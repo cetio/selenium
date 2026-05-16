@@ -2,7 +2,7 @@ module test;
 
 import selenium.api;
 import std.stdio;
-import vibe.data.json;
+import std.json;
 
 import std.datetime;
 
@@ -36,9 +36,9 @@ unittest {
   Step("Javascript execution");
   assert(session.execute!int("return 1+1") == 2);
 
-  Json params = Json.emptyArray;
-  params ~= 1;
-  params ~= 2;
+  JSONValue params = JSONValue.emptyArray;
+  params.array ~= JSONValue(1);
+  params.array ~= JSONValue(2);
   assert(session.execute!int("return arguments[0] + arguments[1]", params) == 3);
 
   assert(session.executeAsync!int("arguments[0](1+1)") == 2);

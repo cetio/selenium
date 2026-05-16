@@ -17,7 +17,6 @@ import selenium.api;
 import std.string;
 import std.conv;
 
-import vibe.core.log;
 
 abstract class SeleniumPage {
 	protected {

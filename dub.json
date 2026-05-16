@@ -1,14 +1,14 @@
 {
-	"name": "selenium-d",
-	"description": "D Selenium bindings",
-	"copyright": "Copyright © 2015, Szabo Bogdan",
-	"authors": ["Szabo Bogdan"],
-	"license": "MIT",
+    "name": "selenium-d",
+    "description": "D Selenium bindings",
+    "copyright": "Copyright © 2015, Szabo Bogdan",
+    "authors": ["Szabo Bogdan"],
+    "license": "MIT",
 
-	"dependencies": {
-		"vibe-d": "*",
-		"trial:lifecycle": "~>0.6.1"
-	},
-
-	"versions": ["VibeCustomMain"]
+    "dependencies": {
+        "conductor": {
+            "path": "../conductor"
+        },
+        "trial": "~>1.0.1"
+    }
 }

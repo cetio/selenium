@@ -3,15 +3,12 @@ module selenium.api;
 import core.vararg;
 import std.stdio;
 
-import vibe.d;
-
-import vibe.http.client;
-import vibe.data.json;
+import conductor;
+import conductor.serialize.json : fromJSON;
+import std.json : JSONValue, parseJSON;
+import std.net.curl : HTTP;
 import std.typecons;
 
-//hack for development dub
-alias Nint = Nullable!int;
-Nint a;
 
 /// https://code.google.com/p/selenium/wiki/JsonWireProtocol#/session/:sessionId/url
 
@@ -26,8 +23,9 @@ class SeleniumException : Exception {
 		super(msg);
 	}
 
-	this(Json data, string file = __FILE__, ulong line = cast(ulong)__LINE__, Throwable next = null) {
-		super("Selenium server error: " ~ data["value"]["message"].to!string);
+	this(JSONValue data, string file = __FILE__, ulong line = cast(ulong)__LINE__, Throwable next = null)
+	{
+		super("Selenium server error: " ~ data["value"]["message"].str);
 	}
 }
 
@@ -83,13 +81,13 @@ enum Browser: string {
 }
 
 enum Platform: string {
-	windows = "WINDOWS",
-	xp = "XP",
-	vista = "VISTA",
-	mac = "MAC",
-	linux = "LINUX",
-	unix = "UNIX",
-	android = "ANDROID"
+	Windows = "Windows",
+	Xp = "Windows XP",
+	Vista = "Windows Vista",
+	Mac = "Mac",
+	Linux = "Linux",
+	Unix = "Unix",
+	Android = "Android"
 }
 
 enum AlertBehaviour: string {
@@ -141,54 +139,91 @@ enum CacheStatus {
 }
 
 struct Capabilities {
-	@optional {
-		Browser browserName;
-		string browserVersion;
-		Platform platform;
+	Browser browserName;
+	string browserVersion;
+	Platform platform;
 
-		bool takesScreenshot;
-		bool handlesAlerts;
-		bool cssSelectorsEnabled;
+	bool takesScreenshot;
+	bool handlesAlerts;
+	bool cssSelectorsEnabled;
 
-		bool javascriptEnabled;
-		bool databaseEnabled;
-		bool locationContextEnabled;
-		bool applicationCacheEnabled;
-		bool browserConnectionEnabled;
-		bool webStorageEnabled;
-		bool acceptSslCerts;
-		bool rotatable;
-		bool nativeEvents;
-		//ProxyObject proxy;
-		AlertBehaviour unexpectedAlertBehaviour;
-		int elementScrollBehavior;
+	bool javascriptEnabled;
+	bool databaseEnabled;
+	bool locationContextEnabled;
+	bool applicationCacheEnabled;
+	bool browserConnectionEnabled;
+	bool webStorageEnabled;
+	bool acceptSslCerts;
+	bool rotatable;
+	bool nativeEvents;
+	//ProxyObject proxy;
+	AlertBehaviour unexpectedAlertBehaviour;
+	int elementScrollBehavior;
 
-		@name("webdriver.remote.sessionid")
-		string webdriver_remote_sessionid;
+	@Name("webdriver.remote.sessionid")
+	string webdriver_remote_sessionid;
 
-		@name("webdriver.remote.quietExceptions")
-		bool webdriver_remote_quietExceptions;
+	@Name("webdriver.remote.quietExceptions")
+	bool webdriver_remote_quietExceptions;
+
+	static Capabilities chrome()
+	{
+		Capabilities ret;
+		ret.browserName = Browser.chrome;
+		return ret;
 	}
 
-	static Capabilities chrome() {
-		auto capabilities = Capabilities();
-		capabilities.browserName = Browser.chrome;
+	JSONValue toJSONValue() const
+	{
+		JSONValue ret = JSONValue.emptyObject;
 
-		return capabilities;
+		if (browserName != Browser.init)
+			ret["browserName"] = JSONValue(cast(string) browserName);
+		if (browserVersion.length > 0)
+			ret["browserVersion"] = JSONValue(browserVersion);
+		if (platform != Platform.init)
+			ret["platform"] = JSONValue(cast(string) platform);
+		if (takesScreenshot)
+			ret["takesScreenshot"] = JSONValue(true);
+		if (handlesAlerts)
+			ret["handlesAlerts"] = JSONValue(true);
+		if (cssSelectorsEnabled)
+			ret["cssSelectorsEnabled"] = JSONValue(true);
+		if (javascriptEnabled)
+			ret["javascriptEnabled"] = JSONValue(true);
+		if (databaseEnabled)
+			ret["databaseEnabled"] = JSONValue(true);
+		if (locationContextEnabled)
+			ret["locationContextEnabled"] = JSONValue(true);
+		if (applicationCacheEnabled)
+			ret["applicationCacheEnabled"] = JSONValue(true);
+		if (browserConnectionEnabled)
+			ret["browserConnectionEnabled"] = JSONValue(true);
+		if (webStorageEnabled)
+			ret["webStorageEnabled"] = JSONValue(true);
+		if (acceptSslCerts)
+			ret["acceptSslCerts"] = JSONValue(true);
+		if (rotatable)
+			ret["rotatable"] = JSONValue(true);
+		if (nativeEvents)
+			ret["nativeEvents"] = JSONValue(true);
+		if (unexpectedAlertBehaviour != AlertBehaviour.init)
+			ret["unexpectedAlertBehaviour"] = JSONValue(cast(string) unexpectedAlertBehaviour);
+		if (elementScrollBehavior != 0)
+			ret["elementScrollBehavior"] = JSONValue(elementScrollBehavior);
+
+		return ret;
 	}
 }
 
 struct SessionResponse(T) {
+	string sessionId;
+	long hCode;
+	long status;
 
-	@optional {
-		string sessionId;
-		long hCode;
-		long status;
+	string state;
 
-		string state;
-
-		T value;
-	}
+	T value;
 }
 
 struct Size {
@@ -205,13 +240,11 @@ struct Cookie {
 	string name;
 	string value;
 
-	@optional {
-		string path;
-		string domain;
-		bool secure;
-		bool httpOnly;
-		long expiry;
-	}
+	string path;
+	string domain;
+	bool secure;
+	bool httpOnly;
+	long expiry;
 }
 
 struct ElementLocator {
@@ -293,10 +326,19 @@ class SeleniumApiConnector {
 		this.requiredCapabilities = requiredCapabilities;
 		this.session = session;
 
-		responseSession = makeRequest(HTTPMethod.POST, serverUrl ~ "/session", ["desiredCapabilities": desiredCapabilities])
-								.deserializeJson!(SessionResponse!Capabilities).value;
+		import conductor.serialize.json : fromJSON;
 
-		connection = new immutable SeleniumApiConnection(serverUrl, responseSession.webdriver_remote_sessionid.idup);
+		JSONValue response = makeRequest(HTTP.Method.post, serverUrl ~ "/session",
+		    ["desiredCapabilities": desiredCapabilities.toJSONValue()]);
+		responseSession = fromJSON!(SessionResponse!Capabilities)(response).value;
+
+		string sessionId;
+		if ("sessionId" in response)
+			sessionId = response["sessionId"].str;
+		else if ("value" in response && "sessionId" in response["value"])
+			sessionId = response["value"]["sessionId"].str;
+
+		connection = new immutable SeleniumApiConnection(serverUrl, sessionId.idup);
 		api = new immutable SeleniumApi(connection);
 	}
 }
@@ -314,47 +356,45 @@ class SeleniumApiConnection {
 
 	inout {
 		void disconnect() {
-			makeRequest(HTTPMethod.DELETE,
+			makeRequest(HTTP.Method.del,
 									serverUrl ~ "/session/" ~ sessionId);
 		}
 
 		void DELETE(T)(string path, T values = null) {
-			makeRequest(HTTPMethod.DELETE,
+			makeRequest(HTTP.Method.del,
 									serverUrl ~ "/session/" ~ sessionId ~ path,
 									values);
 		}
 
 		void DELETE(string path) {
-			makeRequest(HTTPMethod.DELETE,
+			makeRequest(HTTP.Method.del,
 									serverUrl ~ "/session/" ~ sessionId ~ path);
 		}
 
 		void POST(T)(string path, T values) {
-			makeRequest(HTTPMethod.POST,
+			makeRequest(HTTP.Method.post,
 									serverUrl ~ "/session/" ~ sessionId ~ path,
 									values);
 		}
 
 		void POST(string path) {
-			makeRequest(HTTPMethod.POST,
+			makeRequest(HTTP.Method.post,
 									serverUrl ~ "/session/" ~ sessionId ~ path);
 		}
 
 		auto POST(U, T)(string path, T values) {
-			return makeRequest(HTTPMethod.POST,
-									serverUrl ~ "/session/" ~ sessionId ~ path,
-									values).deserializeJson!(SessionResponse!U).value;
+			return fromJSON!(SessionResponse!U)(
+				makeRequest(HTTP.Method.post, serverUrl ~ "/session/" ~ sessionId ~ path, values)).value;
 		}
 
 		auto POST(U)(string path) {
-			return makeRequest(HTTPMethod.POST,
-									serverUrl ~ "/session/" ~ sessionId ~ path)
-									.deserializeJson!(SessionResponse!U).value;
+			return fromJSON!(SessionResponse!U)(
+				makeRequest(HTTP.Method.post, serverUrl ~ "/session/" ~ sessionId ~ path)).value;
 		}
 
 		T GET(T)(string path) {
-			return makeRequest(HTTPMethod.GET, serverUrl ~ "/session/" ~ sessionId ~ path)
-									.deserializeJson!(SessionResponse!T).value;
+			return fromJSON!(SessionResponse!T)(
+				makeRequest(HTTP.Method.get, serverUrl ~ "/session/" ~ sessionId ~ path)).value;
 		}
 	}
 }
@@ -368,17 +408,17 @@ class SeleniumApi {
 
 	inout {
 		auto timeouts(TimeoutType type, long ms) {
-			connection.POST("/timeouts", ["type": Json(type), "ms": Json(ms)]);
+			connection.POST("/timeouts", ["type": JSONValue(type), "ms": JSONValue(ms)]);
 			return this;
 		}
 
 		auto timeoutsAsyncScript(long ms) {
-			connection.POST("/timeouts/async_script", ["ms": Json(ms)]);
+			connection.POST("/timeouts/async_script", ["ms": ms]);
 			return this;
 		}
 
 		auto timeoutsImplicitWait(long ms) {
-			connection.POST("/timeouts/implicit_wait", ["ms": Json(ms)]);
+			connection.POST("/timeouts/implicit_wait", ["ms": ms]);
 			return this;
 		}
 
@@ -391,7 +431,7 @@ class SeleniumApi {
 		}
 
 		auto url(string url) {
-			connection.POST("/url", ["url": Json(url)]);
+			connection.POST("/url", ["url": url]);
 			return this;
 		}
 
@@ -414,12 +454,12 @@ class SeleniumApi {
 			return this;
 		}
 
-		auto execute(T = string)(string script, Json args = Json.emptyArray) {
-			return connection.POST!T("/execute", [ "script": Json(script), "args": args ]);
+		auto execute(T = string)(string script, JSONValue args = JSONValue.emptyArray) {
+			return connection.POST!T("/execute", [ "script": JSONValue(script), "args": args ]);
 		}
 
-		auto executeAsync(T = string)(string script, Json args = Json.emptyArray) {
-			return connection.POST!T("/execute_async", [ "script": Json(script), "args": args ]);
+		auto executeAsync(T = string)(string script, JSONValue args = JSONValue.emptyArray) {
+			return connection.POST!T("/execute_async", [ "script": JSONValue(script), "args": args ]);
 		}
 
 		auto screenshot() {
@@ -838,59 +878,35 @@ class SeleniumApi {
 
 
 		auto wait(long ms) {
-			sleep(ms.msecs);
+			import core.thread : Thread;
+			import core.time : msecs;
+
+			Thread.sleep(ms.msecs);
 			return this;
 		}
 	}
 }
 
-private Json makeRequest(T)(HTTPMethod method, string path, T data) {
-	import vibe.core.core : sleep;
-	import core.time : msecs;
-	import std.conv : to;
+private JSONValue makeRequest(T)(HTTP.Method method, string path, T data)
+{
+	HTTP http = HTTP();
+	Response response = conductor.http.send(http, method, path, data);
 
-	Json result;
-	bool done = false;
+	JSONValue ret = parseJSON(cast(string) response.content);
+	if (response.status == 500)
+		throw new SeleniumException(ret);
 
-	requestHTTP(path,
-		(scope req) {
-			req.method = method;
-			req.writeJsonBody(data);
-		},
-		(scope res) {
-			result = res.readJson;
-
-			if(res.statusCode == 500) {
-				throw new SeleniumException(result);
-			}
-			done = true;
-		}
-	);
-
-	return result;
+	return ret;
 }
 
+private JSONValue makeRequest(HTTP.Method method, string path)
+{
+	HTTP http = HTTP();
+	Response response = conductor.http.send(http, method, path);
 
-private Json makeRequest(HTTPMethod method, string path) {
-	import vibe.core.core : sleep;
-	import core.time : msecs;
-	import std.conv : to;
+	JSONValue ret = parseJSON(cast(string) response.content);
+	if (response.status == 500)
+		throw new SeleniumException(ret);
 
-	Json result;
-	bool done = false;
-
-	requestHTTP(path,
-		(scope req) {
-			req.method = method;
-		},
-		(scope res) {
-			result = res.readJson;
-
-			if(res.statusCode == 500) {
-				throw new SeleniumException(result);
-			}
-			done = true;
-		}
-	);
-	return result;
+	return ret;
 }
