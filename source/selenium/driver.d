@@ -42,21 +42,27 @@ enum DriverType
 class Driver
 {
 private:
-    DriverType _type;
-    string _executablePath;
-    Pid _pid;
+    DriverType type;
+    string executablePath;
+    Pid pid;
     string _serverUrl;
-    ushort _port;
+    ushort port;
     bool _running;
     Client _client;
 
-    this(DriverType type, string executablePath)
+    this(DriverType driverType, string executablePath)
     {
-        _type = type;
-        _executablePath = executablePath;
+        type = driverType;
+        this.executablePath = executablePath;
     }
 
 public:
+    bool running() const
+        => _running;
+
+    string serverUrl() const
+        => _serverUrl;
+
     // --- Factory methods ---
 
     static Driver start()
@@ -114,19 +120,13 @@ public:
 
     void stop()
     {
-        if (!_running || _pid is Pid.init)
+        if (!_running || pid is Pid.init)
             return;
 
-        tryKill(_pid);
+        tryKill(pid);
         _running = false;
-        _pid = Pid.init;
+        pid = Pid.init;
     }
-
-    bool running() const
-        => _running;
-
-    string serverUrl() const
-        => _serverUrl;
 
     // --- Session lifecycle ---
 
@@ -323,11 +323,11 @@ private:
         if (_running)
             return;
 
-        _port = requestedPort == 0 ? findFreePort() : requestedPort;
-        string[] args = ["--port="~_port.to!string];
+        port = requestedPort == 0 ? findFreePort() : requestedPort;
+        string[] args = ["--port="~port.to!string];
 
-        _pid = spawnProcess([_executablePath]~args);
-        _serverUrl = "http://127.0.0.1:"~_port.to!string;
+        pid = spawnProcess([executablePath]~args);
+        _serverUrl = "http://127.0.0.1:"~port.to!string;
 
         waitForServer(5000);
         _running = true;

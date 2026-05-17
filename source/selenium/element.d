@@ -9,29 +9,29 @@ public:
 class Element
 {
 private:
-    Driver _driver;
-    WebElement _webElement;
+    Driver driver;
+    WebElement webElement;
 
 public:
     this(Driver driver, WebElement webElement)
     {
-        _driver = driver;
-        _webElement = webElement;
+        this.driver = driver;
+        this.webElement = webElement;
     }
 
     string id() const
-        => _webElement.id;
+        => webElement.id;
 
     // --- Search context (scoped to this element) ---
 
     Element findOne(string strategy)(string value)
         if (__traits(compiles, LocatorOf!strategy))
-        => _driver.queryElementFrom(_webElement.id, LocatorOf!strategy, value);
+        => driver.queryElementFrom(webElement.id, LocatorOf!strategy, value);
 
     Element findOne(ElementLocator locator)
     {
-        return _driver.queryElementFrom(
-            _webElement.id,
+        return driver.queryElementFrom(
+            webElement.id,
             locator.strategy,
             locator.value
         );
@@ -39,12 +39,12 @@ public:
 
     Element[] findMany(string strategy)(string value)
         if (__traits(compiles, LocatorOf!strategy))
-        => _driver.queryElementsFrom(_webElement.id, LocatorOf!strategy, value);
+        => driver.queryElementsFrom(webElement.id, LocatorOf!strategy, value);
 
     Element[] findMany(ElementLocator locator)
     {
-        return _driver.queryElementsFrom(
-            _webElement.id,
+        return driver.queryElementsFrom(
+            webElement.id,
             locator.strategy,
             locator.value
         );
@@ -53,24 +53,24 @@ public:
     // --- Properties ---
 
     string text()
-        => _driver.client.get!string(elementPath("/text"));
+        => driver.client.get!string(elementPath("/text"));
 
     string tagName()
-        => _driver.client.get!string(elementPath("/name"));
+        => driver.client.get!string(elementPath("/name"));
 
     void click()
     {
-        _driver.client.post(elementPath("/click"));
+        driver.client.post(elementPath("/click"));
     }
 
     void submit()
     {
-        _driver.client.post(elementPath("/submit"));
+        driver.client.post(elementPath("/submit"));
     }
 
     void sendKeys(string[] keys)
     {
-        _driver.client.post(elementPath("/value"), ["value": keys]);
+        driver.client.post(elementPath("/value"), ["value": keys]);
     }
 
     void sendKeys(string keys)
@@ -80,45 +80,45 @@ public:
 
     void clear()
     {
-        _driver.client.post(elementPath("/clear"));
+        driver.client.post(elementPath("/clear"));
     }
 
     bool selected()
-        => _driver.client.get!bool(elementPath("/selected"));
+        => driver.client.get!bool(elementPath("/selected"));
 
     bool enabled()
-        => _driver.client.get!bool(elementPath("/enabled"));
+        => driver.client.get!bool(elementPath("/enabled"));
 
     bool displayed()
-        => _driver.client.get!bool(elementPath("/displayed"));
+        => driver.client.get!bool(elementPath("/displayed"));
 
     string attribute(string name)
     {
-        return _driver.client.get!string(elementPath("/attribute/"~name));
+        return driver.client.get!string(elementPath("/attribute/"~name));
     }
 
     string cssValue(string property)
     {
-        return _driver.client.get!string(elementPath("/css/"~property));
+        return driver.client.get!string(elementPath("/css/"~property));
     }
 
     Position position()
-        => _driver.client.get!Position(elementPath("/location"));
+        => driver.client.get!Position(elementPath("/location"));
 
     Position positionInView()
-        => _driver.client.get!Position(elementPath("/location_in_view"));
+        => driver.client.get!Position(elementPath("/location_in_view"));
 
     Size size()
-        => _driver.client.get!Size(elementPath("/size"));
+        => driver.client.get!Size(elementPath("/size"));
 
     string screenshot()
     {
-        return _driver.client.get!string(elementPath("/screenshot"));
+        return driver.client.get!string(elementPath("/screenshot"));
     }
 
 private:
     string elementPath(string suffix)
     {
-        return "/element/"~_webElement.id~suffix;
+        return "/element/"~webElement.id~suffix;
     }
 }
