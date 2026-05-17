@@ -1,16 +1,33 @@
 module selenium.driver;
 
-import conductor;
-import conductor.http : send;
-import selenium.api;
-import selenium.session;
+import std.algorithm.searching : canFind;
 import std.conv : to;
+import std.json : JSONValue, parseJSON;
 import std.net.curl : HTTP;
-import std.process;
-import std.socket;
-import std.string;
+import std.process : execute, Pid, spawnProcess;
+import std.socket :
+    AddressFamily,
+    InternetAddress,
+    Socket,
+    SocketOption,
+    SocketOptionLevel,
+    SocketType;
+import std.string : strip;
 import core.thread : Thread;
-import core.time : MonoTime, msecs, seconds;
+import core.time : MonoTime, msecs;
+
+import conductor.http : Response, send;
+
+import selenium.element : Element;
+import selenium.errors : WebDriverConnectionError;
+import selenium.locator : ElementLocator;
+import selenium.protocol.client : Client;
+import selenium.types :
+    Capabilities,
+    LocatorStrategy,
+    Size;
+
+public:
 
 enum DriverType
 {
@@ -20,78 +37,334 @@ enum DriverType
     Safari
 }
 
-class SeleniumDriver
+class Driver
 {
 private:
-    DriverType driverType;
-    string executablePath;
-    Pid pid;
+    DriverType _type;
+    string _executablePath;
+    Pid _pid;
     string _serverUrl;
-    ushort port;
+    ushort _port;
     bool _running;
+    Client _client;
+
+    this(DriverType type, string executablePath)
+    {
+        _type = type;
+        _executablePath = executablePath;
+    }
 
 public:
-    this(DriverType type, string path = "")
+    // --- Factory methods ---
+
+    static Driver start()
     {
-        driverType = type;
-        executablePath = path;
+        string executablePath = tryAutoDetect();
+        if (executablePath is null)
+        {
+            throw new WebDriverConnectionError(
+                "No driver configuration was set, and the default configuration failed to match on the system."
+            );
+        }
+
+        DriverType type = inferTypeFromExecutable(executablePath);
+        return start(type, executablePath, Capabilities.init);
     }
+
+    static Driver start(Capabilities desiredCapabilities)
+    {
+        string executablePath = tryAutoDetect();
+        if (executablePath is null)
+        {
+            throw new WebDriverConnectionError(
+                "No driver configuration was set, and the default configuration failed to match on the system."
+            );
+        }
+
+        DriverType type = inferTypeFromExecutable(executablePath);
+        return start(type, executablePath, desiredCapabilities);
+    }
+
+    static Driver start(DriverType type)
+    {
+        string executablePath = autoDetectExecutable(type);
+        return start(type, executablePath, Capabilities.init);
+    }
+
+    static Driver start(DriverType type, string executablePath)
+    {
+        return start(type, executablePath, Capabilities.init);
+    }
+
+    static Driver start(
+        DriverType type,
+        string executablePath,
+        Capabilities desiredCapabilities,
+    )
+    {
+        Driver ret = new Driver(type, executablePath);
+        ret.launch();
+        ret.createSession(desiredCapabilities);
+        return ret;
+    }
+
+    // --- Process management ---
+
+    void stop()
+    {
+        if (!_running || _pid is Pid.init)
+            return;
+
+        tryKill(_pid);
+        _running = false;
+        _pid = Pid.init;
+    }
+
+    bool running() const
+        => _running;
 
     string serverUrl() const
+        => _serverUrl;
+
+    // --- Session lifecycle ---
+
+    void quit()
     {
-        return _serverUrl;
+        if (_client !is null)
+            _client.disconnect();
+
+        stop();
     }
 
-    bool isRunning() const
+    // --- Navigation ---
+
+    string url()
     {
-        return _running;
+        return _client.get!string("/url");
     }
 
-    void start(ushort requestedPort = 0)
+    void url(string value)
+    {
+        _client.post("/url", ["url": value]);
+    }
+
+    void back()
+    {
+        _client.post("/back");
+    }
+
+    void forward()
+    {
+        _client.post("/forward");
+    }
+
+    void refresh()
+    {
+        _client.post("/refresh");
+    }
+
+    string title()
+    {
+        return _client.get!string("/title");
+    }
+
+    string source()
+    {
+        return _client.get!string("/source");
+    }
+
+    // --- Window / Frame ---
+
+    string windowHandle()
+    {
+        return _client.get!string("/window");
+    }
+
+    void window(string handle)
+    {
+        _client.post("/window", ["handle": handle]);
+    }
+
+    string[] windowHandles()
+    {
+        return _client.get!(string[])("/window/handles");
+    }
+
+    void closeWindow()
+    {
+        _client.delete_("/window");
+    }
+
+    void maximize()
+    {
+        _client.post("/window/maximize");
+    }
+
+    Size windowSize()
+    {
+        return _client.get!Size("/window/rect");
+    }
+
+    void windowSize(Size value)
+    {
+        _client.post("/window/rect", value);
+    }
+
+    void frame(string id)
+    {
+        _client.post("/frame", ["id": id]);
+    }
+
+    void frame(long id)
+    {
+        _client.post("/frame", ["id": id]);
+    }
+
+    // --- Search context (Driver-level) ---
+
+    Element findOne(string strategy)(string value)
+        if (is(typeof(LocatorOf!strategy) == LocatorStrategy))
+    {
+        return queryElement(LocatorOf!strategy, value);
+    }
+
+    Element findOne(ElementLocator locator)
+    {
+        return queryElement(locator.strategy, locator.value);
+    }
+
+    Element[] findMany(string strategy)(string value)
+        if (is(typeof(LocatorOf!strategy) == LocatorStrategy))
+    {
+        return queryElements(LocatorOf!strategy, value);
+    }
+
+    Element[] findMany(ElementLocator locator)
+    {
+        return queryElements(locator.strategy, locator.value);
+    }
+
+    Element activeElement()
+    {
+        return new Element(
+            this,
+            _client.post!(WebElement)("/element/active")
+        );
+    }
+
+    // --- JavaScript / Screenshot ---
+
+    T execute(T = string)(string script, JSONValue args = JSONValue.emptyArray)
+    {
+        return _client.post!T("/execute", [
+            "script": JSONValue(script),
+            "args": args,
+        ]);
+    }
+
+    string screenshot()
+    {
+        return _client.get!string("/screenshot");
+    }
+
+    // --- Package access for Element ---
+
+    package Client client()
+        => _client;
+
+    package Element queryElement(LocatorStrategy strategy, string value)
+    {
+        import selenium.types : WebElement;
+
+        WebElement webElement = _client.post!(WebElement)(
+            "/element",
+            ElementLocator(strategy, value)
+        );
+        return new Element(this, webElement);
+    }
+
+    package Element[] queryElements(LocatorStrategy strategy, string value)
+    {
+        import selenium.types : WebElement;
+
+        WebElement[] webElements = _client.post!(WebElement[])(
+            "/elements",
+            ElementLocator(strategy, value)
+        );
+        Element[] ret;
+        foreach (webElement; webElements)
+            ret ~= new Element(this, webElement);
+        return ret;
+    }
+
+    package Element queryElementFrom(string parentId, LocatorStrategy strategy, string value)
+    {
+        import selenium.types : WebElement;
+
+        WebElement webElement = _client.post!(WebElement)(
+            "/element/" ~ parentId ~ "/element",
+            ElementLocator(strategy, value)
+        );
+        return new Element(this, webElement);
+    }
+
+    package Element[] queryElementsFrom(string parentId, LocatorStrategy strategy, string value)
+    {
+        import selenium.types : WebElement;
+
+        WebElement[] webElements = _client.post!(WebElement[])(
+            "/element/" ~ parentId ~ "/elements",
+            ElementLocator(strategy, value)
+        );
+        Element[] ret;
+        foreach (webElement; webElements)
+            ret ~= new Element(this, webElement);
+        return ret;
+    }
+
+private:
+    void launch(ushort requestedPort = 0)
     {
         if (_running)
             return;
 
-        port = requestedPort;
-        if (port == 0)
-            port = findFreePort();
+        _port = requestedPort == 0 ? findFreePort() : requestedPort;
+        string[] args = ["--port=" ~ _port.to!string];
 
-        string[] args;
-        args ~= "--port="~port.to!string;
-
-        if (executablePath.length == 0)
-            executablePath = autoDetectExecutable();
-
-        pid = spawnProcess([executablePath]~args);
-        _serverUrl = "http://127.0.0.1:"~port.to!string;
+        _pid = spawnProcess([_executablePath] ~ args);
+        _serverUrl = "http://127.0.0.1:" ~ _port.to!string;
 
         waitForServer(5000);
         _running = true;
     }
 
-    void stop()
-    {
-        if (!_running || pid is Pid.init)
-            return;
-
-        tryKill(pid);
-        _running = false;
-        pid = Pid.init;
-    }
-
-    immutable (SeleniumSession) newSession(
-        Capabilities desiredCapabilities = Capabilities(),
-        Capabilities requiredCapabilities = Capabilities()
-    )
+    void createSession(Capabilities desiredCapabilities)
     {
         if (!_running)
-            throw new Exception("Driver is not running. Call start() first.");
+            throw new WebDriverConnectionError("Driver is not running.");
 
-        return new immutable SeleniumSession(_serverUrl,
-            desiredCapabilities, requiredCapabilities);
+        JSONValue payload = JSONValue.emptyObject;
+        payload["desiredCapabilities"] = desiredCapabilities.toJSONValue();
+
+        HTTP http = HTTP();
+        Response response = send(
+            http,
+            HTTP.Method.post,
+            _serverUrl ~ "/session",
+            payload,
+        );
+
+        JSONValue json = parseJSON(cast(string)response.content);
+        string sessionId;
+
+        if ("sessionId" in json)
+            sessionId = json["sessionId"].str;
+        else if ("value" in json && "sessionId" in json["value"])
+            sessionId = json["value"]["sessionId"].str;
+
+        _client = new Client(_serverUrl, sessionId);
     }
 
-private:
     ushort findFreePort()
     {
         Socket socket = new Socket(AddressFamily.INET, SocketType.STREAM);
@@ -102,10 +375,39 @@ private:
         return ret;
     }
 
-    string autoDetectExecutable()
+    static string tryAutoDetect()
+    {
+        string[][DriverType] candidates = [
+            DriverType.Chrome: ["chromedriver"],
+            DriverType.Firefox: ["geckodriver"],
+            DriverType.Edge: ["msedgedriver"],
+            DriverType.Safari: ["safaridriver"],
+        ];
+
+        DriverType[] priority = [
+            DriverType.Chrome,
+            DriverType.Firefox,
+            DriverType.Edge,
+            DriverType.Safari,
+        ];
+
+        foreach (type; priority)
+        {
+            foreach (candidate; candidates[type])
+            {
+                auto result = execute(["which", candidate]);
+                if (result.status == 0)
+                    return result.output.strip;
+            }
+        }
+
+        return null;
+    }
+
+    static string autoDetectExecutable(DriverType type)
     {
         string[] candidates;
-        final switch (driverType)
+        final switch (type)
         {
             case DriverType.Chrome:
                 candidates = ["chromedriver"];
@@ -123,11 +425,28 @@ private:
 
         foreach (candidate; candidates)
         {
-            if (execute(["which", candidate]).status == 0)
-                return execute(["which", candidate]).output.strip;
+            auto result = execute(["which", candidate]);
+            if (result.status == 0)
+                return result.output.strip;
         }
 
-        throw new Exception("Could not auto-detect executable for "~driverType.to!string);
+        throw new WebDriverConnectionError(
+            "Could not auto-detect executable for " ~ type.to!string
+        );
+    }
+
+    static DriverType inferTypeFromExecutable(string path)
+    {
+        if (path.canFind("chromedriver"))
+            return DriverType.Chrome;
+        if (path.canFind("geckodriver"))
+            return DriverType.Firefox;
+        if (path.canFind("msedgedriver") || path.canFind("edgedriver"))
+            return DriverType.Edge;
+        if (path.canFind("safaridriver"))
+            return DriverType.Safari;
+
+        return DriverType.Chrome;
     }
 
     void waitForServer(long timeoutMs)
@@ -139,19 +458,20 @@ private:
             try
             {
                 HTTP http = HTTP();
-                Response response = send(http, HTTP.Method.get, _serverUrl~"/status");
+                Response response = send(http, HTTP.Method.get, _serverUrl ~ "/status");
                 if (response.status == 200)
                     return;
             }
             catch (Exception)
             {
-                // Server not ready yet
             }
 
             Thread.sleep(100.msecs);
         }
 
-        throw new Exception("WebDriver did not become ready within "~timeoutMs.to!string~" ms");
+        throw new WebDriverConnectionError(
+            "WebDriver did not become ready within " ~ timeoutMs.to!string ~ " ms"
+        );
     }
 
     static void tryKill(Pid process)
@@ -163,8 +483,6 @@ private:
         }
         catch (Exception)
         {
-            // Best-effort cleanup
         }
     }
 }
-
