@@ -8,7 +8,6 @@
     "dependencies": {
         "conductor": {
             "path": "../conductor"
-        },
-        "trial": "~>1.0.1"
+        }
     }
 }

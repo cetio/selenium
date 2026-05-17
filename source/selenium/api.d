@@ -178,11 +178,11 @@ struct Capabilities {
 		JSONValue ret = JSONValue.emptyObject;
 
 		if (browserName != Browser.init)
-			ret["browserName"] = JSONValue(cast(string) browserName);
+			ret["browserName"] = JSONValue(cast(string)browserName);
 		if (browserVersion.length > 0)
 			ret["browserVersion"] = JSONValue(browserVersion);
 		if (platform != Platform.init)
-			ret["platform"] = JSONValue(cast(string) platform);
+			ret["platform"] = JSONValue(cast(string)platform);
 		if (takesScreenshot)
 			ret["takesScreenshot"] = JSONValue(true);
 		if (handlesAlerts)
@@ -208,7 +208,7 @@ struct Capabilities {
 		if (nativeEvents)
 			ret["nativeEvents"] = JSONValue(true);
 		if (unexpectedAlertBehaviour != AlertBehaviour.init)
-			ret["unexpectedAlertBehaviour"] = JSONValue(cast(string) unexpectedAlertBehaviour);
+			ret["unexpectedAlertBehaviour"] = JSONValue(cast(string)unexpectedAlertBehaviour);
 		if (elementScrollBehavior != 0)
 			ret["elementScrollBehavior"] = JSONValue(elementScrollBehavior);
 
@@ -892,7 +892,7 @@ private JSONValue makeRequest(T)(HTTP.Method method, string path, T data)
 	HTTP http = HTTP();
 	Response response = conductor.http.send(http, method, path, data);
 
-	JSONValue ret = parseJSON(cast(string) response.content);
+	JSONValue ret = parseJSON(cast(string)response.content);
 	if (response.status == 500)
 		throw new SeleniumException(ret);
 
@@ -904,7 +904,7 @@ private JSONValue makeRequest(HTTP.Method method, string path)
 	HTTP http = HTTP();
 	Response response = conductor.http.send(http, method, path);
 
-	JSONValue ret = parseJSON(cast(string) response.content);
+	JSONValue ret = parseJSON(cast(string)response.content);
 	if (response.status == 500)
 		throw new SeleniumException(ret);
 

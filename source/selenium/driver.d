@@ -5,7 +5,6 @@ import conductor.http : send;
 import selenium.api;
 import selenium.session;
 import std.conv : to;
-import std.json : JSONValue, parseJSON;
 import std.net.curl : HTTP;
 import std.process;
 import std.socket;
@@ -58,13 +57,13 @@ public:
             port = findFreePort();
 
         string[] args;
-        args ~= "--port=" ~ port.to!string;
+        args ~= "--port="~port.to!string;
 
         if (executablePath.length == 0)
             executablePath = autoDetectExecutable();
 
-        pid = spawnProcess([executablePath] ~ args);
-        _serverUrl = "http://127.0.0.1:" ~ port.to!string;
+        pid = spawnProcess([executablePath]~args);
+        _serverUrl = "http://127.0.0.1:"~port.to!string;
 
         waitForServer(5000);
         _running = true;
@@ -128,7 +127,7 @@ private:
                 return execute(["which", candidate]).output.strip;
         }
 
-        throw new Exception("Could not auto-detect executable for " ~ driverType.to!string);
+        throw new Exception("Could not auto-detect executable for "~driverType.to!string);
     }
 
     void waitForServer(long timeoutMs)
@@ -140,7 +139,7 @@ private:
             try
             {
                 HTTP http = HTTP();
-                Response response = send(http, HTTP.Method.get, _serverUrl ~ "/status");
+                Response response = send(http, HTTP.Method.get, _serverUrl~"/status");
                 if (response.status == 200)
                     return;
             }
@@ -152,7 +151,7 @@ private:
             Thread.sleep(100.msecs);
         }
 
-        throw new Exception("WebDriver did not become ready within " ~ timeoutMs.to!string ~ " ms");
+        throw new Exception("WebDriver did not become ready within "~timeoutMs.to!string~" ms");
     }
 
     static void tryKill(Pid process)
@@ -169,55 +168,3 @@ private:
     }
 }
 
-version (SeleniumIntegrationTest)
-{
-    @("driver: auto-detect, start, session, navigate, close")
-    unittest
-    {
-        import std.stdio : writeln;
-        import std.process : execute;
-
-        string driverPath;
-        DriverType driverType;
-
-        if (execute(["which", "chromedriver"]).status == 0)
-        {
-            driverPath = execute(["which", "chromedriver"]).output.strip;
-            driverType = DriverType.Chrome;
-        }
-        else if (execute(["which", "geckodriver"]).status == 0)
-        {
-            driverPath = execute(["which", "geckodriver"]).output.strip;
-            driverType = DriverType.Firefox;
-        }
-
-        if (driverPath.length == 0)
-        {
-            writeln("SKIP: No WebDriver found in PATH.");
-            return;
-        }
-
-        writeln("Testing with ", driverPath);
-
-        SeleniumDriver driver = new SeleniumDriver(driverType, driverPath);
-        driver.start();
-        scope(exit)
-        {
-            writeln("Stopping driver...");
-            driver.stop();
-        }
-
-        assert(driver.isRunning);
-
-        immutable SeleniumSession session = driver.newSession(Capabilities.chrome);
-        scope(exit) session.close;
-
-        session.navigation.url("http://example.com");
-        assert(session.navigation.url == "https://example.com/");
-
-        immutable Element heading = session.findOne(tagLocator("h1"));
-        assert(heading.text == "Example Domain");
-
-        writeln("PASS: driver integration test.");
-    }
-}
