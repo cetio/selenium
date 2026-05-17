@@ -1,7 +1,6 @@
-selenium.d
-==========
+# Selenium-SDK
 
-selenium.d is a D library for controlling browsers via the WebDriver protocol.
+Selenium-SDK is a D library for browser automation via the WebDriver protocol (Selenium).
 
 ## Setup
 
@@ -70,10 +69,8 @@ driver.findOne(byId("foo"));
 driver.findOne(byCss(".bar"));
 ```
 
-## Running tests
+## License
 
-```bash
-dub test
-```
+Selenium-SDK is licensed under [MIT](LICENSE.txt).
 
-Dynamic integration tests require a WebDriver server (e.g. `chromedriver`) on `PATH`. Static tests run without any external dependencies.
+Forked from [gedaiu/selenium.d](https://github.com/gedaiu/selenium.d).
