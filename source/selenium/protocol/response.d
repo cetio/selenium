@@ -29,7 +29,7 @@ JSONValue checkAndParse(Response response)
         if (response.status >= 200 && response.status < 300)
             return JSONValue.emptyObject;
 
-        throw new WebDriverError("Invalid response from server: " ~ cast(string)response.content);
+        throw new WebDriverError("Invalid response from server:"~cast(string)response.content);
     }
 
     if (response.status >= 400)

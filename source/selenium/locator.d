@@ -1,7 +1,8 @@
 module selenium.locator;
 
-import conductor.serialize.json : Name;
 import selenium.types : LocatorStrategy;
+
+import conductor.serialize.json : Name;
 
 public:
 

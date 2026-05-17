@@ -1,68 +1,69 @@
 module tests.behaviors;
 
-import selenium.api;
-import std.json : JSONValue, JSONType;
+import selenium.locator;
+import selenium.types;
+import std.json : JSONType, JSONValue;
 
 unittest
 {
-    ElementLocator ret = idLocator("foo");
-    assert(ret.using == LocatorStrategy.Id);
+    ElementLocator ret = byId("foo");
+    assert(ret.strategy == LocatorStrategy.Id);
     assert(ret.value == "foo");
 }
 
 unittest
 {
-    ElementLocator ret = classLocator("bar");
-    assert(ret.using == LocatorStrategy.ClassName);
+    ElementLocator ret = byClass("bar");
+    assert(ret.strategy == LocatorStrategy.ClassName);
     assert(ret.value == "bar");
 }
 
 unittest
 {
-    ElementLocator ret = cssLocator("#baz");
-    assert(ret.using == LocatorStrategy.CssSelector);
+    ElementLocator ret = byCss("#baz");
+    assert(ret.strategy == LocatorStrategy.CssSelector);
     assert(ret.value == "#baz");
 }
 
 unittest
 {
-    ElementLocator ret = nameLocator("qux");
-    assert(ret.using == LocatorStrategy.Name);
+    ElementLocator ret = byName("qux");
+    assert(ret.strategy == LocatorStrategy.Name);
     assert(ret.value == "qux");
 }
 
 unittest
 {
-    ElementLocator ret = linkTextLocator("hello");
-    assert(ret.using == LocatorStrategy.LinkText);
+    ElementLocator ret = byLinkText("hello");
+    assert(ret.strategy == LocatorStrategy.LinkText);
     assert(ret.value == "hello");
 }
 
 unittest
 {
-    ElementLocator ret = partialLinkTextLocator("partial");
-    assert(ret.using == LocatorStrategy.PartialLinkText);
+    ElementLocator ret = byPartialLinkText("partial");
+    assert(ret.strategy == LocatorStrategy.PartialLinkText);
     assert(ret.value == "partial");
 }
 
 unittest
 {
-    ElementLocator ret = tagLocator("div");
-    assert(ret.using == LocatorStrategy.TagName);
+    ElementLocator ret = byTag("div");
+    assert(ret.strategy == LocatorStrategy.TagName);
     assert(ret.value == "div");
 }
 
 unittest
 {
-    ElementLocator ret = xpathLocator("//body");
-    assert(ret.using == LocatorStrategy.XPath);
+    ElementLocator ret = byXPath("//body");
+    assert(ret.strategy == LocatorStrategy.XPath);
     assert(ret.value == "//body");
 }
 
 unittest
 {
     Capabilities ret = Capabilities.chrome;
-    assert(ret.browserName == Browser.chrome);
+    assert(ret.browserName == Browser.Chrome);
 }
 
 unittest
@@ -104,13 +105,13 @@ unittest
 unittest
 {
     WebElement ret = WebElement("elem-123");
-    assert(ret.ELEMENT == "elem-123");
+    assert(ret.id == "elem-123");
 }
 
 unittest
 {
-    assert(cast(string)Browser.chrome == "chrome");
-    assert(cast(string)Browser.firefox == "firefox");
+    assert(cast(string)Browser.Chrome == "chrome");
+    assert(cast(string)Browser.Firefox == "firefox");
 }
 
 unittest

@@ -1,14 +1,13 @@
 module selenium.protocol.client;
 
-import std.json : JSONType, JSONValue, parseJSON;
-import std.net.curl : HTTP;
+import selenium.protocol.response : checkAndParse;
+import selenium.types : WebElement;
 
 import conductor.http : Response, send;
 import conductor.serialize.json : fromJSON;
 
-import selenium.errors : WebDriverError;
-import selenium.protocol.response : checkAndParse;
-import selenium.types : WebElement;
+import std.json : JSONType, JSONValue;
+import std.net.curl : HTTP;
 
 public:
 
@@ -74,7 +73,7 @@ public:
 private:
     string sessionPath(string path)
     {
-        return _serverUrl ~ "/session/" ~ _sessionId ~ path;
+        return _serverUrl~"/session/"~_sessionId~path;
     }
 
     JSONValue request(HTTP.Method method, string url)

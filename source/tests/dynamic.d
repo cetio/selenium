@@ -1,12 +1,10 @@
 module tests.dynamic;
 
-import selenium.driver : Driver, DriverType;
+import selenium.driver : Driver;
 import selenium.element : Element;
 import selenium.errors : WebDriverConnectionError;
 import selenium.locator;
-import selenium.types : Capabilities;
 import std.stdio : writeln;
-import std.string : strip;
 
 unittest
 {

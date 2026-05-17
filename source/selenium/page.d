@@ -7,8 +7,7 @@ import std.conv : to;
 import selenium.driver : Driver;
 import selenium.element : Element;
 import selenium.errors : WebDriverTimeoutError;
-import selenium.locator : ElementLocator;
-import selenium.types : LocatorStrategy;
+import selenium.types : LocatorOf, LocatorStrategy;
 
 public:
 
@@ -42,18 +41,18 @@ public:
         }
 
         throw new WebDriverTimeoutError(
-            "Page did not become present within " ~ timeout.to!string
+            "Page did not become present within "~timeout.to!string
         );
     }
 
     Element findOne(string strategy)(string value)
-        if (is(typeof(LocatorOf!strategy) == LocatorStrategy))
+        if (__traits(compiles, LocatorOf!strategy))
     {
         return _driver.findOne!strategy(value);
     }
 
     Element[] findMany(string strategy)(string value)
-        if (is(typeof(LocatorOf!strategy) == LocatorStrategy))
+        if (__traits(compiles, LocatorOf!strategy))
     {
         return _driver.findMany!strategy(value);
     }

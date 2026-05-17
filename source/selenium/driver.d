@@ -1,5 +1,18 @@
 module selenium.driver;
 
+import selenium.element : Element;
+import selenium.errors : WebDriverConnectionError;
+import selenium.locator : ElementLocator;
+import selenium.protocol.client : Client;
+import selenium.types :
+    Capabilities,
+    LocatorOf,
+    LocatorStrategy,
+    Size,
+    WebElement;
+
+import conductor.http : Response, send;
+
 import std.algorithm.searching : canFind;
 import std.conv : to;
 import std.json : JSONValue, parseJSON;
@@ -15,19 +28,6 @@ import std.socket :
 import std.string : strip;
 import core.thread : Thread;
 import core.time : MonoTime, msecs;
-
-import conductor.http : Response, send;
-
-import selenium.element : Element;
-import selenium.errors : WebDriverConnectionError;
-import selenium.locator : ElementLocator;
-import selenium.protocol.client : Client;
-import selenium.types :
-    Capabilities,
-    LocatorOf,
-    LocatorStrategy,
-    Size,
-    WebElement;
 
 public:
 
@@ -297,7 +297,7 @@ public:
         import selenium.types : WebElement;
 
         WebElement webElement = _client.post!(WebElement)(
-            "/element/" ~ parentId ~ "/element",
+            "/element/"~parentId~"/element",
             ElementLocator(strategy, value)
         );
         return new Element(this, webElement);
@@ -308,7 +308,7 @@ public:
         import selenium.types : WebElement;
 
         WebElement[] webElements = _client.post!(WebElement[])(
-            "/element/" ~ parentId ~ "/elements",
+            "/element/"~parentId~"/elements",
             ElementLocator(strategy, value)
         );
         Element[] ret;
@@ -324,10 +324,10 @@ private:
             return;
 
         _port = requestedPort == 0 ? findFreePort() : requestedPort;
-        string[] args = ["--port=" ~ _port.to!string];
+        string[] args = ["--port="~_port.to!string];
 
-        _pid = spawnProcess([_executablePath] ~ args);
-        _serverUrl = "http://127.0.0.1:" ~ _port.to!string;
+        _pid = spawnProcess([_executablePath]~args);
+        _serverUrl = "http://127.0.0.1:"~_port.to!string;
 
         waitForServer(5000);
         _running = true;
@@ -345,7 +345,7 @@ private:
         Response response = send(
             http,
             HTTP.Method.post,
-            _serverUrl ~ "/session",
+            _serverUrl~"/session",
             payload,
         );
 
@@ -426,7 +426,7 @@ private:
         }
 
         throw new WebDriverConnectionError(
-            "Could not auto-detect executable for " ~ type.to!string
+            "Could not auto-detect executable for "~type.to!string
         );
     }
 
@@ -453,7 +453,7 @@ private:
             try
             {
                 HTTP http = HTTP();
-                Response response = send(http, HTTP.Method.get, _serverUrl ~ "/status");
+                Response response = send(http, HTTP.Method.get, _serverUrl~"/status");
                 if (response.status == 200)
                     return;
             }
@@ -465,7 +465,7 @@ private:
         }
 
         throw new WebDriverConnectionError(
-            "WebDriver did not become ready within " ~ timeoutMs.to!string ~ " ms"
+            "WebDriver did not become ready within "~timeoutMs.to!string~" ms"
         );
     }
 
@@ -476,8 +476,6 @@ private:
             kill(process);
             wait(process);
         }
-        catch (Exception)
-        {
-        }
+        catch (Exception) { }
     }
 }

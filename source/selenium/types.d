@@ -1,8 +1,7 @@
 module selenium.types;
 
-import std.json : JSONValue;
-
 import conductor.serialize.json : Name;
+import std.json : JSONValue;
 
 public:
 
@@ -88,7 +87,7 @@ template LocatorOf(string strategy)
     else static if (strategy == "xpath")
         enum LocatorStrategy LocatorOf = LocatorStrategy.XPath;
     else
-        static assert(false, "Unknown locator strategy: " ~ strategy);
+        static assert(false, "Unknown locator strategy:"~strategy);
 }
 
 struct Capabilities

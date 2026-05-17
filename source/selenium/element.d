@@ -26,9 +26,7 @@ public:
 
     Element findOne(string strategy)(string value)
         if (__traits(compiles, LocatorOf!strategy))
-    {
-        return _driver.queryElementFrom(_webElement.id, LocatorOf!strategy, value);
-    }
+        => _driver.queryElementFrom(_webElement.id, LocatorOf!strategy, value);
 
     Element findOne(ElementLocator locator)
     {
@@ -41,9 +39,7 @@ public:
 
     Element[] findMany(string strategy)(string value)
         if (__traits(compiles, LocatorOf!strategy))
-    {
-        return _driver.queryElementsFrom(_webElement.id, LocatorOf!strategy, value);
-    }
+        => _driver.queryElementsFrom(_webElement.id, LocatorOf!strategy, value);
 
     Element[] findMany(ElementLocator locator)
     {
@@ -98,12 +94,12 @@ public:
 
     string attribute(string name)
     {
-        return _driver.client.get!string(elementPath("/attribute/" ~ name));
+        return _driver.client.get!string(elementPath("/attribute/"~name));
     }
 
     string cssValue(string property)
     {
-        return _driver.client.get!string(elementPath("/css/" ~ property));
+        return _driver.client.get!string(elementPath("/css/"~property));
     }
 
     Position position()
@@ -123,6 +119,6 @@ public:
 private:
     string elementPath(string suffix)
     {
-        return "/element/" ~ _webElement.id ~ suffix;
+        return "/element/"~_webElement.id~suffix;
     }
 }
