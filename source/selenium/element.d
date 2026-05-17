@@ -4,8 +4,6 @@ import selenium.driver : Driver;
 import selenium.locator : ElementLocator;
 import selenium.types : LocatorOf, LocatorStrategy, Position, Size, WebElement;
 
-public:
-
 class Element
 {
 private:

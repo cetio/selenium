@@ -3,8 +3,6 @@ module selenium.types;
 import conductor.serialize.json : Name;
 import std.json : JSONValue;
 
-public:
-
 enum Browser : string
 {
     Android = "android",

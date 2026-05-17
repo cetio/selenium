@@ -30,40 +30,29 @@ public:
     string sessionId() const
         => _sessionId;
 
+    string sessionPath(string path)
+        => _serverUrl~"/session/"~_sessionId~path;
+
     void delete_(string path)
-    {
-        request(HTTP.Method.del, sessionPath(path));
-    }
+        => request(HTTP.Method.del, sessionPath(path));
 
     void delete_(T)(string path, T body_)
-    {
-        request(HTTP.Method.del, sessionPath(path), body_);
-    }
+        => request(HTTP.Method.del, sessionPath(path), body_);
 
     void post(string path)
-    {
-        request(HTTP.Method.post, sessionPath(path));
-    }
+        => request(HTTP.Method.post, sessionPath(path));
 
     void post(T)(string path, T body_)
-    {
-        request(HTTP.Method.post, sessionPath(path), body_);
-    }
+        => request(HTTP.Method.post, sessionPath(path), body_);
 
     T get(T)(string path)
-    {
-        return parse!T(request(HTTP.Method.get, sessionPath(path)));
-    }
+        => parse!T(request(HTTP.Method.get, sessionPath(path)));
 
     T post(T)(string path)
-    {
-        return parse!T(request(HTTP.Method.post, sessionPath(path)));
-    }
+        => parse!T(request(HTTP.Method.post, sessionPath(path)));
 
     T post(T, U)(string path, U body_)
-    {
-        return parse!T(request(HTTP.Method.post, sessionPath(path), body_));
-    }
+        => parse!T(request(HTTP.Method.post, sessionPath(path), body_));
 
     void disconnect()
     {
@@ -71,11 +60,6 @@ public:
     }
 
 private:
-    string sessionPath(string path)
-    {
-        return _serverUrl~"/session/"~_sessionId~path;
-    }
-
     JSONValue request(HTTP.Method method, string url)
     {
         HTTP http = HTTP();

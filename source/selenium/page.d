@@ -9,8 +9,6 @@ import selenium.element : Element;
 import selenium.errors : WebDriverTimeoutError;
 import selenium.types : LocatorOf, LocatorStrategy;
 
-public:
-
 abstract class Page
 {
 private:
@@ -47,13 +45,9 @@ public:
 
     Element findOne(string strategy)(string value)
         if (__traits(compiles, LocatorOf!strategy))
-    {
-        return _driver.findOne!strategy(value);
-    }
+        => _driver.findOne!strategy(value);
 
     Element[] findMany(string strategy)(string value)
         if (__traits(compiles, LocatorOf!strategy))
-    {
-        return _driver.findMany!strategy(value);
-    }
+        => _driver.findMany!strategy(value);
 }

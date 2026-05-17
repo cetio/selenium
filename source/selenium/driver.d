@@ -4,12 +4,7 @@ import selenium.element : Element;
 import selenium.errors : WebDriverConnectionError;
 import selenium.locator : ElementLocator;
 import selenium.protocol.client : Client;
-import selenium.types :
-    Capabilities,
-    LocatorOf,
-    LocatorStrategy,
-    Size,
-    WebElement;
+import selenium.types;
 
 import conductor.http : Response, send;
 
@@ -18,18 +13,10 @@ import std.conv : to;
 import std.json : JSONValue, parseJSON;
 import std.net.curl : HTTP;
 import std.process : execute, kill, Pid, spawnProcess, wait;
-import std.socket :
-    AddressFamily,
-    InternetAddress,
-    Socket,
-    SocketOption,
-    SocketOptionLevel,
-    SocketType;
+import std.socket;
 import std.string : strip;
 import core.thread : Thread;
 import core.time : MonoTime, msecs;
-
-public:
 
 enum DriverType
 {

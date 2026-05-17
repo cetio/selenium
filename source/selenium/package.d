@@ -1,7 +1,5 @@
 module selenium;
 
-public:
-
 public import selenium.driver;
 public import selenium.element;
 public import selenium.errors;

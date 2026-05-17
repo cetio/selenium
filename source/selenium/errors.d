@@ -2,8 +2,6 @@ module selenium.errors;
 
 import std.exception : basicExceptionCtors;
 
-public:
-
 class WebDriverError : Exception
 {
     mixin basicExceptionCtors;

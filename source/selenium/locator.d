@@ -4,8 +4,6 @@ import selenium.types : LocatorStrategy;
 
 import conductor.serialize.json : Name;
 
-public:
-
 struct ElementLocator
 {
     @Name("using")
@@ -14,41 +12,26 @@ struct ElementLocator
 }
 
 ElementLocator byClass(string value)
-{
-    return ElementLocator(LocatorStrategy.ClassName, value);
-}
+    => ElementLocator(LocatorStrategy.ClassName, value);
 
 ElementLocator byCss(string value)
-{
-    return ElementLocator(LocatorStrategy.CssSelector, value);
-}
+    => ElementLocator(LocatorStrategy.CssSelector, value);
 
 ElementLocator byId(string value)
-{
-    return ElementLocator(LocatorStrategy.Id, value);
-}
+    => ElementLocator(LocatorStrategy.Id, value);
 
 ElementLocator byName(string value)
-{
-    return ElementLocator(LocatorStrategy.Name, value);
-}
+    => ElementLocator(LocatorStrategy.Name, value);
 
 ElementLocator byLinkText(string value)
-{
-    return ElementLocator(LocatorStrategy.LinkText, value);
-}
+    => ElementLocator(LocatorStrategy.LinkText, value);
 
 ElementLocator byPartialLinkText(string value)
-{
-    return ElementLocator(LocatorStrategy.PartialLinkText, value);
-}
+    => ElementLocator(LocatorStrategy.PartialLinkText, value);
 
 ElementLocator byTag(string value)
-{
-    return ElementLocator(LocatorStrategy.TagName, value);
-}
+    => ElementLocator(LocatorStrategy.TagName, value);
 
 ElementLocator byXPath(string value)
-{
-    return ElementLocator(LocatorStrategy.XPath, value);
-}
+    => ElementLocator(LocatorStrategy.XPath, value);
+
