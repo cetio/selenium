@@ -25,7 +25,7 @@ unittest
 
     assert(driver.running);
 
-    driver.url("http://example.com");
+    driver.navigate("http://example.com");
     assert(driver.url == "https://example.com/");
 
     Element heading = driver.findOne!"tag"("h1");

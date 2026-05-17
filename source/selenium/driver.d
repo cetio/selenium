@@ -130,9 +130,9 @@ public:
     string url()
         => _client.get!string("/url");
 
-    void url(string value)
+    void navigate(string url)
     {
-        _client.post("/url", ["url": value]);
+        _client.post("/url", ["url": url]);
     }
 
     void back()

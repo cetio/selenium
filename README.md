@@ -15,7 +15,7 @@ import selenium;
 Driver driver = Driver.start();
 scope(exit) driver.quit();
 
-driver.url("http://example.com");
+driver.navigate("http://example.com");
 assert(driver.url == "https://example.com/");
 
 Element heading = driver.findOne!"tag"("h1");
