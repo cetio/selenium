@@ -1,4 +1,4 @@
-module selenium.api;
+deprecated module selenium.api;
 
 import core.vararg;
 import std.stdio;

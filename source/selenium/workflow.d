@@ -1,4 +1,4 @@
-module selenium.workflow;
+deprecated module selenium.workflow;
 
 import std.stdio;
 

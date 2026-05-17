@@ -1,4 +1,4 @@
-module selenium.session;
+deprecated module selenium.session;
 
 import selenium.api;
 import std.stdio;
