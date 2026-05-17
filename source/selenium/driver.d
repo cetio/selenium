@@ -24,6 +24,7 @@ import selenium.locator : ElementLocator;
 import selenium.protocol.client : Client;
 import selenium.types :
     Capabilities,
+    LocatorOf,
     LocatorStrategy,
     Size,
     WebElement;
@@ -224,7 +225,7 @@ public:
     // --- Search context (Driver-level) ---
 
     Element findOne(string strategy)(string value)
-        if (is(typeof(LocatorOf!strategy) == LocatorStrategy))
+        if (__traits(compiles, LocatorOf!strategy))
     {
         return queryElement(LocatorOf!strategy, value);
     }
@@ -235,7 +236,7 @@ public:
     }
 
     Element[] findMany(string strategy)(string value)
-        if (is(typeof(LocatorOf!strategy) == LocatorStrategy))
+        if (__traits(compiles, LocatorOf!strategy))
     {
         return queryElements(LocatorOf!strategy, value);
     }
@@ -266,6 +267,13 @@ public:
     string screenshot()
     {
         return _client.get!string("/screenshot");
+    }
+
+    // --- Public accessors ---
+
+    string sessionId()
+    {
+        return _client.sessionId;
     }
 
     // --- Package access for Element ---

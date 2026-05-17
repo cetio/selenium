@@ -1,48 +1,44 @@
 module tests.dynamic;
 
-import selenium.api;
-import selenium.driver;
-import selenium.session;
-import std.process : execute;
+import selenium.driver : Driver, DriverType;
+import selenium.element : Element;
+import selenium.errors : WebDriverConnectionError;
+import selenium.locator;
+import selenium.types : Capabilities;
 import std.stdio : writeln;
 import std.string : strip;
 
 unittest
 {
-    string driverPath;
-    DriverType driverType;
+    Driver driver;
 
-    if (execute(["which", "chromedriver"]).status == 0)
+    try
     {
-        driverPath = execute(["which", "chromedriver"]).output.strip;
-        driverType = DriverType.Chrome;
+        driver = Driver.start();
     }
-    else if (execute(["which", "geckodriver"]).status == 0)
-    {
-        driverPath = execute(["which", "geckodriver"]).output.strip;
-        driverType = DriverType.Firefox;
-    }
-
-    if (driverPath.length == 0)
+    catch (WebDriverConnectionError)
     {
         writeln("SKIP: No WebDriver found in PATH.");
         return;
     }
 
-    SeleniumDriver driver = new SeleniumDriver(driverType, driverPath);
-    driver.start();
-    scope(exit) driver.stop();
+    scope(exit)
+        driver.quit();
 
-    assert(driver.isRunning);
+    assert(driver.running);
 
-    immutable SeleniumSession session = driver.newSession(Capabilities.chrome);
-    scope(exit) session.close;
+    driver.url("http://example.com");
+    assert(driver.url == "https://example.com/");
 
-    session.navigation.url("http://example.com");
-    assert(session.navigation.url == "https://example.com/");
-
-    immutable Element heading = session.findOne(tagLocator("h1"));
+    Element heading = driver.findOne!"tag"("h1");
     assert(heading.text == "Example Domain");
+
+    Element byCss = driver.findOne(byCss("h1"));
+    assert(byCss !is null);
+    assert(byCss.text == "Example Domain");
+
+    Element link = driver.findOne!"tag"("a");
+    assert(link !is null);
 
     writeln("PASS: dynamic integration test.");
 }

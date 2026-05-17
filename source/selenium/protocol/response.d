@@ -16,10 +16,32 @@ public:
 
 JSONValue checkAndParse(Response response)
 {
-    JSONValue ret = parseJSON(cast(string)response.content);
+    if (response.content.length == 0)
+        return JSONValue.emptyObject;
+
+    JSONValue ret;
+    try
+    {
+        ret = parseJSON(cast(string)response.content);
+    }
+    catch (Exception)
+    {
+        if (response.status >= 200 && response.status < 300)
+            return JSONValue.emptyObject;
+
+        throw new WebDriverError("Invalid response from server: " ~ cast(string)response.content);
+    }
 
     if (response.status >= 400)
         throw mapError(response.status, ret);
+
+    // Legacy JsonWireProtocol errors come with HTTP 200 but non-zero status field
+    if ("status" in ret && ret["status"].type == JSONType.integer)
+    {
+        long statusCode = ret["status"].get!long;
+        if (statusCode != 0)
+            throw mapErrorLegacy(ret);
+    }
 
     return ret;
 }
@@ -79,6 +101,28 @@ WebDriverError mapError(ushort status, JSONValue json)
     }
 
     return new WebDriverError(message);
+}
+
+WebDriverError mapErrorLegacy(JSONValue json)
+{
+    string message = extractMessage(json);
+    long statusCode = json["status"].get!long;
+
+    switch (statusCode)
+    {
+        case 7:
+            return new NoSuchElementError(message);
+        case 10:
+            return new StaleElementReferenceError(message);
+        case 12:
+            return new InvalidElementStateError(message);
+        case 21:
+            return new WebDriverTimeoutError(message);
+        case 33:
+            return new WebDriverConnectionError(message);
+        default:
+            return new WebDriverError(message);
+    }
 }
 
 string extractMessage(JSONValue json)

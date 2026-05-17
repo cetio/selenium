@@ -1,11 +1,13 @@
 module selenium.locator;
 
+import conductor.serialize.json : Name;
 import selenium.types : LocatorStrategy;
 
 public:
 
 struct ElementLocator
 {
+    @Name("using")
     LocatorStrategy strategy;
     string value;
 }
