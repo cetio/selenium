@@ -141,9 +141,7 @@ public:
     // --- Navigation ---
 
     string url()
-    {
-        return _client.get!string("/url");
-    }
+        => _client.get!string("/url");
 
     void url(string value)
     {
@@ -166,21 +164,15 @@ public:
     }
 
     string title()
-    {
-        return _client.get!string("/title");
-    }
+        => _client.get!string("/title");
 
     string source()
-    {
-        return _client.get!string("/source");
-    }
+        => _client.get!string("/source");
 
     // --- Window / Frame ---
 
     string windowHandle()
-    {
-        return _client.get!string("/window");
-    }
+        => _client.get!string("/window");
 
     void window(string handle)
     {
@@ -188,9 +180,7 @@ public:
     }
 
     string[] windowHandles()
-    {
-        return _client.get!(string[])("/window/handles");
-    }
+        => _client.get!(string[])("/window/handles");
 
     void closeWindow()
     {
@@ -203,9 +193,7 @@ public:
     }
 
     Size windowSize()
-    {
-        return _client.get!Size("/window/rect");
-    }
+        => _client.get!Size("/window/rect");
 
     void windowSize(Size value)
     {
@@ -272,9 +260,7 @@ public:
     // --- Public accessors ---
 
     string sessionId()
-    {
-        return _client.sessionId;
-    }
+        => _client.sessionId;
 
     // --- Package access for Element ---
 

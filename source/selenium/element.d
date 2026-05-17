@@ -2,7 +2,7 @@ module selenium.element;
 
 import selenium.driver : Driver;
 import selenium.locator : ElementLocator;
-import selenium.types : LocatorStrategy, Position, Size, WebElement;
+import selenium.types : LocatorOf, LocatorStrategy, Position, Size, WebElement;
 
 public:
 
@@ -25,7 +25,7 @@ public:
     // --- Search context (scoped to this element) ---
 
     Element findOne(string strategy)(string value)
-        if (is(typeof(LocatorOf!strategy) == LocatorStrategy))
+        if (__traits(compiles, LocatorOf!strategy))
     {
         return _driver.queryElementFrom(_webElement.id, LocatorOf!strategy, value);
     }
@@ -40,7 +40,7 @@ public:
     }
 
     Element[] findMany(string strategy)(string value)
-        if (is(typeof(LocatorOf!strategy) == LocatorStrategy))
+        if (__traits(compiles, LocatorOf!strategy))
     {
         return _driver.queryElementsFrom(_webElement.id, LocatorOf!strategy, value);
     }
@@ -57,14 +57,10 @@ public:
     // --- Properties ---
 
     string text()
-    {
-        return _driver.client.get!string(elementPath("/text"));
-    }
+        => _driver.client.get!string(elementPath("/text"));
 
     string tagName()
-    {
-        return _driver.client.get!string(elementPath("/name"));
-    }
+        => _driver.client.get!string(elementPath("/name"));
 
     void click()
     {
@@ -92,19 +88,13 @@ public:
     }
 
     bool selected()
-    {
-        return _driver.client.get!bool(elementPath("/selected"));
-    }
+        => _driver.client.get!bool(elementPath("/selected"));
 
     bool enabled()
-    {
-        return _driver.client.get!bool(elementPath("/enabled"));
-    }
+        => _driver.client.get!bool(elementPath("/enabled"));
 
     bool displayed()
-    {
-        return _driver.client.get!bool(elementPath("/displayed"));
-    }
+        => _driver.client.get!bool(elementPath("/displayed"));
 
     string attribute(string name)
     {
@@ -117,19 +107,13 @@ public:
     }
 
     Position position()
-    {
-        return _driver.client.get!Position(elementPath("/location"));
-    }
+        => _driver.client.get!Position(elementPath("/location"));
 
     Position positionInView()
-    {
-        return _driver.client.get!Position(elementPath("/location_in_view"));
-    }
+        => _driver.client.get!Position(elementPath("/location_in_view"));
 
     Size size()
-    {
-        return _driver.client.get!Size(elementPath("/size"));
-    }
+        => _driver.client.get!Size(elementPath("/size"));
 
     string screenshot()
     {
