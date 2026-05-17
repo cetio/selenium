@@ -4,7 +4,7 @@ import std.algorithm.searching : canFind;
 import std.conv : to;
 import std.json : JSONValue, parseJSON;
 import std.net.curl : HTTP;
-import std.process : execute, Pid, spawnProcess;
+import std.process : execute, kill, Pid, spawnProcess, wait;
 import std.socket :
     AddressFamily,
     InternetAddress,
@@ -25,7 +25,8 @@ import selenium.protocol.client : Client;
 import selenium.types :
     Capabilities,
     LocatorStrategy,
-    Size;
+    Size,
+    WebElement;
 
 public:
 
@@ -254,7 +255,7 @@ public:
 
     // --- JavaScript / Screenshot ---
 
-    T execute(T = string)(string script, JSONValue args = JSONValue.emptyArray)
+    T executeScript(T = string)(string script, JSONValue args = JSONValue.emptyArray)
     {
         return _client.post!T("/execute", [
             "script": JSONValue(script),
@@ -478,8 +479,8 @@ private:
     {
         try
         {
-            std.process.kill(process);
-            std.process.wait(process);
+            kill(process);
+            wait(process);
         }
         catch (Exception)
         {

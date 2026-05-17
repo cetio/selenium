@@ -1,6 +1,8 @@
 module selenium.page;
 
+import core.thread : Thread;
 import core.time : Duration, seconds;
+import std.conv : to;
 
 import selenium.driver : Driver;
 import selenium.element : Element;
