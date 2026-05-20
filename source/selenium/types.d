@@ -146,6 +146,10 @@ struct Capabilities
             ret["unexpectedAlertBehaviour"] = JSONValue(cast(string)unexpectedAlertBehaviour);
         if (elementScrollBehavior != 0)
             ret["elementScrollBehavior"] = JSONValue(elementScrollBehavior);
+        if (remoteSessionId.length > 0)
+            ret["webdriver.remote.sessionid"] = JSONValue(remoteSessionId);
+        if (remoteQuietExceptions)
+            ret["webdriver.remote.quietExceptions"] = JSONValue(true);
 
         return ret;
     }

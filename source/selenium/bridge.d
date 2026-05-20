@@ -48,8 +48,12 @@ public:
         if (!running)
             throw new WebDriverConnectionError("Bridge is not running.");
 
+        JSONValue caps = capabilities.toJSONValue();
+        JSONValue w3c = JSONValue.emptyObject;
+        w3c["alwaysMatch"] = caps;
         JSONValue payload = JSONValue.emptyObject;
-        payload["desiredCapabilities"] = capabilities.toJSONValue();
+        payload["capabilities"] = w3c;
+        payload["desiredCapabilities"] = caps;
 
         HTTP http = HTTP();
         Response response = send(http, HTTP.Method.post, serverUrl~"/session", payload);

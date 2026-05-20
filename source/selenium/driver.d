@@ -175,7 +175,7 @@ public:
 
     T execute(T = string)(string script, JSONValue args = JSONValue.emptyArray)
     {
-        return bridge.request!T(HTTP.Method.post, "/execute", [
+        return bridge.request!T(HTTP.Method.post, "/execute/sync", [
             "script": JSONValue(script),
             "args": args,
         ]);
