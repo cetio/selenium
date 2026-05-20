@@ -5,7 +5,7 @@ import std.json : JSONValue;
 
 enum DriverType
 {
-    Unknown,
+    Any,
     Chrome,
     Firefox,
     Edge,
@@ -176,11 +176,4 @@ struct Cookie
     bool secure;
     bool httpOnly;
     long expiry;
-}
-
-struct LogEntry
-{
-    long timestamp;
-    string level;
-    string message;
 }

@@ -1,8 +1,8 @@
 {
-    "name": "selenium-d",
+    "name": "selenium-sdk",
     "description": "D Selenium bindings",
-    "copyright": "Copyright © 2015, Szabo Bogdan",
-    "authors": ["Szabo Bogdan"],
+    "copyright": "Copyright © 2015, Szabo Bogdan, cet",
+    "authors": ["Szabo Bogdan", "cet"],
     "license": "MIT",
 
     "dependencies": {

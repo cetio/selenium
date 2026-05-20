@@ -18,44 +18,17 @@ class Driver
 public:
     Bridge bridge;
 
-    static Driver start()
-    {
-        string executablePath = autoDetectExecutable();
-        if (executablePath is null)
-        {
-            throw new WebDriverConnectionError(
-                "No driver configuration was set, and the default configuration failed to match on the system."
-            );
-        }
-
-        return start(inferTypeFromExecutable(executablePath), executablePath, Capabilities.init);
-    }
-
-    static Driver start(Capabilities desiredCapabilities)
-    {
-        string executablePath = autoDetectExecutable();
-        if (executablePath is null)
-        {
-            throw new WebDriverConnectionError(
-                "No driver configuration was set, and the default configuration failed to match on the system."
-            );
-        }
-
-        return start(inferTypeFromExecutable(executablePath), executablePath, desiredCapabilities);
-    }
-
-    static Driver start(DriverType type)
-        => start(type, autoDetectExecutable(type), Capabilities.init);
-
-    static Driver start(DriverType type, string executablePath)
-        => start(type, executablePath, Capabilities.init);
-
     static Driver start(
-        DriverType type,
-        string executablePath,
-        Capabilities desiredCapabilities,
+        DriverType type = DriverType.Any,
+        string executablePath = null,
+        Capabilities desiredCapabilities = Capabilities.init,
     )
     {
+        if (executablePath is null)
+            executablePath = autoDetectExecutable(type);
+        if (type == DriverType.Any)
+            type = inferTypeFromExecutable(executablePath);
+        
         Driver ret = new Driver();
         ret.bridge = new Bridge(type, executablePath);
         ret.bridge.launch();
@@ -187,7 +160,7 @@ public:
 private:
     this() { }
 
-    static string autoDetectExecutable(DriverType type = DriverType.Unknown)
+    static string autoDetectExecutable(DriverType type = DriverType.Any)
     {
         string[] candidates;
         switch (type)
