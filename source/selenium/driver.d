@@ -8,10 +8,10 @@ import selenium.types;
 import std.algorithm.searching : canFind;
 import std.conv : to;
 import std.json : JSONValue;
-import std.net.curl : HTTP;
-import std.process : execute;
+import std.net.curl : HTTP;;
 import std.typecons : Tuple;
 import std.string : strip;
+static import std.process;
 
 class Driver
 {
@@ -20,7 +20,7 @@ public:
 
     static Driver start()
     {
-        string executablePath = tryAutoDetect();
+        string executablePath = autoDetectExecutable();
         if (executablePath is null)
         {
             throw new WebDriverConnectionError(
@@ -33,7 +33,7 @@ public:
 
     static Driver start(Capabilities desiredCapabilities)
     {
-        string executablePath = tryAutoDetect();
+        string executablePath = autoDetectExecutable();
         if (executablePath is null)
         {
             throw new WebDriverConnectionError(
@@ -173,7 +173,7 @@ public:
         return new Element(bridge, Bridge.parseElementId(resp));
     }
 
-    T executeScript(T = string)(string script, JSONValue args = JSONValue.emptyArray)
+    T execute(T = string)(string script, JSONValue args = JSONValue.emptyArray)
     {
         return bridge.request!T(HTTP.Method.post, "/execute", [
             "script": JSONValue(script),
@@ -187,39 +187,10 @@ public:
 private:
     this() { }
 
-    static string tryAutoDetect()
-    {
-        string[][DriverType] candidates = [
-            DriverType.Chrome: ["chromedriver"],
-            DriverType.Firefox: ["geckodriver"],
-            DriverType.Edge: ["msedgedriver"],
-            DriverType.Safari: ["safaridriver"],
-        ];
-
-        DriverType[] priority = [
-            DriverType.Chrome,
-            DriverType.Firefox,
-            DriverType.Edge,
-            DriverType.Safari,
-        ];
-
-        foreach (type; priority)
-        {
-            foreach (candidate; candidates[type])
-            {
-                Tuple!(int, "status", string, "output") result = execute(["which", candidate]);
-                if (result.status == 0)
-                    return result.output.strip;
-            }
-        }
-
-        return null;
-    }
-
-    static string autoDetectExecutable(DriverType type)
+    static string autoDetectExecutable(DriverType type = DriverType.Unknown)
     {
         string[] candidates;
-        final switch (type)
+        switch (type)
         {
             case DriverType.Chrome:
                 candidates = ["chromedriver"];
@@ -233,11 +204,19 @@ private:
             case DriverType.Safari:
                 candidates = ["safaridriver"];
                 break;
+            default:
+                candidates = [
+                    "chromedriver",
+                    "msedgedriver",
+                    "safaridriver",
+                    "geckodriver"
+                ];
+                break;
         }
 
         foreach (candidate; candidates)
         {
-            Tuple!(int, "status", string, "output") result = execute(["which", candidate]);
+            Tuple!(int, "status", string, "output") result = std.process.execute(["which", candidate]);
             if (result.status == 0)
                 return result.output.strip;
         }

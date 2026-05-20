@@ -5,8 +5,6 @@ import selenium.element : Element;
 import selenium.errors : WebDriverConnectionError;
 import selenium.types : LocatorStrategy;
 
-import std.stdio : writeln;
-
 unittest
 {
     Driver driver;
@@ -14,10 +12,7 @@ unittest
     try
         driver = Driver.start();
     catch (WebDriverConnectionError)
-    {
-        writeln("SKIP: No WebDriver found in PATH.");
         return;
-    }
 
     scope(exit)
         driver.quit();
@@ -36,6 +31,4 @@ unittest
 
     Element link = driver.find(LocatorStrategy.TagName, "a");
     assert(link !is null);
-
-    writeln("PASS: dynamic integration test.");
 }

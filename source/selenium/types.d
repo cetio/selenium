@@ -5,6 +5,7 @@ import std.json : JSONValue;
 
 enum DriverType
 {
+    Unknown,
     Chrome,
     Firefox,
     Edge,
