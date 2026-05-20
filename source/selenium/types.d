@@ -3,6 +3,14 @@ module selenium.types;
 import conductor.serialize.json : Name;
 import std.json : JSONValue;
 
+enum DriverType
+{
+    Chrome,
+    Firefox,
+    Edge,
+    Safari
+}
+
 enum Browser : string
 {
     Android = "android",
@@ -64,28 +72,6 @@ enum Orientation : string
 {
     Landscape = "LANDSCAPE",
     Portrait = "PORTRAIT"
-}
-
-template LocatorOf(string strategy)
-{
-    static if (strategy == "class")
-        enum LocatorStrategy LocatorOf = LocatorStrategy.ClassName;
-    else static if (strategy == "css")
-        enum LocatorStrategy LocatorOf = LocatorStrategy.CssSelector;
-    else static if (strategy == "id")
-        enum LocatorStrategy LocatorOf = LocatorStrategy.Id;
-    else static if (strategy == "name")
-        enum LocatorStrategy LocatorOf = LocatorStrategy.Name;
-    else static if (strategy == "linkText")
-        enum LocatorStrategy LocatorOf = LocatorStrategy.LinkText;
-    else static if (strategy == "partialLinkText")
-        enum LocatorStrategy LocatorOf = LocatorStrategy.PartialLinkText;
-    else static if (strategy == "tag")
-        enum LocatorStrategy LocatorOf = LocatorStrategy.TagName;
-    else static if (strategy == "xpath")
-        enum LocatorStrategy LocatorOf = LocatorStrategy.XPath;
-    else
-        static assert(false, "Unknown locator strategy:"~strategy);
 }
 
 struct Capabilities
@@ -185,11 +171,6 @@ struct Cookie
     bool secure;
     bool httpOnly;
     long expiry;
-}
-
-struct WebElement
-{
-    string id;
 }
 
 struct LogEntry

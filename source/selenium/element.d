@@ -1,74 +1,63 @@
 module selenium.element;
 
-import selenium.driver : Driver;
-import selenium.locator : ElementLocator;
-import selenium.types : LocatorOf, LocatorStrategy, Position, Size, WebElement;
+import selenium.bridge : Bridge;
+import selenium.types : LocatorStrategy, Position, Size;
+
+import std.json : JSONValue;
+import std.net.curl : HTTP;
 
 class Element
 {
-private:
-    Driver driver;
-    WebElement webElement;
-
 public:
-    this(Driver driver, WebElement webElement)
+    Bridge bridge;
+    string id;
+
+    this(Bridge bridge, string id)
     {
-        this.driver = driver;
-        this.webElement = webElement;
+        this.bridge = bridge;
+        this.id = id;
     }
 
-    string id() const
-        => webElement.id;
-
-    // --- Search context (scoped to this element) ---
-
-    Element findOne(string strategy)(string value)
-        if (__traits(compiles, LocatorOf!strategy))
-        => driver.queryElementFrom(webElement.id, LocatorOf!strategy, value);
-
-    Element findOne(ElementLocator locator)
+    Element find(LocatorStrategy strategy, string value)
     {
-        return driver.queryElementFrom(
-            webElement.id,
-            locator.strategy,
-            locator.value
-        );
+        JSONValue body_ = JSONValue.emptyObject;
+        body_["using"] = cast(string)strategy;
+        body_["value"] = value;
+        JSONValue resp = bridge.request(HTTP.Method.post, path("/element"), body_);
+        return new Element(bridge, Bridge.parseElementId(resp));
     }
 
-    Element[] findMany(string strategy)(string value)
-        if (__traits(compiles, LocatorOf!strategy))
-        => driver.queryElementsFrom(webElement.id, LocatorOf!strategy, value);
-
-    Element[] findMany(ElementLocator locator)
+    Element[] findAll(LocatorStrategy strategy, string value)
     {
-        return driver.queryElementsFrom(
-            webElement.id,
-            locator.strategy,
-            locator.value
-        );
+        JSONValue body_ = JSONValue.emptyObject;
+        body_["using"] = cast(string)strategy;
+        body_["value"] = value;
+        JSONValue resp = bridge.request(HTTP.Method.post, path("/elements"), body_);
+        Element[] ret;
+        foreach (eid; Bridge.parseElementIds(resp))
+            ret ~= new Element(bridge, eid);
+        return ret;
     }
-
-    // --- Properties ---
 
     string text()
-        => driver.client.get!string(elementPath("/text"));
+        => bridge.request!string(HTTP.Method.get, path("/text"));
 
     string tagName()
-        => driver.client.get!string(elementPath("/name"));
+        => bridge.request!string(HTTP.Method.get, path("/name"));
 
     void click()
     {
-        driver.client.post(elementPath("/click"));
+        bridge.request(HTTP.Method.post, path("/click"));
     }
 
     void submit()
     {
-        driver.client.post(elementPath("/submit"));
+        bridge.request(HTTP.Method.post, path("/submit"));
     }
 
     void sendKeys(string[] keys)
     {
-        driver.client.post(elementPath("/value"), ["value": keys]);
+        bridge.request(HTTP.Method.post, path("/value"), ["value": keys]);
     }
 
     void sendKeys(string keys)
@@ -78,45 +67,37 @@ public:
 
     void clear()
     {
-        driver.client.post(elementPath("/clear"));
+        bridge.request(HTTP.Method.post, path("/clear"));
     }
 
     bool selected()
-        => driver.client.get!bool(elementPath("/selected"));
+        => bridge.request!bool(HTTP.Method.get, path("/selected"));
 
     bool enabled()
-        => driver.client.get!bool(elementPath("/enabled"));
+        => bridge.request!bool(HTTP.Method.get, path("/enabled"));
 
     bool displayed()
-        => driver.client.get!bool(elementPath("/displayed"));
+        => bridge.request!bool(HTTP.Method.get, path("/displayed"));
 
     string attribute(string name)
-    {
-        return driver.client.get!string(elementPath("/attribute/"~name));
-    }
+        => bridge.request!string(HTTP.Method.get, path("/attribute/"~name));
 
     string cssValue(string property)
-    {
-        return driver.client.get!string(elementPath("/css/"~property));
-    }
+        => bridge.request!string(HTTP.Method.get, path("/css/"~property));
 
     Position position()
-        => driver.client.get!Position(elementPath("/location"));
+        => bridge.request!Position(HTTP.Method.get, path("/location"));
 
     Position positionInView()
-        => driver.client.get!Position(elementPath("/location_in_view"));
+        => bridge.request!Position(HTTP.Method.get, path("/location_in_view"));
 
     Size size()
-        => driver.client.get!Size(elementPath("/size"));
+        => bridge.request!Size(HTTP.Method.get, path("/size"));
 
     string screenshot()
-    {
-        return driver.client.get!string(elementPath("/screenshot"));
-    }
+        => bridge.request!string(HTTP.Method.get, path("/screenshot"));
 
 private:
-    string elementPath(string suffix)
-    {
-        return "/element/"~webElement.id~suffix;
-    }
+    string path(string suffix)
+        => "/element/"~id~suffix;
 }

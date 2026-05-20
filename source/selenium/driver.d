@@ -1,56 +1,22 @@
 module selenium.driver;
 
+import selenium.bridge : Bridge;
 import selenium.element : Element;
 import selenium.errors : WebDriverConnectionError;
-import selenium.locator : ElementLocator;
-import selenium.protocol.client : Client;
 import selenium.types;
-
-import conductor.http : Response, send;
 
 import std.algorithm.searching : canFind;
 import std.conv : to;
-import std.json : JSONValue, parseJSON;
+import std.json : JSONValue;
 import std.net.curl : HTTP;
-import std.process : execute, kill, Pid, spawnProcess, wait;
-import std.socket;
+import std.process : execute;
+import std.typecons : Tuple;
 import std.string : strip;
-import core.thread : Thread;
-import core.time : MonoTime, msecs;
-
-enum DriverType
-{
-    Chrome,
-    Firefox,
-    Edge,
-    Safari
-}
 
 class Driver
 {
-private:
-    DriverType type;
-    string executablePath;
-    Pid pid;
-    string _serverUrl;
-    ushort port;
-    bool _running;
-    Client _client;
-
-    this(DriverType driverType, string executablePath)
-    {
-        type = driverType;
-        this.executablePath = executablePath;
-    }
-
 public:
-    bool running() const
-        => _running;
-
-    string serverUrl() const
-        => _serverUrl;
-
-    // --- Factory methods ---
+    Bridge bridge;
 
     static Driver start()
     {
@@ -62,8 +28,7 @@ public:
             );
         }
 
-        DriverType type = inferTypeFromExecutable(executablePath);
-        return start(type, executablePath, Capabilities.init);
+        return start(inferTypeFromExecutable(executablePath), executablePath, Capabilities.init);
     }
 
     static Driver start(Capabilities desiredCapabilities)
@@ -76,20 +41,14 @@ public:
             );
         }
 
-        DriverType type = inferTypeFromExecutable(executablePath);
-        return start(type, executablePath, desiredCapabilities);
+        return start(inferTypeFromExecutable(executablePath), executablePath, desiredCapabilities);
     }
 
     static Driver start(DriverType type)
-    {
-        string executablePath = autoDetectExecutable(type);
-        return start(type, executablePath, Capabilities.init);
-    }
+        => start(type, autoDetectExecutable(type), Capabilities.init);
 
     static Driver start(DriverType type, string executablePath)
-    {
-        return start(type, executablePath, Capabilities.init);
-    }
+        => start(type, executablePath, Capabilities.init);
 
     static Driver start(
         DriverType type,
@@ -97,265 +56,136 @@ public:
         Capabilities desiredCapabilities,
     )
     {
-        Driver ret = new Driver(type, executablePath);
-        ret.launch();
-        ret.createSession(desiredCapabilities);
+        Driver ret = new Driver();
+        ret.bridge = new Bridge(type, executablePath);
+        ret.bridge.launch();
+        ret.bridge.init(desiredCapabilities);
         return ret;
     }
 
-    // --- Process management ---
+    void quit()
+    {
+        if (bridge is null)
+            return;
+
+        bridge.disconnect();
+        bridge.stop();
+    }
 
     void stop()
     {
-        if (!_running || pid is Pid.init)
-            return;
-
-        tryKill(pid);
-        _running = false;
-        pid = Pid.init;
+        if (bridge !is null)
+            bridge.stop();
     }
-
-    // --- Session lifecycle ---
-
-    void quit()
-    {
-        if (_client !is null)
-            _client.disconnect();
-
-        stop();
-    }
-
-    // --- Navigation ---
 
     string url()
-        => _client.get!string("/url");
+        => bridge.request!string(HTTP.Method.get, "/url");
 
     void navigate(string url)
     {
-        _client.post("/url", ["url": url]);
+        bridge.request(HTTP.Method.post, "/url", ["url": url]);
     }
 
     void back()
     {
-        _client.post("/back");
+        bridge.request(HTTP.Method.post, "/back");
     }
 
     void forward()
     {
-        _client.post("/forward");
+        bridge.request(HTTP.Method.post, "/forward");
     }
 
     void refresh()
     {
-        _client.post("/refresh");
+        bridge.request(HTTP.Method.post, "/refresh");
     }
 
     string title()
-        => _client.get!string("/title");
+        => bridge.request!string(HTTP.Method.get, "/title");
 
     string source()
-        => _client.get!string("/source");
-
-    // --- Window / Frame ---
+        => bridge.request!string(HTTP.Method.get, "/source");
 
     string windowHandle()
-        => _client.get!string("/window");
+        => bridge.request!string(HTTP.Method.get, "/window");
 
     void window(string handle)
     {
-        _client.post("/window", ["handle": handle]);
+        bridge.request(HTTP.Method.post, "/window", ["handle": handle]);
     }
 
     string[] windowHandles()
-        => _client.get!(string[])("/window/handles");
+        => bridge.handles();
 
     void closeWindow()
     {
-        _client.delete_("/window");
+        bridge.request(HTTP.Method.del, "/window");
     }
 
     void maximize()
     {
-        _client.post("/window/maximize");
+        bridge.request(HTTP.Method.post, "/window/maximize");
     }
 
     Size windowSize()
-        => _client.get!Size("/window/rect");
+        => bridge.request!Size(HTTP.Method.get, "/window/rect");
 
     void windowSize(Size value)
     {
-        _client.post("/window/rect", value);
+        bridge.request(HTTP.Method.post, "/window/rect", value);
     }
 
     void frame(string id)
     {
-        _client.post("/frame", ["id": id]);
+        bridge.request(HTTP.Method.post, "/frame", ["id": id]);
     }
 
     void frame(long id)
     {
-        _client.post("/frame", ["id": id]);
+        bridge.request(HTTP.Method.post, "/frame", ["id": id]);
     }
 
-    // --- Search context (Driver-level) ---
-
-    Element findOne(string strategy)(string value)
-        if (__traits(compiles, LocatorOf!strategy))
+    Element find(LocatorStrategy strategy, string value)
     {
-        return queryElement(LocatorOf!strategy, value);
+        JSONValue body_ = JSONValue.emptyObject;
+        body_["using"] = cast(string)strategy;
+        body_["value"] = value;
+        JSONValue resp = bridge.request(HTTP.Method.post, "/element", body_);
+        return new Element(bridge, Bridge.parseElementId(resp));
     }
 
-    Element findOne(ElementLocator locator)
+    Element[] findAll(LocatorStrategy strategy, string value)
     {
-        return queryElement(locator.strategy, locator.value);
-    }
-
-    Element[] findMany(string strategy)(string value)
-        if (__traits(compiles, LocatorOf!strategy))
-    {
-        return queryElements(LocatorOf!strategy, value);
-    }
-
-    Element[] findMany(ElementLocator locator)
-    {
-        return queryElements(locator.strategy, locator.value);
+        JSONValue body_ = JSONValue.emptyObject;
+        body_["using"] = cast(string)strategy;
+        body_["value"] = value;
+        JSONValue resp = bridge.request(HTTP.Method.post, "/elements", body_);
+        Element[] ret;
+        foreach (eid; Bridge.parseElementIds(resp))
+            ret ~= new Element(bridge, eid);
+        return ret;
     }
 
     Element activeElement()
     {
-        return new Element(
-            this,
-            _client.post!(WebElement)("/element/active")
-        );
+        JSONValue resp = bridge.request(HTTP.Method.post, "/element/active");
+        return new Element(bridge, Bridge.parseElementId(resp));
     }
-
-    // --- JavaScript / Screenshot ---
 
     T executeScript(T = string)(string script, JSONValue args = JSONValue.emptyArray)
     {
-        return _client.post!T("/execute", [
+        return bridge.request!T(HTTP.Method.post, "/execute", [
             "script": JSONValue(script),
             "args": args,
         ]);
     }
 
     string screenshot()
-    {
-        return _client.get!string("/screenshot");
-    }
-
-    // --- Public accessors ---
-
-    string sessionId()
-        => _client.sessionId;
-
-    // --- Package access for Element ---
-
-    package Client client()
-        => _client;
-
-    package Element queryElement(LocatorStrategy strategy, string value)
-    {
-        import selenium.types : WebElement;
-
-        WebElement webElement = _client.post!(WebElement)(
-            "/element",
-            ElementLocator(strategy, value)
-        );
-        return new Element(this, webElement);
-    }
-
-    package Element[] queryElements(LocatorStrategy strategy, string value)
-    {
-        import selenium.types : WebElement;
-
-        WebElement[] webElements = _client.post!(WebElement[])(
-            "/elements",
-            ElementLocator(strategy, value)
-        );
-        Element[] ret;
-        foreach (webElement; webElements)
-            ret ~= new Element(this, webElement);
-        return ret;
-    }
-
-    package Element queryElementFrom(string parentId, LocatorStrategy strategy, string value)
-    {
-        import selenium.types : WebElement;
-
-        WebElement webElement = _client.post!(WebElement)(
-            "/element/"~parentId~"/element",
-            ElementLocator(strategy, value)
-        );
-        return new Element(this, webElement);
-    }
-
-    package Element[] queryElementsFrom(string parentId, LocatorStrategy strategy, string value)
-    {
-        import selenium.types : WebElement;
-
-        WebElement[] webElements = _client.post!(WebElement[])(
-            "/element/"~parentId~"/elements",
-            ElementLocator(strategy, value)
-        );
-        Element[] ret;
-        foreach (webElement; webElements)
-            ret ~= new Element(this, webElement);
-        return ret;
-    }
+        => bridge.request!string(HTTP.Method.get, "/screenshot");
 
 private:
-    void launch(ushort requestedPort = 0)
-    {
-        if (_running)
-            return;
-
-        port = requestedPort == 0 ? findFreePort() : requestedPort;
-        string[] args = ["--port="~port.to!string];
-
-        pid = spawnProcess([executablePath]~args);
-        _serverUrl = "http://127.0.0.1:"~port.to!string;
-
-        waitForServer(5000);
-        _running = true;
-    }
-
-    void createSession(Capabilities desiredCapabilities)
-    {
-        if (!_running)
-            throw new WebDriverConnectionError("Driver is not running.");
-
-        JSONValue payload = JSONValue.emptyObject;
-        payload["desiredCapabilities"] = desiredCapabilities.toJSONValue();
-
-        HTTP http = HTTP();
-        Response response = send(
-            http,
-            HTTP.Method.post,
-            _serverUrl~"/session",
-            payload,
-        );
-
-        JSONValue json = parseJSON(cast(string)response.content);
-        string sessionId;
-
-        if ("sessionId" in json)
-            sessionId = json["sessionId"].str;
-        else if ("value" in json && "sessionId" in json["value"])
-            sessionId = json["value"]["sessionId"].str;
-
-        _client = new Client(_serverUrl, sessionId);
-    }
-
-    ushort findFreePort()
-    {
-        Socket socket = new Socket(AddressFamily.INET, SocketType.STREAM);
-        socket.setOption(SocketOptionLevel.SOCKET, SocketOption.REUSEADDR, true);
-        socket.bind(new InternetAddress("127.0.0.1", 0));
-        ushort ret = (cast(InternetAddress)socket.localAddress).port;
-        socket.close();
-        return ret;
-    }
+    this() { }
 
     static string tryAutoDetect()
     {
@@ -377,7 +207,7 @@ private:
         {
             foreach (candidate; candidates[type])
             {
-                auto result = execute(["which", candidate]);
+                Tuple!(int, "status", string, "output") result = execute(["which", candidate]);
                 if (result.status == 0)
                     return result.output.strip;
             }
@@ -407,7 +237,7 @@ private:
 
         foreach (candidate; candidates)
         {
-            auto result = execute(["which", candidate]);
+            Tuple!(int, "status", string, "output") result = execute(["which", candidate]);
             if (result.status == 0)
                 return result.output.strip;
         }
@@ -429,40 +259,5 @@ private:
             return DriverType.Safari;
 
         return DriverType.Chrome;
-    }
-
-    void waitForServer(long timeoutMs)
-    {
-        MonoTime startTime = MonoTime.currTime;
-
-        while ((MonoTime.currTime - startTime).total!"msecs" < timeoutMs)
-        {
-            try
-            {
-                HTTP http = HTTP();
-                Response response = send(http, HTTP.Method.get, _serverUrl~"/status");
-                if (response.status == 200)
-                    return;
-            }
-            catch (Exception)
-            {
-            }
-
-            Thread.sleep(100.msecs);
-        }
-
-        throw new WebDriverConnectionError(
-            "WebDriver did not become ready within "~timeoutMs.to!string~" ms"
-        );
-    }
-
-    static void tryKill(Pid process)
-    {
-        try
-        {
-            kill(process);
-            wait(process);
-        }
-        catch (Exception) { }
     }
 }

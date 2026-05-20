@@ -3,7 +3,8 @@ module tests.dynamic;
 import selenium.driver : Driver;
 import selenium.element : Element;
 import selenium.errors : WebDriverConnectionError;
-import selenium.locator;
+import selenium.types : LocatorStrategy;
+
 import std.stdio : writeln;
 
 unittest
@@ -11,9 +12,7 @@ unittest
     Driver driver;
 
     try
-    {
         driver = Driver.start();
-    }
     catch (WebDriverConnectionError)
     {
         writeln("SKIP: No WebDriver found in PATH.");
@@ -23,19 +22,19 @@ unittest
     scope(exit)
         driver.quit();
 
-    assert(driver.running);
+    assert(driver.bridge.running);
 
     driver.navigate("http://example.com");
     assert(driver.url == "https://example.com/");
 
-    Element heading = driver.findOne!"tag"("h1");
+    Element heading = driver.find(LocatorStrategy.TagName, "h1");
     assert(heading.text == "Example Domain");
 
-    Element byCss = driver.findOne(byCss("h1"));
+    Element byCss = driver.find(LocatorStrategy.CssSelector, "h1");
     assert(byCss !is null);
     assert(byCss.text == "Example Domain");
 
-    Element link = driver.findOne!"tag"("a");
+    Element link = driver.find(LocatorStrategy.TagName, "a");
     assert(link !is null);
 
     writeln("PASS: dynamic integration test.");
