@@ -9,8 +9,7 @@ enum LogType
     Client = 1 << 0,
     Browser = 1 << 1,
     Driver = 1 << 2,
-    Performance = 1 << 3,
-    Server = 1 << 4
+    Performance = 1 << 3
 }
 
 string wireName(LogType type)
@@ -27,8 +26,6 @@ string wireName(LogType type)
             return "driver";
         case LogType.Performance:
             return "performance";
-        case LogType.Server:
-            return "server";
     }
 }
 

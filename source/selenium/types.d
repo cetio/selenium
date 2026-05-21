@@ -158,7 +158,7 @@ struct Options
         if (logTypes != LogType.None)
         {
             JSONValue prefs = JSONValue.emptyObject;
-            foreach (type; [LogType.Client, LogType.Browser, LogType.Driver, LogType.Performance, LogType.Server])
+            foreach (type; [LogType.Client, LogType.Browser, LogType.Driver, LogType.Performance])
             {
                 if (logTypes & type)
                     prefs[wireName(type)] = JSONValue(logLevel);
