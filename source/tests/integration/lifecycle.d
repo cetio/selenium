@@ -63,6 +63,6 @@ unittest
     catch (WebDriverConnectionError)
         return;
 
-    driver.stop();
+    driver.quit();
     driver.stop();
 }

@@ -85,6 +85,9 @@ public:
 
     T request(T = JSONValue)(HTTP.Method method, string path)
     {
+        if (method == HTTP.Method.post)
+            return request!T(method, path, JSONValue.emptyObject);
+
         HTTP http = HTTP();
         Response response = send(http, method, sessionPath(path));
         JSONValue json = checkAndParse(response);

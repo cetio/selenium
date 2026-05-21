@@ -69,6 +69,7 @@ public:
                 LogEntry entry = LogEntry.fromJSON(item);
                 entries[type] ~= entry;
 
+                // TODO: This is terrible and we should not sink all at once.
                 if (File* sink = type in destination)
                     sink.writeln("["~wireName(type)~"]["~entry.level~"] "~entry.message);
             }
@@ -158,7 +159,7 @@ public:
         bridge.request(HTTP.Method.post, "/frame", ["id": id]);
     }
 
-    Element find(LocatorStrategy strategy, string value)
+    Element find(Locator strategy, string value)
     {
         JSONValue body_ = JSONValue.emptyObject;
         body_["using"] = cast(string)strategy;
@@ -167,7 +168,7 @@ public:
         return new Element(bridge, Bridge.parseElementId(resp));
     }
 
-    Element[] findAll(LocatorStrategy strategy, string value)
+    Element[] findAll(Locator strategy, string value)
     {
         JSONValue body_ = JSONValue.emptyObject;
         body_["using"] = cast(string)strategy;
@@ -180,10 +181,7 @@ public:
     }
 
     Element activeElement()
-    {
-        JSONValue resp = bridge.request(HTTP.Method.post, "/element/active");
-        return new Element(bridge, Bridge.parseElementId(resp));
-    }
+        => new Element(bridge, Bridge.parseElementId(bridge.request(HTTP.Method.get, "/element/active")));
 
     T execute(T = string)(string script, JSONValue args = JSONValue.emptyArray)
     {

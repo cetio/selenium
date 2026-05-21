@@ -1,7 +1,7 @@
 module selenium.element;
 
 import selenium.bridge : Bridge;
-import selenium.types : LocatorStrategy, Position, Size;
+import selenium.types : Locator, Position, Size;
 
 import std.json : JSONValue;
 import std.net.curl : HTTP;
@@ -18,7 +18,7 @@ public:
         this.id = id;
     }
 
-    Element find(LocatorStrategy strategy, string value)
+    Element find(Locator strategy, string value)
     {
         JSONValue body_ = JSONValue.emptyObject;
         body_["using"] = cast(string)strategy;
@@ -27,7 +27,7 @@ public:
         return new Element(bridge, Bridge.parseElementId(resp));
     }
 
-    Element[] findAll(LocatorStrategy strategy, string value)
+    Element[] findAll(Locator strategy, string value)
     {
         JSONValue body_ = JSONValue.emptyObject;
         body_["using"] = cast(string)strategy;

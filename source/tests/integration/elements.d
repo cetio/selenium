@@ -3,7 +3,7 @@ module tests.integration.elements;
 import selenium.driver : Driver;
 import selenium.element : Element;
 import selenium.errors : NoSuchElementError, StaleElementReferenceError, WebDriverConnectionError;
-import selenium.types : LocatorStrategy;
+import selenium.types : Locator;
 
 import std.conv : to;
 import std.exception : assertThrown;
@@ -36,7 +36,7 @@ unittest
     driver.navigate(PAGE_A);
 
     assertThrown!NoSuchElementError(
-        driver.find(LocatorStrategy.CssSelector, "#does-not-exist")
+        driver.find(Locator.CssSelector, "#does-not-exist")
     );
 }
 
@@ -53,7 +53,7 @@ unittest
         driver.quit();
 
     driver.navigate(PAGE_A);
-    Element heading = driver.find(LocatorStrategy.TagName, "h1");
+    Element heading = driver.find(Locator.TagName, "h1");
     driver.navigate(PAGE_B);
 
     assertThrown!StaleElementReferenceError(heading.text);
@@ -72,7 +72,7 @@ unittest
         driver.quit();
 
     driver.navigate(PAGE_A);
-    Element[] found = driver.findAll(LocatorStrategy.CssSelector, ".no-such-class");
+    Element[] found = driver.findAll(Locator.CssSelector, ".no-such-class");
     assert(found.length == 0);
 }
 
@@ -89,7 +89,7 @@ unittest
         driver.quit();
 
     driver.navigate(makePage("<input id='in' type='text'/>"));
-    Element input = driver.find(LocatorStrategy.CssSelector, "#in");
+    Element input = driver.find(Locator.CssSelector, "#in");
     input.click();
     Element active = driver.activeElement();
     assert(active !is null);

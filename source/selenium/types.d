@@ -38,7 +38,7 @@ enum Platform : string
     Android = "Android"
 }
 
-enum LocatorStrategy : string
+enum Locator : string
 {
     ClassName = "class name",
     CssSelector = "css selector",
