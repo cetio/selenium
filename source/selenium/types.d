@@ -160,8 +160,12 @@ struct Options
             JSONValue prefs = JSONValue.emptyObject;
             foreach (type; [LogType.Client, LogType.Browser, LogType.Driver, LogType.Performance])
             {
-                if (logTypes & type)
-                    prefs[wireName(type)] = JSONValue(logLevel);
+                if (!(logTypes & type))
+                    continue;
+                string name = wireName(type);
+                if (name.length == 0)
+                    continue;
+                prefs[name] = JSONValue(logLevel);
             }
             ret["loggingPrefs"] = prefs;
             ret["goog:loggingPrefs"] = prefs;

@@ -49,7 +49,7 @@ public:
         if (bridge is null || !bridge.running || options.logTypes == LogType.None)
             return;
 
-        foreach (type; [LogType.Client, LogType.Browser, LogType.Driver, LogType.Performance])
+        foreach (type; [LogType.Browser, LogType.Driver, LogType.Performance])
         {
             if (!(options.logTypes & type))
                 continue;

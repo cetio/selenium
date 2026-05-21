@@ -17,9 +17,8 @@ string wireName(LogType type)
     final switch (type)
     {
         case LogType.None:
-            return null;
         case LogType.Client:
-            return "client";
+            return null;
         case LogType.Browser:
             return "browser";
         case LogType.Driver:
