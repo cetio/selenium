@@ -3,12 +3,14 @@ module selenium.driver;
 import selenium.bridge : Bridge;
 import selenium.element : Element;
 import selenium.errors : WebDriverConnectionError;
+import selenium.log : LogEntry, LogType, wireName;
 import selenium.types;
 
 import std.algorithm.searching : canFind;
 import std.conv : to;
-import std.json : JSONValue;
+import std.json : JSONType, JSONValue;
 import std.net.curl : HTTP;;
+import std.stdio : File, stderr, stdout;
 import std.typecons : Tuple;
 import std.string : strip;
 static import std.process;
@@ -17,23 +19,60 @@ class Driver
 {
 public:
     Bridge bridge;
+    Options options;
+    LogEntry[][LogType] entries;
+    File[LogType] destination;
 
     static Driver start(
         DriverType type = DriverType.Any,
         string executablePath = null,
-        Capabilities desiredCapabilities = Capabilities.init,
+        Options options = Options.init,
     )
     {
         if (executablePath is null)
             executablePath = autoDetectExecutable(type);
         if (type == DriverType.Any)
             type = inferTypeFromExecutable(executablePath);
-        
+
         Driver ret = new Driver();
+        ret.options = options;
+        ret.destination[LogType.Browser] = stdout;
+        ret.destination[LogType.Driver] = stderr;
         ret.bridge = new Bridge(type, executablePath);
         ret.bridge.launch();
-        ret.bridge.init(desiredCapabilities);
+        ret.bridge.init(options);
         return ret;
+    }
+
+    void fetchLogs()
+    {
+        if (bridge is null || !bridge.running || options.logTypes == LogType.None)
+            return;
+
+        foreach (type; [LogType.Client, LogType.Browser, LogType.Driver, LogType.Performance, LogType.Server])
+        {
+            if (!(options.logTypes & type))
+                continue;
+
+            JSONValue resp;
+            try
+                resp = bridge.request(HTTP.Method.post, "/log", ["type": wireName(type)]);
+            catch (Exception)
+                continue;
+
+            JSONValue value = ("value" in resp) ? resp["value"] : resp;
+            if (value.type != JSONType.array)
+                continue;
+
+            foreach (item; value.array)
+            {
+                LogEntry entry = LogEntry.fromJSON(item);
+                entries[type] ~= entry;
+
+                if (File* sink = type in destination)
+                    sink.writeln("["~wireName(type)~"]["~entry.level~"] "~entry.message);
+            }
+        }
     }
 
     void quit()

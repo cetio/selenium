@@ -4,5 +4,5 @@ __dummy.html
 *.o
 *.obj
 *.a
-selenium-sdk
+selenium-sdk*
 plans/*

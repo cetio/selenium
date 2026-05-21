@@ -1,5 +1,7 @@
 module selenium.types;
 
+import selenium.log : LogType, wireName;
+
 import conductor.serialize.json : Name;
 import std.json : JSONValue;
 
@@ -75,7 +77,7 @@ enum Orientation : string
     Portrait = "PORTRAIT"
 }
 
-struct Capabilities
+struct Options
 {
     Browser browserName;
     string browserVersion;
@@ -101,9 +103,12 @@ struct Capabilities
     @Name("webdriver.remote.quietExceptions")
     bool remoteQuietExceptions;
 
-    static Capabilities chrome()
+    LogType logTypes = LogType.None;
+    string logLevel = "ALL";
+
+    static Options chrome()
     {
-        Capabilities ret;
+        Options ret;
         ret.browserName = Browser.Chrome;
         return ret;
     }
@@ -150,6 +155,17 @@ struct Capabilities
             ret["webdriver.remote.sessionid"] = JSONValue(remoteSessionId);
         if (remoteQuietExceptions)
             ret["webdriver.remote.quietExceptions"] = JSONValue(true);
+        if (logTypes != LogType.None)
+        {
+            JSONValue prefs = JSONValue.emptyObject;
+            foreach (type; [LogType.Client, LogType.Browser, LogType.Driver, LogType.Performance, LogType.Server])
+            {
+                if (logTypes & type)
+                    prefs[wireName(type)] = JSONValue(logLevel);
+            }
+            ret["loggingPrefs"] = prefs;
+            ret["goog:loggingPrefs"] = prefs;
+        }
 
         return ret;
     }

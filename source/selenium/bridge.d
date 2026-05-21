@@ -43,12 +43,12 @@ public:
         running = true;
     }
 
-    void init(Capabilities capabilities)
+    void init(Options options)
     {
         if (!running)
             throw new WebDriverConnectionError("Bridge is not running.");
 
-        JSONValue caps = capabilities.toJSONValue();
+        JSONValue caps = options.toJSONValue();
         JSONValue w3c = JSONValue.emptyObject;
         w3c["alwaysMatch"] = caps;
         JSONValue payload = JSONValue.emptyObject;
