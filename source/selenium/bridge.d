@@ -54,7 +54,6 @@ public:
         w3c["alwaysMatch"] = caps;
         JSONValue payload = JSONValue.emptyObject;
         payload["capabilities"] = w3c;
-        payload["desiredCapabilities"] = caps;
 
         HTTP http = HTTP();
         Response response = send(http, HTTP.Method.post, serverUrl~"/session", payload);
