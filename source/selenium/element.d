@@ -3,6 +3,7 @@ module selenium.element;
 import selenium.bridge : Bridge;
 import selenium.types : Locator, Position, Size;
 
+import std.array : join;
 import std.json : JSONValue;
 import std.net.curl : HTTP;
 
@@ -61,7 +62,7 @@ public:
 
     void sendKeys(string[] keys)
     {
-        bridge.request(HTTP.Method.post, path("/value"), ["value": keys]);
+        bridge.request(HTTP.Method.post, path("/value"), ["text": keys.join]);
     }
 
     void sendKeys(string keys)
