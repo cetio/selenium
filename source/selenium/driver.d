@@ -44,7 +44,7 @@ public:
         ret.bridge = new Bridge(type, executablePath);
         ret.bridge.launch();
         try
-            ret.bridge.init(options);
+            ret.bridge.start(options);
         catch (Exception err)
         {
             ret.bridge.stop();

@@ -44,7 +44,7 @@ public:
         running = true;
     }
 
-    void init(Options options)
+    void start(Options options)
     {
         if (!running)
             throw new WebDriverConnectionError("Bridge is not running.");
