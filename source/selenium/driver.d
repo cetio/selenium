@@ -2,7 +2,7 @@ module selenium.driver;
 
 import selenium.bridge : Bridge;
 import selenium.element : Element;
-import selenium.errors : WebDriverConnectionError;
+import selenium.error : WebDriverConnectionError;
 import selenium.log : LogEntry, LogType, wireName;
 import selenium.types;
 
@@ -21,7 +21,7 @@ public:
     Bridge bridge;
     Options options;
     LogEntry[][LogType] entries;
-    File[LogType] destination;
+    //File[LogType] destination;
 
     static Driver start(
         DriverType type = DriverType.Any,
@@ -36,8 +36,8 @@ public:
 
         Driver ret = new Driver();
         ret.options = options;
-        ret.destination[LogType.Browser] = stdout;
-        ret.destination[LogType.Driver] = stderr;
+        //ret.destination[LogType.Browser] = stdout;
+        //ret.destination[LogType.Driver] = stderr;
         ret.bridge = new Bridge(type, executablePath);
         ret.bridge.launch();
         ret.bridge.init(options);
@@ -70,8 +70,8 @@ public:
                 entries[type] ~= entry;
 
                 // TODO: This is terrible and we should not sink all at once.
-                if (File* sink = type in destination)
-                    sink.writeln("["~wireName(type)~"]["~entry.level~"] "~entry.message);
+                // if (File* sink = type in destination)
+                //     sink.writeln("["~wireName(type)~"]["~entry.level~"] "~entry.message);
             }
         }
     }

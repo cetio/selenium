@@ -1,4 +1,4 @@
-module selenium.errors;
+module selenium.error;
 
 import std.exception : basicExceptionCtors;
 

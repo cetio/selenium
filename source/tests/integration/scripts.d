@@ -1,7 +1,7 @@
 module tests.integration.scripts;
 
 import selenium.driver : Driver;
-import selenium.errors : WebDriverConnectionError, WebDriverError;
+import selenium.error : WebDriverConnectionError, WebDriverError;
 
 import std.exception : assertThrown;
 

@@ -2,7 +2,7 @@ module tests.integration.elements;
 
 import selenium.driver : Driver;
 import selenium.element : Element;
-import selenium.errors : NoSuchElementError, StaleElementReferenceError, WebDriverConnectionError;
+import selenium.error : NoSuchElementError, StaleElementReferenceError, WebDriverConnectionError;
 import selenium.types : Locator;
 
 import std.conv : to;

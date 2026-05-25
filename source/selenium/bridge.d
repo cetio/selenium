@@ -1,6 +1,6 @@
 module selenium.bridge;
 
-import selenium.errors;
+import selenium.error;
 import selenium.types;
 
 import conductor.http : Response, send;
