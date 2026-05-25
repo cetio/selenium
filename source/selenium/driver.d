@@ -175,6 +175,8 @@ public:
 
     Element[] findAll(Locator strategy, string value)
     {
+        bridge.ensureImplicitWaitSynced();
+
         JSONValue body_ = JSONValue.emptyObject;
         body_["using"] = cast(string)strategy;
         body_["value"] = value;
