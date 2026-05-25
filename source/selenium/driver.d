@@ -13,6 +13,7 @@ import std.net.curl : HTTP;;
 import std.stdio : File, stderr, stdout;
 import std.typecons : Tuple;
 import std.string : strip;
+import core.time : Duration;
 static import std.process;
 
 class Driver
@@ -22,6 +23,8 @@ public:
     Options options;
     LogEntry[][LogType] entries;
     //File[LogType] destination;
+
+    ref Duration implicitWait() => bridge.implicitWait;
 
     static Driver start(
         DriverType type = DriverType.Any,
@@ -161,6 +164,8 @@ public:
 
     Element find(Locator strategy, string value)
     {
+        bridge.ensureImplicitWaitSynced();
+
         JSONValue body_ = JSONValue.emptyObject;
         body_["using"] = cast(string)strategy;
         body_["value"] = value;

@@ -12,7 +12,7 @@ import std.net.curl : HTTP;
 import std.process : kill, Pid, spawnProcess, wait;
 import std.socket;
 import core.thread : Thread;
-import core.time : MonoTime, msecs;
+import core.time : Duration, MonoTime, msecs;
 
 class Bridge
 {
@@ -24,6 +24,7 @@ public:
     string serverUrl;
     string sessionId;
     bool running;
+    Duration implicitWait;
 
     this(DriverType type, string executablePath)
     {
@@ -138,7 +139,25 @@ public:
         return ret;
     }
 
+package:
+    void ensureImplicitWaitSynced()
+    {
+        if (implicitWait == syncedImplicitWait)
+            return;
+
+        JSONValue body_ = JSONValue.emptyObject;
+        body_["implicit"] = JSONValue(implicitWait.total!"msecs");
+        try
+            request(HTTP.Method.post, "/timeouts", body_);
+        catch (Exception)
+        {
+        }
+        syncedImplicitWait = implicitWait;
+    }
+
 private:
+    Duration syncedImplicitWait;
+
     string sessionPath(string path)
         => serverUrl~"/session/"~sessionId~path;
 
