@@ -1,11 +1,13 @@
 {
-    "name": "selenium-sdk",
-    "description": "Modern Selenium SDK for D, inspired by Ruby's Selenium",
-    "copyright": "Copyright © 2015, Szabo Bogdan, cet",
-    "authors": ["Szabo Bogdan", "cet"],
-    "license": "MIT",
-
-    "dependencies": {
-        "conductor": "*"
-    }
+	"authors": [
+		"Szabo Bogdan",
+		"cet"
+	],
+	"copyright": "Copyright © 2026, Szabo Bogdan, cet",
+	"dependencies": {
+		"conductor": "~>2.0.0"
+	},
+	"description": "Modern Selenium SDK for D, inspired by Ruby's Selenium",
+	"license": "MIT",
+	"name": "selenium-sdk"
 }
