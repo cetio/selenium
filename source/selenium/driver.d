@@ -9,7 +9,7 @@ import selenium.types;
 import std.algorithm.searching : canFind;
 import std.conv : to;
 import std.json : JSONType, JSONValue;
-import std.net.curl : HTTP;;
+import std.net.curl : HTTP;
 import std.stdio : File, stderr, stdout;
 import std.typecons : Tuple;
 import std.string : strip;
