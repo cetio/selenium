@@ -147,11 +147,13 @@ package:
         JSONValue body_ = JSONValue.emptyObject;
         body_["implicit"] = JSONValue(implicitWait.total!"msecs");
         try
+        {
             request(HTTP.Method.post, "/timeouts", body_);
+            syncedImplicitWait = implicitWait;
+        }
         catch (Exception)
         {
         }
-        syncedImplicitWait = implicitWait;
     }
 
 private:
