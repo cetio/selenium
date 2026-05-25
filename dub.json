@@ -6,8 +6,6 @@
     "license": "MIT",
 
     "dependencies": {
-        "conductor": {
-            "path": "../conductor"
-        }
+        "conductor": "*"
     }
 }

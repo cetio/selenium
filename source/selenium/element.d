@@ -62,7 +62,7 @@ public:
 
     void sendKeys(string[] keys)
     {
-        bridge.request(HTTP.Method.post, path("/value"), ["text": keys.join]);
+        bridge.request(HTTP.Method.post, path("/value"), ["text": keys.join()]);
     }
 
     void sendKeys(string keys)

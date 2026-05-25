@@ -1,6 +1,6 @@
 {
 	"fileVersion": 1,
 	"versions": {
-		"conductor": {"path":"../conductor"}
+		"conductor": "*"
 	}
 }

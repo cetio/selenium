@@ -151,9 +151,7 @@ package:
             request(HTTP.Method.post, "/timeouts", body_);
             syncedImplicitWait = implicitWait;
         }
-        catch (Exception)
-        {
-        }
+        catch (Exception) { }
     }
 
 private:

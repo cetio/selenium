@@ -45,10 +45,10 @@ public:
         ret.bridge.launch();
         try
             ret.bridge.init(options);
-        catch (Exception)
+        catch (Exception err)
         {
             ret.bridge.stop();
-            throw;
+            throw err;
         }
         return ret;
     }
@@ -90,7 +90,11 @@ public:
         if (bridge is null)
             return;
 
-        bridge.disconnect();
+        try
+            bridge.disconnect();
+        catch (Exception)
+        {
+        }
         bridge.stop();
     }
 
