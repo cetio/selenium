@@ -90,13 +90,13 @@ public:
         => bridge.request!string(HTTP.Method.get, path("/css/"~property));
 
     Position position()
-        => bridge.request!Position(HTTP.Method.get, path("/location"));
+        => bridge.request!Position(HTTP.Method.get, path("/rect"));
 
     Position positionInView()
         => bridge.request!Position(HTTP.Method.get, path("/location_in_view"));
 
     Size size()
-        => bridge.request!Size(HTTP.Method.get, path("/size"));
+        => bridge.request!Size(HTTP.Method.get, path("/rect"));
 
     string screenshot()
         => bridge.request!string(HTTP.Method.get, path("/screenshot"));
