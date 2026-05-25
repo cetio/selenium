@@ -43,7 +43,13 @@ public:
         //ret.destination[LogType.Driver] = stderr;
         ret.bridge = new Bridge(type, executablePath);
         ret.bridge.launch();
-        ret.bridge.init(options);
+        try
+            ret.bridge.init(options);
+        catch (Exception)
+        {
+            ret.bridge.stop();
+            throw;
+        }
         return ret;
     }
 
