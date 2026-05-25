@@ -9,7 +9,7 @@ import conductor.serialize.json : fromJSON;
 import std.conv : to;
 import std.json : JSONType, JSONValue, parseJSON;
 import std.net.curl : HTTP;
-import std.process : kill, Pid, spawnProcess, wait;
+import std.process : kill, Pid, spawnProcess;
 import std.socket;
 import core.thread : Thread;
 import core.time : Duration, MonoTime, msecs;
@@ -205,10 +205,7 @@ private:
     static void tryKill(Pid process)
     {
         try
-        {
             kill(process);
-            wait(process);
-        }
         catch (Exception) { }
     }
 
