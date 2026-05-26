@@ -36,6 +36,38 @@ enum AlertBehaviour : string
     Ignore = "ignore"
 }
 
+struct ChromeOptions
+{
+    string[] args;
+    string binary;
+    string[string] prefs;
+
+    bool empty() const
+        => args.length == 0 && binary.length == 0 && prefs.length == 0;
+
+    JSONValue toJSONValue() const
+    {
+        JSONValue ret = JSONValue.emptyObject;
+        if (args.length > 0)
+        {
+            JSONValue arr = JSONValue.emptyArray;
+            foreach (a; args)
+                arr.array ~= JSONValue(a);
+            ret["args"] = arr;
+        }
+        if (binary.length > 0)
+            ret["binary"] = JSONValue(binary);
+        if (prefs.length > 0)
+        {
+            JSONValue obj = JSONValue.emptyObject;
+            foreach (k, v; prefs)
+                obj[k] = JSONValue(v);
+            ret["prefs"] = obj;
+        }
+        return ret;
+    }
+}
+
 struct Options
 {
     Browser browserName;
@@ -65,10 +97,14 @@ struct Options
     LogType logTypes = LogType.None;
     string logLevel = "ALL";
 
-    static Options chrome()
+    ChromeOptions chrome;
+
+    static Options forChrome(string userDataDir = null)
     {
         Options ret;
         ret.browserName = Browser.Chrome;
+        if (userDataDir.length > 0)
+            ret.chrome.args ~= "--user-data-dir="~userDataDir;
         return ret;
     }
 
@@ -129,6 +165,8 @@ struct Options
             ret["loggingPrefs"] = prefs;
             ret["goog:loggingPrefs"] = prefs;
         }
+        if (!chrome.empty)
+            ret["goog:chromeOptions"] = chrome.toJSONValue();
 
         return ret;
     }
