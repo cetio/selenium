@@ -1,7 +1,7 @@
 module selenium.bridge;
 
 import selenium.error;
-import selenium.types;
+import selenium.options : Options;
 
 import conductor.http : Response, send;
 import conductor.serialize.json : fromJSON;
@@ -13,6 +13,15 @@ import std.process : kill, Pid, spawnProcess;
 import std.socket;
 import core.thread : Thread;
 import core.time : Duration, MonoTime, msecs;
+
+enum DriverType
+{
+    Any,
+    Chrome,
+    Firefox,
+    Edge,
+    Safari
+}
 
 class Bridge
 {

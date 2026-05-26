@@ -1,10 +1,12 @@
 module selenium.driver;
 
 import selenium.bridge : Bridge;
-import selenium.element : Element;
+import selenium.element : Element, Size;
 import selenium.error : WebDriverConnectionError;
 import selenium.log : LogEntry, LogType, wireName;
-import selenium.types;
+import selenium.options : Options;
+public import selenium.bridge : DriverType;
+public import selenium.element : Locator;
 
 import std.algorithm.searching : canFind;
 import std.conv : to;

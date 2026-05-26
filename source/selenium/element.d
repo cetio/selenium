@@ -1,11 +1,34 @@
 module selenium.element;
 
 import selenium.bridge : Bridge;
-import selenium.types : Locator, Position, Size;
 
 import std.array : join;
 import std.json : JSONValue;
 import std.net.curl : HTTP;
+
+enum Locator : string
+{
+    ClassName = "class name",
+    CssSelector = "css selector",
+    Id = "id",
+    Name = "name",
+    LinkText = "link text",
+    PartialLinkText = "partial link text",
+    TagName = "tag name",
+    XPath = "xpath"
+}
+
+struct Size
+{
+    long width;
+    long height;
+}
+
+struct Position
+{
+    long x;
+    long y;
+}
 
 class Element
 {

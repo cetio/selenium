@@ -2,7 +2,7 @@ module tests.integration.lifecycle;
 
 import selenium.driver : Driver;
 import selenium.error : WebDriverConnectionError;
-import selenium.types : DriverType;
+import selenium.bridge : DriverType;
 
 import std.conv : octal;
 import std.exception : assertThrown;

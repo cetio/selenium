@@ -1,18 +1,9 @@
-module selenium.types;
+module selenium.options;
 
 import selenium.log : LogType, wireName;
 
 import conductor.serialize.json : Name;
 import std.json : JSONValue;
-
-enum DriverType
-{
-    Any,
-    Chrome,
-    Firefox,
-    Edge,
-    Safari
-}
 
 enum Browser : string
 {
@@ -38,43 +29,11 @@ enum Platform : string
     Android = "Android"
 }
 
-enum Locator : string
-{
-    ClassName = "class name",
-    CssSelector = "css selector",
-    Id = "id",
-    Name = "name",
-    LinkText = "link text",
-    PartialLinkText = "partial link text",
-    TagName = "tag name",
-    XPath = "xpath"
-}
-
 enum AlertBehaviour : string
 {
     Accept = "accept",
     Dismiss = "dismiss",
     Ignore = "ignore"
-}
-
-enum TimeoutType : string
-{
-    Script = "script",
-    Implicit = "implicit",
-    PageLoad = "page load"
-}
-
-enum MouseButton : int
-{
-    Left = 0,
-    Middle = 1,
-    Right = 2
-}
-
-enum Orientation : string
-{
-    Landscape = "LANDSCAPE",
-    Portrait = "PORTRAIT"
 }
 
 struct Options
@@ -173,27 +132,4 @@ struct Options
 
         return ret;
     }
-}
-
-struct Size
-{
-    long width;
-    long height;
-}
-
-struct Position
-{
-    long x;
-    long y;
-}
-
-struct Cookie
-{
-    string name;
-    string value;
-    string path;
-    string domain;
-    bool secure;
-    bool httpOnly;
-    long expiry;
 }

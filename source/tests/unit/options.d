@@ -1,7 +1,7 @@
 module tests.unit.options;
 
 import selenium.log : LogType;
-import selenium.types : Options;
+import selenium.options : Options;
 
 import std.json : JSONType, JSONValue;
 
