@@ -11,8 +11,11 @@ import std.json : JSONType, JSONValue, parseJSON;
 import std.net.curl : HTTP;
 import std.process : kill, Pid, spawnProcess;
 import std.socket;
+import std.string : strip;
+import std.typecons : Tuple;
 import core.thread : Thread;
 import core.time : Duration, MonoTime, msecs;
+static import std.process;
 
 class Bridge
 {
@@ -25,9 +28,33 @@ public:
     bool running;
     Duration implicitWait;
 
-    this(string executablePath)
+    static Bridge start(Options options)
     {
-        this.executablePath = executablePath;
+        string path;
+        foreach (browser; options.browsers)
+        {
+            if (browser.generic)
+                continue;
+            string candidate = browser.executablePath;
+            if (candidate.length > 0)
+            {
+                path = candidate;
+                break;
+            }
+        }
+        if (path.length == 0)
+            path = autoDetectExecutable(options);
+
+        Bridge ret = new Bridge(path);
+        ret.launch();
+        try
+            ret.beginSession(options);
+        catch (Exception err)
+        {
+            ret.stop();
+            throw err;
+        }
+        return ret;
     }
 
     void launch(ushort requestedPort = 0)
@@ -42,7 +69,7 @@ public:
         running = true;
     }
 
-    void start(Options options)
+    void beginSession(Options options)
     {
         if (!running)
             throw new WebDriverConnectionError("Bridge is not running.");
@@ -150,7 +177,53 @@ package:
     }
 
 private:
+    this(string executablePath)
+    {
+        this.executablePath = executablePath;
+    }
+
     Duration syncedImplicitWait;
+
+    static string autoDetectExecutable(Options options)
+    {
+        string[] candidates;
+        foreach (browser; options.browsers)
+        {
+            if (browser.generic)
+                continue;
+            switch (browser.name)
+            {
+                case "chrome":
+                    candidates ~= "chromedriver";
+                    break;
+                case "firefox":
+                    candidates ~= "geckodriver";
+                    break;
+                case "edge":
+                case "MicrosoftEdge":
+                    candidates ~= "msedgedriver";
+                    break;
+                case "safari":
+                    candidates ~= "safaridriver";
+                    break;
+                default:
+                    break;
+            }
+        }
+        if (candidates.length == 0)
+            candidates = ["chromedriver", "msedgedriver", "safaridriver", "geckodriver"];
+
+        foreach (candidate; candidates)
+        {
+            Tuple!(int, "status", string, "output") result = std.process.execute(["which", candidate]);
+            if (result.status == 0)
+                return result.output.strip;
+        }
+
+        throw new WebDriverConnectionError(
+            "Could not auto-detect executable for provided browsers"
+        );
+    }
 
     string sessionPath(string path)
         => serverUrl~"/session/"~sessionId~path;
@@ -186,9 +259,7 @@ private:
                 if (response.status == 200)
                     return;
             }
-            catch (Exception)
-            {
-            }
+            catch (Exception) { }
             Thread.sleep(100.msecs);
         }
 

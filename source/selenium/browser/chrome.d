@@ -3,6 +3,9 @@ module selenium.browser.chrome;
 import selenium.browser : Browser;
 
 import std.json : JSONValue;
+import std.string : strip;
+import std.typecons : Tuple;
+static import std.process;
 
 class Chrome : Browser
 {
@@ -12,6 +15,18 @@ class Chrome : Browser
 
     override string name() const
         => "chrome";
+
+    override ref string executablePath()
+    {
+        if (_executablePath.length == 0)
+        {
+            Tuple!(int, "status", string, "output") result =
+                std.process.execute(["which", "chromedriver"]);
+            if (result.status == 0)
+                _executablePath = result.output.strip;
+        }
+        return _executablePath;
+    }
 
     override JSONValue toJSONValue() const
     {

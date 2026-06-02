@@ -1,22 +1,16 @@
 module selenium.driver;
 
 import selenium.bridge : Bridge;
-import selenium.browser : Browser;
 import selenium.element : Element, Size;
 import selenium.error : WebDriverConnectionError;
 import selenium.log : LogEntry, LogType, wireName;
 import selenium.options : Options;
 public import selenium.element : Locator;
 
-import std.algorithm.searching : canFind;
-import std.conv : to;
 import std.json : JSONType, JSONValue;
 import std.net.curl : HTTP;
 import std.stdio : File, stderr, stdout;
-import std.typecons : Tuple;
-import std.string : strip;
 import core.time : Duration;
-static import std.process;
 
 class Driver
 {
@@ -28,25 +22,11 @@ public:
 
     ref Duration implicitWait() => bridge.implicitWait;
 
-    static Driver start(
-        Options options = Options.init,
-        string executablePath = null,
-    )
+    static Driver start(Options options = Options.init)
     {
-        if (executablePath is null)
-            executablePath = autoDetectExecutable(options);
-
         Driver ret = new Driver();
         ret.options = options;
-        ret.bridge = new Bridge(executablePath);
-        ret.bridge.launch();
-        try
-            ret.bridge.start(options);
-        catch (Exception err)
-        {
-            ret.bridge.stop();
-            throw err;
-        }
+        ret.bridge = Bridge.start(options);
         return ret;
     }
 
@@ -214,44 +194,4 @@ public:
 private:
     this() { }
 
-    static string autoDetectExecutable(Options options)
-    {
-        string[] candidates;
-        foreach (browser; options.browsers)
-        {
-            if (browser.generic)
-                continue;
-            switch (browser.name)
-            {
-                case "chrome":
-                    candidates ~= "chromedriver";
-                    break;
-                case "firefox":
-                    candidates ~= "geckodriver";
-                    break;
-                case "edge":
-                case "MicrosoftEdge":
-                    candidates ~= "msedgedriver";
-                    break;
-                case "safari":
-                    candidates ~= "safaridriver";
-                    break;
-                default:
-                    break;
-            }
-        }
-        if (candidates.length == 0)
-            candidates = ["chromedriver", "msedgedriver", "safaridriver", "geckodriver"];
-
-        foreach (candidate; candidates)
-        {
-            Tuple!(int, "status", string, "output") result = std.process.execute(["which", candidate]);
-            if (result.status == 0)
-                return result.output.strip;
-        }
-
-        throw new WebDriverConnectionError(
-            "Could not auto-detect executable for provided browsers"
-        );
-    }
 }

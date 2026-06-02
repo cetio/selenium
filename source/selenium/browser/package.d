@@ -11,7 +11,7 @@ enum AlertBehaviour : string
 
 class Browser
 {
-    string browserVersion;
+    string release;
     bool takesScreenshot;
     bool handlesAlerts;
     bool cssSelectorsEnabled;
@@ -26,6 +26,13 @@ class Browser
     bool nativeEvents;
     AlertBehaviour unexpectedAlertBehaviour;
     int elementScrollBehavior;
+
+    protected string _executablePath;
+
+    ref string executablePath()
+    {
+        return _executablePath;
+    }
 
     string name() const
     {
@@ -42,8 +49,8 @@ class Browser
         JSONValue ret = JSONValue.emptyObject;
         if (name.length > 0)
             ret["browserName"] = JSONValue(name);
-        if (browserVersion.length > 0)
-            ret["browserVersion"] = JSONValue(browserVersion);
+        if (release.length > 0)
+            ret["browserVersion"] = JSONValue(release);
         if (takesScreenshot)
             ret["takesScreenshot"] = JSONValue(true);
         if (handlesAlerts)
