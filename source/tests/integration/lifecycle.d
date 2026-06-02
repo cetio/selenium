@@ -2,7 +2,7 @@ module tests.integration.lifecycle;
 
 import selenium.driver : Driver;
 import selenium.error : WebDriverConnectionError;
-import selenium.bridge : DriverType;
+import selenium.options : Options;
 
 import std.conv : octal;
 import std.exception : assertThrown;
@@ -38,7 +38,7 @@ unittest
     scope(exit)
         environment["PATH"] = original;
 
-    assertThrown!WebDriverConnectionError(Driver.start(DriverType.Chrome));
+    assertThrown!WebDriverConnectionError(Driver.start(Options.forChrome()));
 }
 
 unittest

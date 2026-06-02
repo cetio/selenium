@@ -1,5 +1,6 @@
 module selenium;
 
+public import selenium.browser;
 public import selenium.bridge;
 public import selenium.driver;
 public import selenium.element;

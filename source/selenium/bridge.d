@@ -14,19 +14,9 @@ import std.socket;
 import core.thread : Thread;
 import core.time : Duration, MonoTime, msecs;
 
-enum DriverType
-{
-    Any,
-    Chrome,
-    Firefox,
-    Edge,
-    Safari
-}
-
 class Bridge
 {
 public:
-    DriverType type;
     string executablePath;
     Pid pid;
     ushort port;
@@ -35,9 +25,8 @@ public:
     bool running;
     Duration implicitWait;
 
-    this(DriverType type, string executablePath)
+    this(string executablePath)
     {
-        this.type = type;
         this.executablePath = executablePath;
     }
 
@@ -58,11 +47,8 @@ public:
         if (!running)
             throw new WebDriverConnectionError("Bridge is not running.");
 
-        JSONValue caps = options.toJSONValue();
-        JSONValue w3c = JSONValue.emptyObject;
-        w3c["alwaysMatch"] = caps;
         JSONValue payload = JSONValue.emptyObject;
-        payload["capabilities"] = w3c;
+        payload["capabilities"] = options.toJSONValue();
 
         HTTP http = HTTP();
         Response response = send(http, HTTP.Method.post, serverUrl~"/session", payload);

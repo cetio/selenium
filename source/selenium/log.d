@@ -59,4 +59,9 @@ struct LogEntry
 
         return ret;
     }
+
+    string toString() const
+    {
+        return timestamp.toISOString()~" ["~level~"] "~message;
+    }
 }

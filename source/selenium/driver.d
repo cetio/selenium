@@ -1,11 +1,11 @@
 module selenium.driver;
 
 import selenium.bridge : Bridge;
+import selenium.browser : Browser;
 import selenium.element : Element, Size;
 import selenium.error : WebDriverConnectionError;
 import selenium.log : LogEntry, LogType, wireName;
 import selenium.options : Options;
-public import selenium.bridge : DriverType;
 public import selenium.element : Locator;
 
 import std.algorithm.searching : canFind;
@@ -29,21 +29,16 @@ public:
     ref Duration implicitWait() => bridge.implicitWait;
 
     static Driver start(
-        DriverType type = DriverType.Any,
-        string executablePath = null,
         Options options = Options.init,
+        string executablePath = null,
     )
     {
         if (executablePath is null)
-            executablePath = autoDetectExecutable(type);
-        if (type == DriverType.Any)
-            type = inferTypeFromExecutable(executablePath);
+            executablePath = autoDetectExecutable(options);
 
         Driver ret = new Driver();
         ret.options = options;
-        //ret.destination[LogType.Browser] = stdout;
-        //ret.destination[LogType.Driver] = stderr;
-        ret.bridge = new Bridge(type, executablePath);
+        ret.bridge = new Bridge(executablePath);
         ret.bridge.launch();
         try
             ret.bridge.start(options);
@@ -94,9 +89,7 @@ public:
 
         try
             bridge.disconnect();
-        catch (Exception)
-        {
-        }
+        catch (Exception) { }
         bridge.stop();
     }
 
@@ -213,35 +206,42 @@ public:
     string screenshot()
         => bridge.request!string(HTTP.Method.get, "/screenshot");
 
+    // void wait(Duration timeout, Duration interval, bool delegate() poll)
+    // {
+        
+    // }
+
 private:
     this() { }
 
-    static string autoDetectExecutable(DriverType type = DriverType.Any)
+    static string autoDetectExecutable(Options options)
     {
         string[] candidates;
-        switch (type)
+        foreach (browser; options.browsers)
         {
-            case DriverType.Chrome:
-                candidates = ["chromedriver"];
-                break;
-            case DriverType.Firefox:
-                candidates = ["geckodriver"];
-                break;
-            case DriverType.Edge:
-                candidates = ["msedgedriver"];
-                break;
-            case DriverType.Safari:
-                candidates = ["safaridriver"];
-                break;
-            default:
-                candidates = [
-                    "chromedriver",
-                    "msedgedriver",
-                    "safaridriver",
-                    "geckodriver"
-                ];
-                break;
+            if (browser.generic)
+                continue;
+            switch (browser.name)
+            {
+                case "chrome":
+                    candidates ~= "chromedriver";
+                    break;
+                case "firefox":
+                    candidates ~= "geckodriver";
+                    break;
+                case "edge":
+                case "MicrosoftEdge":
+                    candidates ~= "msedgedriver";
+                    break;
+                case "safari":
+                    candidates ~= "safaridriver";
+                    break;
+                default:
+                    break;
+            }
         }
+        if (candidates.length == 0)
+            candidates = ["chromedriver", "msedgedriver", "safaridriver", "geckodriver"];
 
         foreach (candidate; candidates)
         {
@@ -251,21 +251,7 @@ private:
         }
 
         throw new WebDriverConnectionError(
-            "Could not auto-detect executable for "~type.to!string
+            "Could not auto-detect executable for provided browsers"
         );
-    }
-
-    static DriverType inferTypeFromExecutable(string path)
-    {
-        if (path.canFind("chromedriver"))
-            return DriverType.Chrome;
-        if (path.canFind("geckodriver"))
-            return DriverType.Firefox;
-        if (path.canFind("msedgedriver") || path.canFind("edgedriver"))
-            return DriverType.Edge;
-        if (path.canFind("safaridriver"))
-            return DriverType.Safari;
-
-        return DriverType.Chrome;
     }
 }

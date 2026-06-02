@@ -1,5 +1,7 @@
 module tests.unit.options;
 
+import selenium.browser : Browser;
+import selenium.browser.chrome : Chrome;
 import selenium.log : LogType;
 import selenium.options : Options;
 
@@ -14,13 +16,18 @@ unittest
 
 unittest
 {
+    Chrome chrome = new Chrome();
+    chrome.takesScreenshot = true;
+    chrome.javascriptEnabled = true;
     Options options;
-    options.takesScreenshot = true;
-    options.javascriptEnabled = true;
+    options.browsers ~= chrome;
     JSONValue json = options.toJSONValue();
-    assert(json.object.length == 2);
-    assert(json["takesScreenshot"] == JSONValue(true));
-    assert(json["javascriptEnabled"] == JSONValue(true));
+    assert("firstMatch" in json);
+    assert(json["firstMatch"].array.length == 1);
+    JSONValue first = json["firstMatch"].array[0];
+    assert(first["browserName"].str == "chrome");
+    assert(first["takesScreenshot"] == JSONValue(true));
+    assert(first["javascriptEnabled"] == JSONValue(true));
 }
 
 unittest
@@ -29,8 +36,9 @@ unittest
     options.remoteSessionId = "sess-42";
     options.remoteQuietExceptions = true;
     JSONValue json = options.toJSONValue();
-    assert(json["webdriver.remote.sessionid"].str == "sess-42");
-    assert(json["webdriver.remote.quietExceptions"] == JSONValue(true));
+    assert("alwaysMatch" in json);
+    assert(json["alwaysMatch"]["webdriver.remote.sessionid"].str == "sess-42");
+    assert(json["alwaysMatch"]["webdriver.remote.quietExceptions"] == JSONValue(true));
     assert("remoteSessionId" !in json);
     assert("remoteQuietExceptions" !in json);
 }
@@ -41,9 +49,10 @@ unittest
     options.logTypes = LogType.Browser | LogType.Driver;
     options.logLevel = "INFO";
     JSONValue json = options.toJSONValue();
-    assert("loggingPrefs" in json);
-    assert(json["loggingPrefs"]["browser"].str == "INFO");
-    assert(json["loggingPrefs"]["driver"].str == "INFO");
-    assert("client" !in json["loggingPrefs"]);
-    assert(json["goog:loggingPrefs"] == json["loggingPrefs"]);
+    assert("alwaysMatch" in json);
+    assert("loggingPrefs" in json["alwaysMatch"]);
+    assert(json["alwaysMatch"]["loggingPrefs"]["browser"].str == "INFO");
+    assert(json["alwaysMatch"]["loggingPrefs"]["driver"].str == "INFO");
+    assert("client" !in json["alwaysMatch"]["loggingPrefs"]);
+    assert(json["alwaysMatch"]["goog:loggingPrefs"] == json["alwaysMatch"]["loggingPrefs"]);
 }
