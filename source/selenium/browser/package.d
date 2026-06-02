@@ -24,6 +24,8 @@ class Browser
     private string _executablePath;
 public:
     string release;
+    string[] args;
+    string binary;
     bool takesScreenshot;
     bool handlesAlerts;
     bool cssSelectorsEnabled;
