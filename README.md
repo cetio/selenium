@@ -36,9 +36,9 @@ Pin to a specific browser:
 
 ```d
 import selenium.driver;
-import selenium.bridge : DriverType;
+import selenium.browser.chrome : defaultChrome;
 
-Driver driver = Driver.start(DriverType.Chrome);
+Driver driver = Driver.start(defaultChrome);
 ```
 
 ### Navigation
@@ -90,12 +90,13 @@ int result = driver.execute!int("return arguments[0] + arguments[1];");
 ### Browser Options
 
 ```d
+import selenium.browser.chrome : defaultChrome;
 import selenium.options;
 
-Options options = Options.forChrome("/tmp/chrome-profile");
+Options options = Options(defaultChrome);
 options.logTypes = LogType.Browser | LogType.Driver;
 
-Driver driver = Driver.start(DriverType.Chrome, null, options);
+Driver driver = Driver.start(options);
 ```
 
 ### Window Management

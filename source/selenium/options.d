@@ -1,7 +1,7 @@
 module selenium.options;
 
-import selenium.browser : AlertBehaviour, Browser;
-import selenium.browser.chrome : Chrome;
+import selenium.browser : AlertBehaviour, Browser, defaultBrowser;
+import selenium.browser.chrome : Chrome, defaultChrome;
 import selenium.log : LogType, wireName;
 
 import conductor.serialize.json : Name;
@@ -32,14 +32,12 @@ struct Options
     LogType logTypes = LogType.None;
     string logLevel = "ALL";
 
-    static Options forChrome(string userDataDir = null)
+    this(Browser[] browsers...)
     {
-        Options ret;
-        Chrome chrome = new Chrome();
-        if (userDataDir.length > 0)
-            chrome.args ~= "--user-data-dir="~userDataDir;
-        ret.browsers ~= chrome;
-        return ret;
+        if (browsers.length > 0)
+            this.browsers = browsers;
+        else
+            this.browsers = [defaultBrowser];
     }
 
     JSONValue toJSONValue() const

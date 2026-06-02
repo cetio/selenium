@@ -1,6 +1,16 @@
 module selenium.browser;
 
 import std.json : JSONValue;
+import std.string : strip;
+import std.typecons : Tuple;
+static import std.process;
+
+Browser defaultBrowser;
+
+static this()
+{
+    defaultBrowser = new Browser();
+}
 
 enum AlertBehaviour : string
 {
@@ -11,6 +21,8 @@ enum AlertBehaviour : string
 
 class Browser
 {
+    private string _executablePath;
+public:
     string release;
     bool takesScreenshot;
     bool handlesAlerts;
@@ -27,22 +39,29 @@ class Browser
     AlertBehaviour unexpectedAlertBehaviour;
     int elementScrollBehavior;
 
-    protected string _executablePath;
+    string name() const
+        => "";
+
+    bool generic() const
+        => name.length == 0;
 
     ref string executablePath()
     {
+        if (_executablePath.length == 0)
+        {
+            foreach (candidate; ["chromedriver", "msedgedriver", "safaridriver", "geckodriver"])
+            {
+                string path = findExecutable(candidate);
+                if (path.length > 0)
+                {
+                    _executablePath = path;
+                    break;
+                }
+            }
+        }
         return _executablePath;
     }
 
-    string name() const
-    {
-        return "";
-    }
-
-    bool generic() const
-    {
-        return name.length == 0;
-    }
 
     JSONValue toJSONValue() const
     {
@@ -80,5 +99,15 @@ class Browser
         if (elementScrollBehavior != 0)
             ret["elementScrollBehavior"] = JSONValue(elementScrollBehavior);
         return ret;
+    }
+
+package:
+    static string findExecutable(string candidate)
+    {
+        Tuple!(int, "status", string, "output") result =
+            std.process.execute(["which", candidate]);
+        if (result.status == 0)
+            return result.output.strip;
+        return null;
     }
 }

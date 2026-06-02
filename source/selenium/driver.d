@@ -22,7 +22,7 @@ public:
 
     ref Duration implicitWait() => bridge.implicitWait;
 
-    static Driver start(Options options = Options.init)
+    static Driver start(Options options = Options())
     {
         Driver ret = new Driver();
         ret.options = options;

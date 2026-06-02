@@ -1,5 +1,6 @@
 module tests.integration.lifecycle;
 
+import selenium.browser.chrome : defaultChrome;
 import selenium.driver : Driver;
 import selenium.error : WebDriverConnectionError;
 import selenium.options : Options;
@@ -38,7 +39,7 @@ unittest
     scope(exit)
         environment["PATH"] = original;
 
-    assertThrown!WebDriverConnectionError(Driver.start(Options.forChrome()));
+    assertThrown!WebDriverConnectionError(Driver.start(Options(defaultChrome)));
 }
 
 unittest

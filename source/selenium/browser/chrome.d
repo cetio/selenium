@@ -1,14 +1,21 @@
 module selenium.browser.chrome;
 
 import selenium.browser : Browser;
-
 import std.json : JSONValue;
 import std.string : strip;
 import std.typecons : Tuple;
 static import std.process;
 
+Chrome defaultChrome;
+
+static this()
+{
+    defaultChrome = new Chrome();
+}
+
 class Chrome : Browser
 {
+    private string _executablePath;
     string[] args;
     string binary;
     string[string] prefs;
@@ -19,12 +26,7 @@ class Chrome : Browser
     override ref string executablePath()
     {
         if (_executablePath.length == 0)
-        {
-            Tuple!(int, "status", string, "output") result =
-                std.process.execute(["which", "chromedriver"]);
-            if (result.status == 0)
-                _executablePath = result.output.strip;
-        }
+            _executablePath = findExecutable("chromedriver");
         return _executablePath;
     }
 
@@ -35,8 +37,8 @@ class Chrome : Browser
         if (args.length > 0)
         {
             JSONValue arr = JSONValue.emptyArray;
-            foreach (a; args)
-                arr.array ~= JSONValue(a);
+            foreach (arg; args)
+                arr.array ~= JSONValue(arg);
             chromeOpts["args"] = arr;
         }
         if (binary.length > 0)
@@ -44,8 +46,8 @@ class Chrome : Browser
         if (prefs.length > 0)
         {
             JSONValue obj = JSONValue.emptyObject;
-            foreach (k, v; prefs)
-                obj[k] = JSONValue(v);
+            foreach (key, value; prefs)
+                obj[key] = JSONValue(value);
             chromeOpts["prefs"] = obj;
         }
         if (chromeOpts.object.length > 0)
