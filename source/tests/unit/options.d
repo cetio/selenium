@@ -2,7 +2,6 @@ module tests.unit.options;
 
 import selenium.browser : Browser;
 import selenium.browser.chrome : Chrome;
-import selenium.log : LogType;
 import selenium.options : Options;
 
 import std.json : JSONType, JSONValue;
@@ -41,18 +40,4 @@ unittest
     assert(json["alwaysMatch"]["webdriver.remote.quietExceptions"] == JSONValue(true));
     assert("remoteSessionId" !in json);
     assert("remoteQuietExceptions" !in json);
-}
-
-unittest
-{
-    Options options;
-    options.logTypes = LogType.Browser | LogType.Driver;
-    options.logLevel = "INFO";
-    JSONValue json = options.toJSONValue();
-    assert("alwaysMatch" in json);
-    assert("loggingPrefs" in json["alwaysMatch"]);
-    assert(json["alwaysMatch"]["loggingPrefs"]["browser"].str == "INFO");
-    assert(json["alwaysMatch"]["loggingPrefs"]["driver"].str == "INFO");
-    assert("client" !in json["alwaysMatch"]["loggingPrefs"]);
-    assert(json["alwaysMatch"]["goog:loggingPrefs"] == json["alwaysMatch"]["loggingPrefs"]);
 }

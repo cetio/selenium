@@ -15,7 +15,6 @@ class Chrome : Browser
 {
     private string _executablePath;
 public:
-    string[string] prefs;
     string[] extensions;
     string[] excludeSwitches;
     string debuggerAddress;

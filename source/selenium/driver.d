@@ -4,7 +4,6 @@ import selenium.browser : Browser;
 import selenium.bridge : Bridge;
 import selenium.element : Element, Size;
 import selenium.error : WebDriverConnectionError;
-import selenium.log : LogEntry, LogType, wireName;
 import selenium.options : Options;
 public import selenium.element : Locator;
 
@@ -18,8 +17,6 @@ class Driver
 public:
     Bridge bridge;
     Options options;
-    LogEntry[][LogType] entries;
-    //File[LogType] destination;
 
     ref Duration implicitWait() => bridge.implicitWait;
 
@@ -33,38 +30,6 @@ public:
 
     static Driver start(Browser browsers...)
         => start(Options(browsers));
-
-    void fetchLogs()
-    {
-        if (bridge is null || !bridge.running || options.logTypes == LogType.None)
-            return;
-
-        foreach (type; [LogType.Browser, LogType.Driver, LogType.Performance])
-        {
-            if (!(options.logTypes & type))
-                continue;
-
-            JSONValue resp;
-            try
-                resp = bridge.request(HTTP.Method.post, "/log", ["type": wireName(type)]);
-            catch (Exception)
-                continue;
-
-            JSONValue value = ("value" in resp) ? resp["value"] : resp;
-            if (value.type != JSONType.array)
-                continue;
-
-            foreach (item; value.array)
-            {
-                LogEntry entry = LogEntry.fromJSON(item);
-                entries[type] ~= entry;
-
-                // TODO: This is terrible and we should not sink all at once.
-                // if (File* sink = type in destination)
-                //     sink.writeln("["~wireName(type)~"]["~entry.level~"] "~entry.message);
-            }
-        }
-    }
 
     void quit()
     {

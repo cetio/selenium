@@ -11,9 +11,8 @@ Selenium-SDK is a D library for browser automation via the WebDriver protocol. I
 - **Element Search**: Find single or multiple elements by CSS selector, XPath, tag name, or name. Search globally or within an existing element.
 - **Element Interaction**: Click, send keys, clear, submit, read text and attributes, and check enabled or displayed state.
 - **JavaScript Execution**: Execute arbitrary scripts with typed return values.
-- **Browser Options**: Configure profiles, headless mode, log types, and per-browser capability presets including `ChromeOptions`.
+- **Browser Options**: Configure all browsers using their `Browser` classes, (ie: `Chrome`).
 - **Window Management**: Maximize, resize, enumerate handles, and close windows.
-- **Logging**: Fetch and parse browser, driver, and performance logs.
 
 ## Usage
 
@@ -87,18 +86,6 @@ writeln(input.displayed);
 int result = driver.execute!int("return arguments[0] + arguments[1];");
 ```
 
-### Browser Options
-
-```d
-import selenium.browser.chrome : defaultChrome;
-import selenium.options;
-
-Options options = Options(defaultChrome);
-options.logTypes = LogType.Browser | LogType.Driver;
-
-Driver driver = Driver.start(options);
-```
-
 ### Window Management
 
 ```d
@@ -109,14 +96,6 @@ driver.windowSize = Size(1920, 1080);
 
 string[] handles = driver.windowHandles();
 driver.closeWindow();
-```
-
-### Logging
-
-```d
-driver.fetchLogs();
-foreach (entry; driver.entries[LogType.Browser])
-    writeln(entry.level, ": ", entry.message);
 ```
 
 ## License
