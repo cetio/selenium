@@ -1,5 +1,6 @@
 module selenium.driver;
 
+import selenium.browser : Browser;
 import selenium.bridge : Bridge;
 import selenium.element : Element, Size;
 import selenium.error : WebDriverConnectionError;
@@ -29,6 +30,9 @@ public:
         ret.bridge = Bridge.start(options);
         return ret;
     }
+
+    static Driver start(Browser browsers...)
+        => start(Options(browsers));
 
     void fetchLogs()
     {
