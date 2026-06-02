@@ -11,9 +11,7 @@ class Chrome : Browser
     string[string] prefs;
 
     override string name() const
-    {
-        return "chrome";
-    }
+        => "chrome";
 
     override JSONValue toJSONValue() const
     {
