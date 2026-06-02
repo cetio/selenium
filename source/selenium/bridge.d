@@ -174,6 +174,7 @@ public:
 package:
     void ensureImplicitWaitSynced()
     {
+        static Duration syncedImplicitWait;
         if (implicitWait == syncedImplicitWait)
             return;
 
@@ -192,8 +193,6 @@ private:
     {
         this.executablePath = executablePath;
     }
-
-    Duration syncedImplicitWait;
 
     string sessionPath(string path)
         => serverUrl~"/session/"~sessionId~path;
