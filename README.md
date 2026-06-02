@@ -4,29 +4,24 @@
 
 Selenium-SDK is a D library for browser automation via the WebDriver protocol. It manages driver lifecycle, element interaction, JavaScript execution, and browser options without requiring external language bindings.
 
-## Modules
+## Features
 
-| Module | Description |
-|--------|-------------|
-| `selenium.driver` | `Driver` lifecycle, navigation, element search, JavaScript execution, and window management. |
-| `selenium.element` | `Element` interaction: click, text, attributes, form input, and nested search. |
-| `selenium.bridge` | Low-level WebDriver bridge: process spawn, session creation, request dispatch, and error mapping. |
-| `selenium.options` | Capability configuration including `ChromeOptions` and per-browser option presets. |
-| `selenium.log` | Log entry types and parsing for browser, driver, and performance logs. |
-| `selenium.error` | Exception hierarchy for element-not-found, stale references, timeouts, and connection failures. |
-
-## Setup
-
-Install a WebDriver server and ensure it is on your `PATH`:
-
-- **Chrome** - `chromedriver`
-- **Firefox** - `geckodriver`
-- **Edge** - `msedgedriver`
-- **Safari** - `safaridriver`
+- **Driver Lifecycle**: Start, quit, and auto-detect WebDriver executables on `PATH` for Chrome, Firefox, Edge, and Safari.
+- **Navigation**: Navigate, go back/forward, refresh, and read page title and URL.
+- **Element Search**: Find single or multiple elements by CSS selector, XPath, tag name, or name. Search globally or within an existing element.
+- **Element Interaction**: Click, send keys, clear, submit, read text and attributes, and check enabled or displayed state.
+- **JavaScript Execution**: Execute arbitrary scripts with typed return values.
+- **Browser Options**: Configure profiles, headless mode, log types, and per-browser capability presets including `ChromeOptions`.
+- **Window Management**: Maximize, resize, enumerate handles, and close windows.
+- **Logging**: Fetch and parse browser, driver, and performance logs.
 
 ## Usage
 
-### Starting A Driver
+`dub add selenium-sdk`
+
+Install a WebDriver server and ensure it is on your `PATH` (e.g. `chromedriver`, `geckodriver`, `msedgedriver`, or `safaridriver`).
+
+### Driver Lifecycle
 
 `Driver.start` auto-detects the executable on `PATH` if you do not provide one.
 
@@ -37,7 +32,7 @@ Driver driver = Driver.start();
 scope (exit) driver.quit();
 ```
 
-Pin to a specific browser or executable:
+Pin to a specific browser:
 
 ```d
 import selenium.driver;
