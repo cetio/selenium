@@ -5,6 +5,8 @@ import std.string : strip;
 import std.typecons : Tuple;
 static import std.process;
 
+import core.time : Duration;
+
 Browser defaultBrowser;
 
 static this()
@@ -40,9 +42,9 @@ public:
     bool nativeEvents;
     AlertBehaviour unexpectedAlertBehaviour;
     int elementScrollBehavior;
-    int implicitTimeout;
-    int pageTimeout;
-    int scriptTimeout;
+    Duration implicitTimeout;
+    Duration pageTimeout;
+    Duration scriptTimeout;
 
     string name() const
         => "";

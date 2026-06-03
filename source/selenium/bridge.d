@@ -106,9 +106,9 @@ public:
             if (browser.generic)
                 continue;
 
-            implicitTimeout = browser.implicitTimeout;
-            pageTimeout = browser.pageTimeout;
-            scriptTimeout = browser.scriptTimeout;
+            implicitTimeout = cast(int)browser.implicitTimeout.total!"msecs";
+            pageTimeout = cast(int)browser.pageTimeout.total!"msecs";
+            scriptTimeout = cast(int)browser.scriptTimeout.total!"msecs";
             break;
         }
     }
