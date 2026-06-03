@@ -29,6 +29,8 @@ public:
     }
 
     // https://developer.mozilla.org/en-US/docs/Web/WebDriver/Reference/Capabilities/firefoxOptions
+    /// Filter for matching a specific browser version.
+    string release;
     /// Browser binary. To set a custom binary (ie: Librewolf), set this to the path of the binary.
     string binary;
     /// Arguments to be appended when launching.
@@ -52,6 +54,9 @@ public:
     override JSONValue toJSONValue() const
     {
         JSONValue ret = super.toJSONValue();
+        if (release != null)
+            ret["browserVersion"] = JSONValue(release);
+
         JSONValue opts = JSONValue.emptyObject;
 
         string[] launchArgs = args.dup;

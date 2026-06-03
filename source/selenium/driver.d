@@ -1,42 +1,32 @@
 module selenium.driver;
 
-import selenium.browser : Browser;
 import selenium.bridge : Bridge;
 import selenium.element : Element, Size;
 import selenium.error : WebDriverConnectionError;
-import selenium.options : Options;
+import selenium.target : Target;
 public import selenium.element : Locator;
 
-import std.json : JSONType, JSONValue;
+import std.json : JSONValue;
 import std.net.curl : HTTP;
-import std.stdio : File, stderr, stdout;
 
 class Driver
 {
 public:
     Bridge bridge;
-    Options options;
+    string sessionId;
 
-    static Driver start(Options options = Options())
+    static Driver start(Target target = new Target())
     {
         Driver ret = new Driver();
-        ret.options = options;
-        ret.bridge = Bridge.start(options);
+        ret.bridge = new Bridge(target);
+        ret.sessionId = ret.bridge.start();
         return ret;
     }
 
-    static Driver start(Browser browsers...)
-        => start(Options(browsers));
-
     void quit()
     {
-        if (bridge is null)
-            return;
-
-        try
-            bridge.disconnect();
-        catch (Exception) { }
-        bridge.stop();
+        if (bridge !is null)
+            bridge.stop();
     }
 
     void stop()
@@ -122,7 +112,7 @@ public:
         body_["using"] = cast(string)strategy;
         body_["value"] = value;
         JSONValue resp = bridge.request(HTTP.Method.post, "/element", body_);
-        return new Element(bridge, Bridge.parseElementId(resp));
+        return new Element(this, Bridge.parseElementId(resp));
     }
 
     Element[] findAll(Locator strategy, string value)
@@ -135,12 +125,12 @@ public:
         JSONValue resp = bridge.request(HTTP.Method.post, "/elements", body_);
         Element[] ret;
         foreach (eid; Bridge.parseElementIds(resp))
-            ret ~= new Element(bridge, eid);
+            ret ~= new Element(this, eid);
         return ret;
     }
 
     Element activeElement()
-        => new Element(bridge, Bridge.parseElementId(bridge.request(HTTP.Method.get, "/element/active")));
+        => new Element(this, Bridge.parseElementId(bridge.request(HTTP.Method.get, "/element/active")));
 
     T execute(T = string)(string script, JSONValue args = JSONValue.emptyArray)
     {

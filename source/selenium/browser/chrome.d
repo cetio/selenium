@@ -31,6 +31,8 @@ public:
     }
 
     // https://developer.chrome.com/docs/chromedriver/capabilities#chromeoptions_object
+    /// Filter for matching a specific browser version.
+    string release;
     /// Browser binary. To set a custom binary (ie: Vivaldi), set this to the path of the binary.
     string binary;
     /// Command inclusion arguments. To exclude default arguments, see `excludeSwitches`.
@@ -64,6 +66,9 @@ public:
     override JSONValue toJSONValue() const
     {
         JSONValue ret = super.toJSONValue();
+        if (release != null)
+            ret["browserVersion"] = JSONValue(release);
+            
         JSONValue opts = JSONValue.emptyObject;
         if (includeSwitches != null)
             opts["args"] = JSONValue(includeSwitches);

@@ -1,13 +1,24 @@
-module selenium.options;
+module selenium.target;
 
-import selenium.browser : Browser, defaultBrowser;
+import selenium.browser : Browser, defaultBrowser, Timeouts;
 import selenium.error : WebDriverConnectionError;
 
 import std.json : JSONValue;
 import std.file : isFile;
 
-struct Options
+enum Platform : string
 {
+    Any = "",
+    Windows = "Windows",
+    Linux = "Linux",
+    Mac = "Mac",
+    Android = "Android"
+}
+
+class Target
+{
+public:
+    Platform platform;
     Browser[] browsers;
 
     this(Browser[] browsers...)
@@ -40,6 +51,10 @@ struct Options
 
     JSONValue toJSONValue() const
     {
+        JSONValue alwaysMatch = JSONValue.emptyObject;
+        if (platform != Platform.init)
+            alwaysMatch["platformName"] = JSONValue(cast(string)platform);
+
         JSONValue[] firstMatch;
         bool anyGeneric = false;
         foreach (browser; browsers)
@@ -55,6 +70,8 @@ struct Options
             firstMatch ~= JSONValue.emptyObject;
 
         JSONValue ret = JSONValue.emptyObject;
+        if (alwaysMatch.object.length > 0)
+            ret["alwaysMatch"] = alwaysMatch;
         if (firstMatch.length > 0)
             ret["firstMatch"] = JSONValue(firstMatch);
 

@@ -5,4 +5,4 @@ public import selenium.bridge;
 public import selenium.driver;
 public import selenium.element;
 public import selenium.error;
-public import selenium.options;
+public import selenium.target;

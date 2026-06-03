@@ -1,11 +1,18 @@
 module selenium.browser;
 
+import selenium.error : WebDriverError;
+import conductor.http : Response, send;
+
 import std.json : JSONValue;
+import std.net.curl : HTTP;
+import std.process : kill, Pid, spawnProcess;
+import std.socket;
 import std.string : strip;
 import std.typecons : Tuple;
 static import std.process;
 
-import core.time : Duration;
+import core.thread : Thread;
+import core.time : Duration, MonoTime, msecs;
 
 Browser defaultBrowser;
 
@@ -45,11 +52,12 @@ class Browser
 private:
     string _executablePath;
 
+package (selenium):
+    Pid pid;
+    ushort port;
+    string serverUrl;
+    
 public:
-    /// Filter for matching a specific browser version.
-    string release;
-    /// Filter for matching a specific platform.
-    string platformName;
     /// Accept insecure TLS certificates.
     bool acceptInsecureCerts;
     /// Page load readiness strategy.
@@ -86,15 +94,33 @@ public:
         return _executablePath;
     }
 
+    void start(ushort requestedPort = 0)
+    {
+        if (pid !is Pid.init)
+            return;
+
+        import std.conv : to;
+
+        port = requestedPort == 0 ? findFreePort() : requestedPort;
+        pid = spawnProcess([executablePath, "--port="~port.to!string]);
+        serverUrl = "http://127.0.0.1:"~port.to!string;
+        waitForServer(5000);
+    }
+
+    void stop()
+    {
+        if (pid is Pid.init)
+            return;
+
+        tryKill(pid);
+        pid = Pid.init;
+    }
+
     JSONValue toJSONValue() const
     {
         JSONValue ret = JSONValue.emptyObject;
         if (name != null)
             ret["browserName"] = JSONValue(name);
-        if (release != null)
-            ret["browserVersion"] = JSONValue(release);
-        if (platformName != null)
-            ret["platformName"] = JSONValue(platformName);
         if (acceptInsecureCerts)
             ret["acceptInsecureCerts"] = JSONValue(true);
         if (pageLoadStrategy != PageLoadStrategy.init)
@@ -127,5 +153,47 @@ package:
         if (result.status == 0)
             return result.output.strip;
         return null;
+    }
+
+private:
+    ushort findFreePort()
+    {
+        Socket socket = new Socket(AddressFamily.INET, SocketType.STREAM);
+        socket.setOption(SocketOptionLevel.SOCKET, SocketOption.REUSEADDR, true);
+        socket.bind(new InternetAddress("127.0.0.1", 0));
+        ushort ret = (cast(InternetAddress)socket.localAddress).port;
+        socket.close();
+        return ret;
+    }
+
+    void waitForServer(long timeoutMs)
+    {
+        import std.conv : to;
+
+        MonoTime startTime = MonoTime.currTime;
+
+        while ((MonoTime.currTime - startTime).total!"msecs" < timeoutMs)
+        {
+            try
+            {
+                HTTP http = HTTP();
+                Response response = send(http, HTTP.Method.get, serverUrl~"/status");
+                if (response.status == 200)
+                    return;
+            }
+            catch (Exception) { }
+            Thread.sleep(100.msecs);
+        }
+
+        throw new WebDriverError(
+            "WebDriver did not become ready within "~timeoutMs.to!string~" ms"
+        );
+    }
+
+    static void tryKill(Pid process)
+    {
+        try
+            kill(process);
+        catch (Exception) { }
     }
 }

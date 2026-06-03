@@ -2,93 +2,58 @@ module selenium.bridge;
 
 import selenium.browser : Browser;
 import selenium.error;
-import selenium.options : Options;
+import selenium.target : Target;
 
 import conductor.http : Response, send;
 import conductor.serialize.json : fromJSON;
 
-import std.conv : to;
+import core.time : Duration;
 import std.json : JSONType, JSONValue, parseJSON;
 import std.net.curl : HTTP;
-import std.process : kill, Pid, spawnProcess;
-import std.socket;
-import core.thread : Thread;
-import core.time : MonoTime, msecs, Duration;
 
 class Bridge
 {
 public:
-    string executablePath;
-    Pid pid;
-    ushort port;
-    string serverUrl;
-    string sessionId;
-    bool running;
-    int implicitTimeout;
-    int pageTimeout;
-    int scriptTimeout;
+    Target target;
+    Browser browser;
+    string sessionPrefix;
 
-    static Bridge start(Options options)
+    this(Target target)
     {
-        Browser browser = options.match();
-        Bridge ret = new Bridge(browser.executablePath);
-        ret.implicitTimeout = cast(int)browser.timeouts.implicit.total!"msecs";
-        ret.pageTimeout = cast(int)browser.timeouts.pageLoad.total!"msecs";
-        ret.scriptTimeout = cast(int)browser.timeouts.script.total!"msecs";
-        ret.launch();
-        try
-            ret.beginSession(options);
-        catch (Exception err)
-        {
-            ret.stop();
-            throw err;
-        }
-        return ret;
+        this.target = target;
     }
 
-    void launch(ushort requestedPort = 0)
+    string start()
     {
-        if (running)
-            return;
-
-        port = requestedPort == 0 ? findFreePort() : requestedPort;
-        pid = spawnProcess([executablePath, "--port="~port.to!string]);
-        serverUrl = "http://127.0.0.1:"~port.to!string;
-        waitForServer(5000);
-        running = true;
-    }
-
-    void beginSession(Options options)
-    {
-        if (!running)
-            throw new WebDriverConnectionError("Bridge is not running.");
+        browser = target.match();
+        browser.start();
 
         JSONValue payload = JSONValue.emptyObject;
-        payload["capabilities"] = options.toJSONValue();
+        payload["capabilities"] = target.toJSONValue();
 
         HTTP http = HTTP();
-        Response response = send(http, HTTP.Method.post, serverUrl~"/session", payload);
+        Response response = send(http, HTTP.Method.post, browser.serverUrl~"/session", payload);
         JSONValue json = checkAndParse(response);
 
+        string sessionId;
         if ("sessionId" in json)
             sessionId = json["sessionId"].str;
         else if ("value" in json && "sessionId" in json["value"])
             sessionId = json["value"]["sessionId"].str;
+
+        sessionPrefix = browser.serverUrl~"/session/"~sessionId;
+        ensureTimeoutsSynced();
+
+        return sessionId;
     }
 
     void stop()
     {
-        if (!running || pid is Pid.init)
-            return;
-
-        tryKill(pid);
-        running = false;
-        pid = Pid.init;
-    }
-
-    void disconnect()
-    {
-        request(HTTP.Method.del, "");
+        try
+            request(HTTP.Method.del, "");
+        catch (Exception) { }
+        if (browser !is null)
+            browser.stop();
     }
 
     string[] handles()
@@ -100,7 +65,7 @@ public:
             return request!T(method, path, JSONValue.emptyObject);
 
         HTTP http = HTTP();
-        Response response = send(http, method, sessionPath(path));
+        Response response = send(http, method, sessionPrefix~path);
         JSONValue json = checkAndParse(response);
         static if (is(T == JSONValue))
             return json;
@@ -111,7 +76,7 @@ public:
     T request(T = JSONValue, B)(HTTP.Method method, string path, B body_)
     {
         HTTP http = HTTP();
-        Response response = send(http, method, sessionPath(path), body_);
+        Response response = send(http, method, sessionPrefix~path, body_);
         JSONValue json = checkAndParse(response);
         static if (is(T == JSONValue))
             return json;
@@ -156,6 +121,10 @@ package:
         static int syncedPage;
         static int syncedScript;
 
+        int implicitTimeout = cast(int)browser.timeouts.implicit.total!"msecs";
+        int pageTimeout = cast(int)browser.timeouts.pageLoad.total!"msecs";
+        int scriptTimeout = cast(int)browser.timeouts.script.total!"msecs";
+
         if (implicitTimeout == syncedImplicit && pageTimeout == syncedPage && scriptTimeout == syncedScript)
             return;
 
@@ -173,62 +142,6 @@ package:
             syncedPage = pageTimeout;
             syncedScript = scriptTimeout;
         }
-        catch (Exception) { }
-    }
-
-private:
-    this(string executablePath)
-    {
-        this.executablePath = executablePath;
-    }
-
-    string sessionPath(string path)
-        => serverUrl~"/session/"~sessionId~path;
-
-    static T parse(T)(JSONValue json)
-    {
-        if ("value" in json)
-            return fromJSON!T(json["value"]);
-
-        return fromJSON!T(json);
-    }
-
-    ushort findFreePort()
-    {
-        Socket socket = new Socket(AddressFamily.INET, SocketType.STREAM);
-        socket.setOption(SocketOptionLevel.SOCKET, SocketOption.REUSEADDR, true);
-        socket.bind(new InternetAddress("127.0.0.1", 0));
-        ushort ret = (cast(InternetAddress)socket.localAddress).port;
-        socket.close();
-        return ret;
-    }
-
-    void waitForServer(long timeoutMs)
-    {
-        MonoTime startTime = MonoTime.currTime;
-
-        while ((MonoTime.currTime - startTime).total!"msecs" < timeoutMs)
-        {
-            try
-            {
-                HTTP http = HTTP();
-                Response response = send(http, HTTP.Method.get, serverUrl~"/status");
-                if (response.status == 200)
-                    return;
-            }
-            catch (Exception) { }
-            Thread.sleep(100.msecs);
-        }
-
-        throw new WebDriverConnectionError(
-            "WebDriver did not become ready within "~timeoutMs.to!string~" ms"
-        );
-    }
-
-    static void tryKill(Pid process)
-    {
-        try
-            kill(process);
         catch (Exception) { }
     }
 
@@ -316,5 +229,14 @@ private:
             return json["message"].str;
 
         return "WebDriver server error";
+    }
+
+private:
+    static T parse(T)(JSONValue json)
+    {
+        if ("value" in json)
+            return fromJSON!T(json["value"]);
+
+        return fromJSON!T(json);
     }
 }
