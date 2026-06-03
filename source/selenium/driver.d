@@ -1,9 +1,9 @@
 module selenium.driver;
 
 import selenium.bridge : Bridge;
+import selenium.browser : Browser;
 import selenium.element : Element, Size;
 import selenium.error : WebDriverConnectionError;
-import selenium.target : Target;
 public import selenium.element : Locator;
 
 import std.json : JSONValue;
@@ -14,10 +14,20 @@ class Driver
     Bridge bridge;
     string sessionId;
 
-    static Driver start(Target target = new Target())
+    static Driver start(
+        Browser alwaysMatch, 
+        string executable = null, 
+        string address = null, 
+        Browser[] firstMatch...
+    )
     {
         Driver ret = new Driver();
-        ret.bridge = new Bridge(target);
+        ret.bridge = new Bridge(
+            alwaysMatch, 
+            executable, 
+            address, 
+            firstMatch
+        );
         ret.sessionId = ret.bridge.start();
         return ret;
     }
@@ -73,7 +83,7 @@ class Driver
     }
 
     string[] windowHandles()
-        => bridge.handles();
+        => bridge.request!(string[])(HTTP.Method.get, "/window/handles");
 
     void closeWindow()
     {

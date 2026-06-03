@@ -1,5 +1,6 @@
 module tests.integration.elements;
 
+import selenium.browser : Browser;
 import selenium.driver : Driver;
 import selenium.element : Element, Locator;
 import selenium.error : NoSuchElementError, StaleElementReferenceError, WebDriverConnectionError;
@@ -23,7 +24,7 @@ private enum PAGE_B = "http://example.org/";
 unittest
 {
     Driver driver;
-    driver = Driver.start();
+    driver = Driver.start(new Browser());
 
     scope(exit)
         driver.quit();
@@ -38,7 +39,7 @@ unittest
 unittest
 {
     Driver driver;
-    driver = Driver.start();
+    driver = Driver.start(new Browser());
 
     scope(exit)
         driver.quit();
@@ -53,7 +54,7 @@ unittest
 unittest
 {
     Driver driver;
-    driver = Driver.start();
+    driver = Driver.start(new Browser());
 
     scope(exit)
         driver.quit();
@@ -66,7 +67,7 @@ unittest
 unittest
 {
     Driver driver;
-    driver = Driver.start();
+    driver = Driver.start(new Browser());
 
     scope(exit)
         driver.quit();

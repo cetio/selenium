@@ -8,9 +8,6 @@ import std.regex : match, ctRegex;
 
 class Firefox : Browser
 {
-private:
-    string _executablePath;
-
 public:
     /// Wrapper struct for preferences. Firefox only supports user preferences.
     /// Preferences are NOT sanitized or validated, and are expected to be JSON objects.
@@ -36,13 +33,6 @@ public:
 
     override string name() const
         => "firefox";
-
-    override ref string executablePath()
-    {
-        if (_executablePath == null)
-            _executablePath = findExecutable("geckodriver");
-        return _executablePath;
-    }
 
     override JSONValue toJSONValue() const
     {

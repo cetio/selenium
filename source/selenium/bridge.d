@@ -2,36 +2,72 @@ module selenium.bridge;
 
 import selenium.browser : Browser;
 import selenium.error;
-import selenium.target : Target;
 
 import conductor.http : Response, send;
 import conductor.serialize.json : fromJSON;
 
 import core.time : Duration;
 import std.json : JSONType, JSONValue, parseJSON;
+import std.conv : to;
 import std.net.curl : HTTP;
+import std.process : kill, Pid, spawnProcess;
+import std.socket;
+import std.string : strip;
+import std.typecons : Tuple;
+static import std.process;
+
+import core.thread : Thread;
+import core.time : MonoTime, msecs;
 
 class Bridge
 {
-    Target target;
-    Browser browser;
+    string executable;
+    string address;
+    Browser alwaysMatch;
+    Browser[] firstMatch;
+    Pid pid;
     string sessionPrefix;
 
-    this(Target target)
+    this(
+        Browser alwaysMatch, 
+        string executable = null, 
+        string address = null, 
+        Browser[] firstMatch...
+    )
     {
-        this.target = target;
+        this.alwaysMatch = alwaysMatch;
+        this.executable = executable;
+        this.address = address;
+        this.firstMatch = firstMatch;
     }
 
     string start()
     {
-        browser = target.match();
-        browser.start();
+        if (address is null)
+        {
+            if (executable is null)
+                executable = findExecutable("chromedriver");
+
+            ushort port = findFreePort();
+            pid = spawnProcess([executable, "--port="~port.to!string]);
+            address = "http://127.0.0.1:"~port.to!string;
+            waitForServer(5000);
+        }
 
         JSONValue payload = JSONValue.emptyObject;
-        payload["capabilities"] = target.toJSONValue();
+        JSONValue capabilities = JSONValue.emptyObject;
+        capabilities["alwaysMatch"] = alwaysMatch.toJSONValue();
+
+        JSONValue[] firstMatchJson;
+        foreach (browser; firstMatch)
+            firstMatchJson ~= browser.toJSONValue();
+        if (firstMatchJson.length > 0)
+            capabilities["firstMatch"] = JSONValue(firstMatchJson);
+
+        payload["capabilities"] = capabilities;
 
         HTTP http = HTTP();
-        Response response = send(http, HTTP.Method.post, browser.serverUrl~"/session", payload);
+        Response response = send(http, HTTP.Method.post, address~"/session", payload);
         JSONValue json = checkAndParse(response);
 
         string sessionId;
@@ -40,7 +76,7 @@ class Bridge
         else if ("value" in json && "sessionId" in json["value"])
             sessionId = json["value"]["sessionId"].str;
 
-        sessionPrefix = browser.serverUrl~"/session/"~sessionId;
+        sessionPrefix = address~"/session/"~sessionId;
         ensureTimeoutsSynced();
 
         return sessionId;
@@ -51,12 +87,12 @@ class Bridge
         try
             request(HTTP.Method.del, "");
         catch (Exception) { }
-        if (browser !is null)
-            browser.stop();
+        if (pid !is Pid.init)
+        {
+            tryKill(pid);
+            pid = Pid.init;
+        }
     }
-
-    string[] handles()
-        => request!(string[])(HTTP.Method.get, "/window/handles");
 
     T request(T = JSONValue)(HTTP.Method method, string path)
     {
@@ -120,9 +156,9 @@ package:
         static int syncedPage;
         static int syncedScript;
 
-        int implicitTimeout = cast(int)browser.timeouts.implicit.total!"msecs";
-        int pageTimeout = cast(int)browser.timeouts.pageLoad.total!"msecs";
-        int scriptTimeout = cast(int)browser.timeouts.script.total!"msecs";
+        int implicitTimeout = cast(int)alwaysMatch.timeouts.implicit.total!"msecs";
+        int pageTimeout = cast(int)alwaysMatch.timeouts.pageLoad.total!"msecs";
+        int scriptTimeout = cast(int)alwaysMatch.timeouts.script.total!"msecs";
 
         if (implicitTimeout == syncedImplicit && pageTimeout == syncedPage && scriptTimeout == syncedScript)
             return;
@@ -231,6 +267,56 @@ package:
     }
 
 private:
+    static string findExecutable(string candidate)
+    {
+        Tuple!(int, "status", string, "output") result =
+            std.process.execute(["which", candidate]);
+        if (result.status == 0)
+            return result.output.strip;
+        return null;
+    }
+
+    ushort findFreePort()
+    {
+        Socket socket = new Socket(AddressFamily.INET, SocketType.STREAM);
+        socket.setOption(SocketOptionLevel.SOCKET, SocketOption.REUSEADDR, true);
+        socket.bind(new InternetAddress("127.0.0.1", 0));
+        ushort ret = (cast(InternetAddress)socket.localAddress).port;
+        socket.close();
+        return ret;
+    }
+
+    void waitForServer(long timeoutMs)
+    {
+        import std.conv : to;
+
+        MonoTime startTime = MonoTime.currTime;
+
+        while ((MonoTime.currTime - startTime).total!"msecs" < timeoutMs)
+        {
+            try
+            {
+                HTTP http = HTTP();
+                Response response = send(http, HTTP.Method.get, address~"/status");
+                if (response.status == 200)
+                    return;
+            }
+            catch (Exception) { }
+            Thread.sleep(100.msecs);
+        }
+
+        throw new WebDriverError(
+            "WebDriver did not become ready within "~timeoutMs.to!string~" ms"
+        );
+    }
+
+    static void tryKill(Pid process)
+    {
+        try
+            kill(process);
+        catch (Exception) { }
+    }
+
     static T parse(T)(JSONValue json)
     {
         if ("value" in json)

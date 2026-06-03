@@ -9,9 +9,6 @@ import std.regex : match, ctRegex;
 
 class Chrome : Browser
 {
-private:
-    string _executablePath;
-
 public:
     /// Wrapper struct for preferences. Chrome supports both browser (local state) and user preferences.
     /// Preferences are NOT sanitized or validated, and are expected to be JSON arrays.
@@ -48,13 +45,6 @@ public:
     // TODO: Support for setting custom names.
     override string name() const
         => "chrome";
-
-    override ref string executablePath()
-    {
-        if (_executablePath.length == 0)
-            _executablePath = findExecutable("chromedriver");
-        return _executablePath;
-    }
 
     override JSONValue toJSONValue() const
     {

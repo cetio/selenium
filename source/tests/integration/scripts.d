@@ -1,5 +1,6 @@
 module tests.integration.scripts;
 
+import selenium.browser : Browser;
 import selenium.driver : Driver;
 import selenium.error : WebDriverConnectionError, WebDriverError;
 
@@ -8,7 +9,7 @@ import std.exception : assertThrown;
 unittest
 {
     Driver driver;
-    driver = Driver.start();
+    driver = Driver.start(new Browser());
 
     scope(exit)
         driver.quit();
@@ -20,7 +21,7 @@ unittest
 unittest
 {
     Driver driver;
-    driver = Driver.start();
+    driver = Driver.start(new Browser());
 
     scope(exit)
         driver.quit();
@@ -32,7 +33,7 @@ unittest
 unittest
 {
     Driver driver;
-    driver = Driver.start();
+    driver = Driver.start(new Browser());
 
     scope(exit)
         driver.quit();

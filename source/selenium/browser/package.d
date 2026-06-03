@@ -1,18 +1,8 @@
 module selenium.browser;
 
-import selenium.error : WebDriverError;
-import conductor.http : Response, send;
-
 import std.json : JSONValue;
-import std.net.curl : HTTP;
-import std.process : kill, Pid, spawnProcess;
-import std.socket;
-import std.string : strip;
-import std.typecons : Tuple;
-static import std.process;
 
-import core.thread : Thread;
-import core.time : Duration, MonoTime, msecs;
+import core.time : Duration;
 
 enum PageLoadStrategy : string
 {
@@ -30,6 +20,15 @@ enum UnhandledPromptBehavior : string
     Ignore = "ignore"
 }
 
+enum Platform : string
+{
+    Any = "",
+    Windows = "Windows",
+    Linux = "Linux",
+    Mac = "Mac",
+    Android = "Android"
+}
+
 struct Timeouts
 {
     /// Time to wait for an element to exist when locating.
@@ -42,15 +41,9 @@ struct Timeouts
 
 class Browser
 {
-private:
-    string _executablePath;
-
-package (selenium):
-    Pid pid;
-    ushort port;
-    string serverUrl;
-    
 public:
+    /// Platform to request from the driver.
+    Platform platform;
     /// Accept insecure TLS certificates.
     bool acceptInsecureCerts;
     /// Page load readiness strategy.
@@ -70,50 +63,13 @@ public:
     bool generic() const
         => name.length == 0;
 
-    ref string executablePath()
-    {
-        if (_executablePath == null)
-        {
-            foreach (candidate; ["chromedriver", "msedgedriver", "safaridriver", "geckodriver"])
-            {
-                string path = findExecutable(candidate);
-                if (path != null)
-                {
-                    _executablePath = path;
-                    break;
-                }
-            }
-        }
-        return _executablePath;
-    }
-
-    void start(ushort requestedPort = 0)
-    {
-        if (pid !is Pid.init)
-            return;
-
-        import std.conv : to;
-
-        port = requestedPort == 0 ? findFreePort() : requestedPort;
-        pid = spawnProcess([executablePath, "--port="~port.to!string]);
-        serverUrl = "http://127.0.0.1:"~port.to!string;
-        waitForServer(5000);
-    }
-
-    void stop()
-    {
-        if (pid is Pid.init)
-            return;
-
-        tryKill(pid);
-        pid = Pid.init;
-    }
-
     JSONValue toJSONValue() const
     {
         JSONValue ret = JSONValue.emptyObject;
         if (name != null)
             ret["browserName"] = JSONValue(name);
+        if (platform != Platform.Any)
+            ret["platformName"] = JSONValue(cast(string)platform);
         if (acceptInsecureCerts)
             ret["acceptInsecureCerts"] = JSONValue(true);
         if (pageLoadStrategy != PageLoadStrategy.init)
@@ -136,57 +92,5 @@ public:
             ret["timeouts"] = timeoutsObj;
 
         return ret;
-    }
-
-package:
-    static string findExecutable(string candidate)
-    {
-        Tuple!(int, "status", string, "output") result =
-            std.process.execute(["which", candidate]);
-        if (result.status == 0)
-            return result.output.strip;
-        return null;
-    }
-
-private:
-    ushort findFreePort()
-    {
-        Socket socket = new Socket(AddressFamily.INET, SocketType.STREAM);
-        socket.setOption(SocketOptionLevel.SOCKET, SocketOption.REUSEADDR, true);
-        socket.bind(new InternetAddress("127.0.0.1", 0));
-        ushort ret = (cast(InternetAddress)socket.localAddress).port;
-        socket.close();
-        return ret;
-    }
-
-    void waitForServer(long timeoutMs)
-    {
-        import std.conv : to;
-
-        MonoTime startTime = MonoTime.currTime;
-
-        while ((MonoTime.currTime - startTime).total!"msecs" < timeoutMs)
-        {
-            try
-            {
-                HTTP http = HTTP();
-                Response response = send(http, HTTP.Method.get, serverUrl~"/status");
-                if (response.status == 200)
-                    return;
-            }
-            catch (Exception) { }
-            Thread.sleep(100.msecs);
-        }
-
-        throw new WebDriverError(
-            "WebDriver did not become ready within "~timeoutMs.to!string~" ms"
-        );
-    }
-
-    static void tryKill(Pid process)
-    {
-        try
-            kill(process);
-        catch (Exception) { }
     }
 }
