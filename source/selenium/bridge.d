@@ -55,17 +55,12 @@ class Bridge
         JSONValue json = checkAndParse(response);
 
         string id;
-        if ("sessionId" in json)
-            id = json["sessionId"].str;
-        else if ("value" in json && "sessionId" in json["value"])
+        if ("value" in json && "sessionId" in json["value"])
             id = json["value"]["sessionId"].str;
-
 
         JSONValue capabilities;
         if ("value" in json && "capabilities" in json["value"])
             capabilities = json["value"]["capabilities"];
-        else if ("value" in json)
-            capabilities = json["value"];
         else
             capabilities = JSONValue.emptyObject;
 

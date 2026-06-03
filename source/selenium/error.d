@@ -33,6 +33,66 @@ class WebDriverConnectionError : WebDriverError
     mixin basicExceptionCtors;
 }
 
+class InvalidArgumentError : WebDriverError
+{
+    mixin basicExceptionCtors;
+}
+
+class InvalidSelectorError : WebDriverError
+{
+    mixin basicExceptionCtors;
+}
+
+class InvalidSessionIdError : WebDriverError
+{
+    mixin basicExceptionCtors;
+}
+
+class JavaScriptError : WebDriverError
+{
+    mixin basicExceptionCtors;
+}
+
+class ElementNotInteractableError : WebDriverError
+{
+    mixin basicExceptionCtors;
+}
+
+class ElementClickInterceptedError : WebDriverError
+{
+    mixin basicExceptionCtors;
+}
+
+class NoSuchWindowError : WebDriverError
+{
+    mixin basicExceptionCtors;
+}
+
+class NoSuchFrameError : WebDriverError
+{
+    mixin basicExceptionCtors;
+}
+
+class ScriptTimeoutError : WebDriverError
+{
+    mixin basicExceptionCtors;
+}
+
+class UnknownCommandError : WebDriverError
+{
+    mixin basicExceptionCtors;
+}
+
+class UnsupportedOperationError : WebDriverError
+{
+    mixin basicExceptionCtors;
+}
+
+class UnexpectedAlertOpenError : WebDriverError
+{
+    mixin basicExceptionCtors;
+}
+
 package:
 
 static WebDriverError mapError(ushort status, JSONValue json)
@@ -56,6 +116,32 @@ static WebDriverError mapError(ushort status, JSONValue json)
                     return new WebDriverTimeoutError(message);
                 case "session not created":
                     return new WebDriverConnectionError(message);
+                case "invalid argument":
+                    return new InvalidArgumentError(message);
+                case "invalid selector":
+                    return new InvalidSelectorError(message);
+                case "invalid session id":
+                    return new InvalidSessionIdError(message);
+                case "javascript error":
+                    return new JavaScriptError(message);
+                case "element not interactable":
+                    return new ElementNotInteractableError(message);
+                case "element click intercepted":
+                    return new ElementClickInterceptedError(message);
+                case "no such window":
+                    return new NoSuchWindowError(message);
+                case "no such frame":
+                    return new NoSuchFrameError(message);
+                case "script timeout":
+                    return new ScriptTimeoutError(message);
+                case "unknown command":
+                    return new UnknownCommandError(message);
+                case "unknown method":
+                    return new UnknownCommandError(message);
+                case "unsupported operation":
+                    return new UnsupportedOperationError(message);
+                case "unexpected alert open":
+                    return new UnexpectedAlertOpenError(message);
                 default:
                     return new WebDriverError(message);
             }
