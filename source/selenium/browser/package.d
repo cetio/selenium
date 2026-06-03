@@ -21,12 +21,11 @@ enum AlertBehaviour : string
 
 class Browser
 {
-    private string _executablePath;
+private:
+    string _executablePath;
+    
 public:
     string release;
-    string binary;
-    string[] args;
-    string[string] prefs;
     bool takesScreenshot;
     bool handlesAlerts;
     bool cssSelectorsEnabled;

@@ -1,7 +1,6 @@
 module selenium.browser.chrome;
 
 import selenium.browser : Browser;
-
 import std.json : JSONValue;
 
 Chrome defaultChrome;
@@ -13,16 +12,37 @@ static this()
 
 class Chrome : Browser
 {
-    private string _executablePath;
+private:
+    string _executablePath;
+
 public:
-    string[] extensions;
+    // https://developer.chrome.com/docs/chromedriver/capabilities#chromeoptions_object
+    /// Browser binary. To set a custom binary (ie: Vivaldi), set this to the path of the binary.
+    string binary;
+    /// Arguments to be appended when launching. To exclude initial arguments, see `excludeSwitches`.
+    string[] args;
+    /// Preferences. These are client preferences for the active profile.
+    string[string] prefs;
+    /// Switch exclusions. All included switches will be excluded from the default binary arguments.
     string[] excludeSwitches;
+    /// Debugger address. This must be in the format '<hostname/ip:port>', ie: '127.0.0.1:9222'.
     string debuggerAddress;
+    /// Minidump path. Only supported for Linux environments.
+    /// Setting this on a non-linux compilation will have no effect.
     string minidumpPath;
+    /// Detach process from driver.
+    /// If true, the browser will not be closed when the driver is closed.
     bool detach;
 
+    // TODO: Support for setting custom names.
     override string name() const
         => "chrome";
+
+    bool addExtension(string extension)
+    {
+        extensions ~= extension;
+        return true;
+    }
 
     override ref string executablePath()
     {
@@ -73,8 +93,11 @@ public:
         if (debuggerAddress.length > 0)
             chromeOpts["debuggerAddress"] = JSONValue(debuggerAddress);
 
-        if (minidumpPath.length > 0)
-            chromeOpts["minidumpPath"] = JSONValue(minidumpPath);
+        version (linux)
+        {
+            if (minidumpPath.length > 0)
+                chromeOpts["minidumpPath"] = JSONValue(minidumpPath);
+        }
 
         if (detach)
             chromeOpts["detach"] = JSONValue(true);
