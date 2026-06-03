@@ -1,14 +1,13 @@
 {
 	"authors": [
-		"Szabo Bogdan",
 		"cet"
 	],
-	"copyright": "Copyright © 2026, Szabo Bogdan, cet",
+	"copyright": "Copyright © 2026, cet",
 	"dependencies": {
 		"conductor": "~>2.0.0"
 	},
 	"description": "Modern Selenium SDK for D, inspired by Ruby's Selenium",
-	"license": "MIT",
+	"license": "AGPL-3.0",
 	"name": "selenium-sdk",
 	"targetType": "library"
 }

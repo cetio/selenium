@@ -1,6 +1,6 @@
 # Selenium-SDK
 
-[![License](https://img.shields.io/badge/License-MIT-blue)](LICENSE.txt)
+[![License](https://img.shields.io/badge/License-AGPL%20v3-blue)](LICENSE.txt)
 
 Selenium-SDK is a D library for browser automation via the WebDriver protocol. It manages driver lifecycle, element interaction, JavaScript execution, and browser options without requiring external language bindings.
 
@@ -100,6 +100,5 @@ driver.closeWindow();
 
 ## License
 
-Selenium-SDK is licensed under [MIT](LICENSE.txt).
+Selenium-SDK is licensed under [AGPL-3.0](LICENSE.txt).
 
-Forked from [gedaiu/selenium.d](https://github.com/gedaiu/selenium.d).

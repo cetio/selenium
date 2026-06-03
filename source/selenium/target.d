@@ -18,7 +18,6 @@ enum Platform : string
 class Target
 {
     Platform platform;
-    // TODO: `defaultX` needs to be removed.
     Browser alwaysMatch = new Browser();
     Browser[] firstMatch;
 
