@@ -27,12 +27,12 @@ public:
     // https://developer.chrome.com/docs/chromedriver/capabilities#chromeoptions_object
     /// Browser binary. To set a custom binary (ie: Vivaldi), set this to the path of the binary.
     string binary;
-    /// Arguments to be appended when launching. To exclude initial arguments, see `excludeSwitches`.
-    string[] args;
+    /// Command inclusion arguments. To exclude default arguments, see `excludeSwitches`.
+    string[] includeSwitches;
+    /// Command exclusion arguments.
+    string[] excludeSwitches;
     /// Preferences for browser (local state) and user.
     Preferences prefs;
-    /// Switch exclusions. All included switches will be excluded from the default binary arguments.
-    string[] excludeSwitches;
     /// Debugger address. This must be in the format '<hostname/ip:port>', ie: '127.0.0.1:9222'.
     string debuggerAddress;
     /// Minidump path. Only supported for Linux environments.
@@ -65,47 +65,30 @@ public:
     {
         JSONValue ret = super.toJSONValue();
         JSONValue opts = JSONValue.emptyObject;
-        if (args.length > 0)
-        {
-            JSONValue arr = JSONValue.emptyArray;
-            foreach (arg; args)
-                arr.array ~= JSONValue(arg);
-            opts["args"] = arr;
-        }
+        if (includeSwitches != null)
+            opts["args"] = JSONValue(includeSwitches);
+        
+        if (excludeSwitches != null)
+            opts["excludeSwitches"] = JSONValue(excludeSwitches);
 
-        if (binary.length > 0)
+        if (binary != null)
             opts["binary"] = JSONValue(binary);
 
-        if (prefs.length > 0)
-        {
-            JSONValue obj = JSONValue.emptyObject;
-            foreach (key, value; prefs)
-                obj[key] = JSONValue(value);
-            opts["prefs"] = obj;
-        }
+        if (prefs.browser != null)
+            opts["localState"] = JSONValue(prefs.browser);
+        
+        if (prefs.user != null)
+            opts["prefs"] = JSONValue(prefs.user);
 
-        if (extensions.length > 0)
-        {
-            JSONValue arr = JSONValue.emptyArray;
-            foreach (ext; extensions)
-                arr.array ~= JSONValue(ext);
-            opts["extensions"] = arr;
-        }
+        if (extensions != null)
+            opts["extensions"] = JSONValue(extensions);
 
-        if (excludeSwitches.length > 0)
-        {
-            JSONValue arr = JSONValue.emptyArray;
-            foreach (eachSwitch; excludeSwitches)
-                arr.array ~= JSONValue(eachSwitch);
-            opts["excludeSwitches"] = arr;
-        }
-
-        if (debuggerAddress.length > 0)
+        if (debuggerAddress != null)
             opts["debuggerAddress"] = JSONValue(debuggerAddress);
 
         version (linux)
         {
-            if (minidumpPath.length > 0)
+            if (minidumpPath != null)
                 opts["minidumpPath"] = JSONValue(minidumpPath);
         }
 
