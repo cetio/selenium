@@ -12,7 +12,7 @@ unittest
     driver = Driver.start();
 
     scope(exit)
-        driver.quit();
+        driver.stop();
 
     driver.navigate("about:blank");
     assert(driver.execute!int("return 42;") == 42);
@@ -24,7 +24,7 @@ unittest
     driver = Driver.start();
 
     scope(exit)
-        driver.quit();
+        driver.stop();
 
     driver.navigate("about:blank");
     assert(driver.execute!bool("return true;") == true);
@@ -36,7 +36,7 @@ unittest
     driver = Driver.start();
 
     scope(exit)
-        driver.quit();
+        driver.stop();
 
     driver.navigate("about:blank");
     assertThrown!WebDriverError(driver.execute("throw new Error('boom');"));

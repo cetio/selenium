@@ -27,7 +27,7 @@ unittest
     driver = Driver.start();
 
     scope(exit)
-        driver.quit();
+        driver.stop();
 
     driver.navigate(PAGE_A);
 
@@ -42,7 +42,7 @@ unittest
     driver = Driver.start();
 
     scope(exit)
-        driver.quit();
+        driver.stop();
 
     driver.navigate(PAGE_A);
     Element heading = driver.find(Locator.TagName, "h1");
@@ -57,7 +57,7 @@ unittest
     driver = Driver.start();
 
     scope(exit)
-        driver.quit();
+        driver.stop();
 
     driver.navigate(PAGE_A);
     Element[] found = driver.findAll(Locator.CssSelector, ".no-such-class");
@@ -70,7 +70,7 @@ unittest
     driver = Driver.start();
 
     scope(exit)
-        driver.quit();
+        driver.stop();
 
     driver.navigate(makePage("<input id='in' type='text'/>"));
     Element input = driver.find(Locator.CssSelector, "#in");

@@ -22,6 +22,7 @@ class Bridge
 {
     string address;
     Pid pid;
+    int capacity;
     Browser[string] sessions;
 
     static Bridge start(string executable)
@@ -46,6 +47,9 @@ class Bridge
 
     string createSession(JSONValue payload)
     {
+        if (sessions.length >= capacity)
+            throw new WebDriverError("Bridge capacity exceeded.");
+
         HTTP http = HTTP();
         Response response = send(http, HTTP.Method.post, address~"/session", payload);
         JSONValue json = checkAndParse(response);
@@ -69,17 +73,24 @@ class Bridge
         return id;
     }
 
-    // TODO: closeSession and stop should be separate.
-    void stop(string id)
+    void closeSession(string id)
     {
         try
             request(id, HTTP.Method.del, "");
         catch (Exception) { }
+        sessions.remove(id);
+        if (sessions.length == 0)
+            stop();
+    }
+
+    void stop()
+    {
         if (pid !is Pid.init)
         {
             tryKill(pid);
             pid = Pid.init;
         }
+        sessions = null;
     }
 
     T request(T = JSONValue)(string id, HTTP.Method method, string path)

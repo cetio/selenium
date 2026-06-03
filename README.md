@@ -6,7 +6,7 @@ Selenium-SDK is a D library for browser automation via the WebDriver protocol. I
 
 ## Features
 
-- **Driver Lifecycle**: Start, quit, and auto-detect WebDriver executables on `PATH` for Chrome, Firefox, Edge, and Safari.
+- **Driver Lifecycle**: Start, stop, and auto-detect WebDriver executables on `PATH` for Chrome, Firefox, Edge, and Safari.
 - **Navigation**: Navigate, go back/forward, refresh, and read page title and URL.
 - **Element Search**: Find single or multiple elements by CSS selector, XPath, tag name, or name. Search globally or within an existing element.
 - **Element Interaction**: Click, send keys, clear, submit, read text and attributes, and check enabled or displayed state.
@@ -28,7 +28,7 @@ Install a WebDriver server and ensure it is on your `PATH` (e.g. `chromedriver`,
 import selenium.driver;
 
 Driver driver = Driver.start();
-scope (exit) driver.quit();
+scope (exit) driver.stop();
 ```
 
 Pin to a specific browser:

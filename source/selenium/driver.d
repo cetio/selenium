@@ -47,17 +47,10 @@ class Driver
         return start(new Browser());
     }
 
-    // TODO: This is useless.
-    void quit()
-    {
-        if (bridge !is null)
-            bridge.stop(id);
-    }
-
     void stop()
     {
         if (bridge !is null)
-            bridge.stop(id);
+            bridge.closeSession(id);
     }
 
     string url()
