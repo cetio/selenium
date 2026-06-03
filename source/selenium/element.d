@@ -13,29 +13,19 @@ struct By
     string value;
 
     static By css(string value)
-    {
-        return By("css selector", value);
-    }
+        => By("css selector", value);
 
     static By tagName(string value)
-    {
-        return By("tag name", value);
-    }
+        => By("tag name", value);
 
     static By linkText(string value)
-    {
-        return By("link text", value);
-    }
+        => By("link text", value);
 
     static By partialLinkText(string value)
-    {
-        return By("partial link text", value);
-    }
+        => By("partial link text", value);
 
     static By xpath(string value)
-    {
-        return By("xpath", value);
-    }
+        => By("xpath", value);
 
     JSONValue toJSON()
     {
