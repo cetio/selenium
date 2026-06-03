@@ -54,12 +54,12 @@ public:
 
     ref string executablePath()
     {
-        if (_executablePath.length == 0)
+        if (_executablePath == null)
         {
             foreach (candidate; ["chromedriver", "msedgedriver", "safaridriver", "geckodriver"])
             {
                 string path = findExecutable(candidate);
-                if (path.length > 0)
+                if (path != null)
                 {
                     _executablePath = path;
                     break;
@@ -73,9 +73,9 @@ public:
     JSONValue toJSONValue() const
     {
         JSONValue ret = JSONValue.emptyObject;
-        if (name.length > 0)
+        if (name != null)
             ret["browserName"] = JSONValue(name);
-        if (release.length > 0)
+        if (release != null)
             ret["browserVersion"] = JSONValue(release);
         if (takesScreenshot)
             ret["takesScreenshot"] = JSONValue(true);

@@ -63,12 +63,12 @@ struct Options
         JSONValue alwaysMatch = JSONValue.emptyObject;
         if (platform != Platform.init)
             alwaysMatch["platformName"] = JSONValue(cast(string)platform);
-        if (remoteSessionId.length > 0)
+        if (remoteSessionId != null)
             alwaysMatch["webdriver.remote.sessionid"] = JSONValue(remoteSessionId);
         if (remoteQuietExceptions)
             alwaysMatch["webdriver.remote.quietExceptions"] = JSONValue(true);
 
-        JSONValue firstMatch = JSONValue.emptyArray;
+        JSONValue[] firstMatch;
         bool anyGeneric = false;
         foreach (browser; browsers)
         {
@@ -77,17 +77,17 @@ struct Options
                 anyGeneric = true;
                 continue;
             }
-            firstMatch.array ~= browser.toJSONValue();
+            firstMatch ~= browser.toJSONValue();
         }
         if (anyGeneric)
-            firstMatch.array ~= JSONValue.emptyObject;
+            firstMatch ~= JSONValue.emptyObject;
 
-        JSONValue capabilities = JSONValue.emptyObject;
+        JSONValue ret = JSONValue.emptyObject;
         if (alwaysMatch.object.length > 0)
-            capabilities["alwaysMatch"] = alwaysMatch;
-        if (firstMatch.array.length > 0)
-            capabilities["firstMatch"] = firstMatch;
+            ret["alwaysMatch"] = alwaysMatch;
+        if (firstMatch.length > 0)
+            ret["firstMatch"] = JSONValue(firstMatch);
 
-        return capabilities;
+        return ret;
     }
 }

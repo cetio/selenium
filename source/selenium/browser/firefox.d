@@ -35,7 +35,7 @@ public:
 
     override ref string executablePath()
     {
-        if (_executablePath.length == 0)
+        if (_executablePath == null)
             _executablePath = findExecutable("geckodriver");
         return _executablePath;
     }
@@ -44,35 +44,25 @@ public:
     {
         JSONValue ret = super.toJSONValue();
         JSONValue opts = JSONValue.emptyObject;
-        if (args.length > 0)
-        {
-            JSONValue arr = JSONValue.emptyArray;
-            foreach (arg; args)
-                arr.array ~= JSONValue(arg);
-            opts["args"] = arr;
-        }
 
-        if (binary.length > 0)
-            opts["binary"] = JSONValue(binary);
-
-        if (prefs.length > 0)
+        string[] launchArgs = args.dup;
+        if (profile != null)
         {
-            JSONValue obj = JSONValue.emptyObject;
-            foreach (key, value; prefs)
-                obj[key] = JSONValue(value);
-            opts["prefs"] = obj;
-        }
-
-        if (profile.isDir)
-            opts["args"].array ~= JSONValue("--profile "~profile);
-        else
-        {
-            auto re = ctRegex!(`^([A-Za-z0-9+/]{4})*([A-Za-z0-9+/]{3}=|[A-Za-z0-9+/]{2}==)?$`);
-            if (profile.match(re))
+            if (profile.isDir)
+                launchArgs ~= "--profile " ~ profile;
+            else if (profile.match(ctRegex!(`^([A-Za-z0-9+/]{4})*([A-Za-z0-9+/]{3}=|[A-Za-z0-9+/]{2}==)?$`)))
                 opts["profile"] = JSONValue(profile);
             else
                 throw new WebDriverError("Profile must be a directory path or a base-64 encoded zip file.");
         }
+        if (launchArgs != null)
+            opts["args"] = JSONValue(launchArgs);
+
+        if (binary != null)
+            opts["binary"] = JSONValue(binary);
+
+        if (prefs != null)
+            opts["prefs"] = JSONValue(prefs);
 
         if (opts.object.length > 0)
             ret["moz:firefoxOptions"] = opts;
