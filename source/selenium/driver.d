@@ -83,10 +83,10 @@ class Driver
     string source()
         => bridge.request!string(id, HTTP.Method.get, "/source");
 
-    string windowHandle()
+    @property string windowHandle()
         => bridge.request!string(id, HTTP.Method.get, "/window");
 
-    void window(string handle)
+    @property void windowHandle(string handle)
     {
         bridge.request(id, HTTP.Method.post, "/window", ["handle": handle]);
     }
@@ -104,10 +104,10 @@ class Driver
         bridge.request(id, HTTP.Method.post, "/window/maximize");
     }
 
-    Size windowSize()
+    @property Size windowSize()
         => bridge.request!Size(id, HTTP.Method.get, "/window/rect");
 
-    void windowSize(Size value)
+    @property void windowSize(Size value)
     {
         bridge.request(id, HTTP.Method.post, "/window/rect", value);
     }

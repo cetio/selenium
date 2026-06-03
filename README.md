@@ -35,9 +35,9 @@ Pin to a specific browser:
 
 ```d
 import selenium.driver;
-import selenium.browser.chrome : defaultChrome;
+import selenium.browser.chrome : Chrome;
 
-Driver driver = Driver.start(defaultChrome);
+Driver driver = Driver.start(new Chrome());
 ```
 
 ### Navigation
