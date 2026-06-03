@@ -22,7 +22,6 @@ class Bridge
 {
     string address;
     Pid pid;
-    string sessionPrefix;
     Browser[string] sessions;
 
     static Bridge start(string executable)
@@ -57,7 +56,6 @@ class Bridge
         else if ("value" in json && "sessionId" in json["value"])
             sessionId = json["value"]["sessionId"].str;
 
-        sessionPrefix = address~"/session/"~sessionId;
 
         JSONValue capabilities;
         if ("value" in json && "capabilities" in json["value"])
@@ -71,10 +69,11 @@ class Bridge
         return sessionId;
     }
 
-    void stop()
+    // TODO: closeSession and stop should be separate.
+    void stop(string sessionId)
     {
         try
-            request(HTTP.Method.del, "");
+            request(sessionId, HTTP.Method.del, "");
         catch (Exception) { }
         if (pid !is Pid.init)
         {
@@ -83,13 +82,13 @@ class Bridge
         }
     }
 
-    T request(T = JSONValue)(HTTP.Method method, string path)
+    T request(T = JSONValue)(string sessionId, HTTP.Method method, string path)
     {
         if (method == HTTP.Method.post)
-            return request!T(method, path, JSONValue.emptyObject);
+            return request!T(sessionId, method, path, JSONValue.emptyObject);
 
         HTTP http = HTTP();
-        Response response = send(http, method, sessionPrefix~path);
+        Response response = send(http, method, address~"/session/"~sessionId~path);
         JSONValue json = checkAndParse(response);
         static if (is(T == JSONValue))
             return json;
@@ -97,10 +96,10 @@ class Bridge
             return parse!T(json);
     }
 
-    T request(T = JSONValue, B)(HTTP.Method method, string path, B body_)
+    T request(T = JSONValue, B)(string sessionId, HTTP.Method method, string path, B body_)
     {
         HTTP http = HTTP();
-        Response response = send(http, method, sessionPrefix~path, body_);
+        Response response = send(http, method, address~"/session/"~sessionId~path, body_);
         JSONValue json = checkAndParse(response);
         static if (is(T == JSONValue))
             return json;
@@ -139,7 +138,7 @@ class Bridge
     }
 
 package:
-    void ensureTimeoutsSynced(Browser browser)
+    void ensureTimeoutsSynced(string sessionId, Browser browser)
     {
         static int syncedImplicit;
         static int syncedPage;
@@ -161,7 +160,7 @@ package:
             body_["script"] = JSONValue(scriptTimeout);
         try
         {
-            request(HTTP.Method.post, "/timeouts", body_);
+            request(sessionId, HTTP.Method.post, "/timeouts", body_);
             syncedImplicit = implicitTimeout;
             syncedPage = pageTimeout;
             syncedScript = scriptTimeout;
