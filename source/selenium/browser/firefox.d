@@ -2,7 +2,7 @@ module selenium.browser.firefox;
 
 import selenium.browser : Browser;
 import selenium.error : WebDriverError;
-import std.json : JSONValue;
+import std.json : JSONValue, JSONType;
 import std.file : isDir;
 import std.regex : match, ctRegex;
 
@@ -19,13 +19,22 @@ private:
     string _executablePath;
 
 public:
+    /// Wrapper struct for preferences. Firefox only supports user preferences.
+    /// Preferences are NOT sanitized or validated, and are expected to be JSON objects.
+    /// Preferences can be found at https://searchfox.org/firefox-main/source/modules/libpref/init/all.js
+    struct Preferences
+    {
+        /// User profile preferences.
+        JSONValue user;
+    }
+
     // https://developer.mozilla.org/en-US/docs/Web/WebDriver/Reference/Capabilities/firefoxOptions
     /// Browser binary. To set a custom binary (ie: Librewolf), set this to the path of the binary.
     string binary;
     /// Arguments to be appended when launching.
     string[] args;
     /// Preferences. These are client preferences for the active profile.
-    string[string] prefs;
+    Preferences prefs;
     /// This is universal for both the recommended `--profile` and the legacy `firefox_profile`.
     /// This should be a directory path containing a Firefox profile, but Base-64 Zip is supported for compatibility.
     string profile;
@@ -61,8 +70,8 @@ public:
         if (binary != null)
             opts["binary"] = JSONValue(binary);
 
-        if (prefs != null)
-            opts["prefs"] = JSONValue(prefs);
+        if (prefs.user.type == JSONType.object && prefs.user.object.length > 0)
+            opts["prefs"] = prefs.user;
 
         if (opts.object.length > 0)
             ret["moz:firefoxOptions"] = opts;

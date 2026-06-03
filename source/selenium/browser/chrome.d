@@ -1,7 +1,7 @@
 module selenium.browser.chrome;
 
 import selenium.browser : Browser;
-import std.json : JSONValue;
+import std.json : JSONValue, JSONType;
 
 Chrome defaultChrome;
 
@@ -16,12 +16,14 @@ private:
     string _executablePath;
 
 public:
+    /// Wrapper struct for preferences. Chrome supports both browser (local state) and user preferences.
+    /// Preferences are NOT sanitized or validated, and are expected to be JSON arrays.
     struct Preferences
     {
         /// Local state preferences.
-        string[string] browser;
+        JSONValue browser;
         /// User profile preferences.
-        string[string] user;
+        JSONValue user;
     }
 
     // https://developer.chrome.com/docs/chromedriver/capabilities#chromeoptions_object
@@ -74,11 +76,11 @@ public:
         if (binary != null)
             opts["binary"] = JSONValue(binary);
 
-        if (prefs.browser != null)
-            opts["localState"] = JSONValue(prefs.browser);
+        if (prefs.browser.type == JSONType.object && prefs.browser.object.length > 0)
+            opts["localState"] = prefs.browser;
         
-        if (prefs.user != null)
-            opts["prefs"] = JSONValue(prefs.user);
+        if (prefs.user.type == JSONType.object && prefs.user.object.length > 0)
+            opts["prefs"] = prefs.user;
 
         if (extensions != null)
             opts["extensions"] = JSONValue(extensions);
