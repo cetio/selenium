@@ -44,7 +44,7 @@ class Element
 
     Element find(Locator strategy, string value)
     {
-        driver.bridge.ensureTimeoutsSynced();
+        driver.bridge.ensureTimeoutsSynced(driver.browser);
 
         JSONValue body_ = JSONValue.emptyObject;
         body_["using"] = cast(string)strategy;
@@ -55,7 +55,7 @@ class Element
 
     Element[] findAll(Locator strategy, string value)
     {
-        driver.bridge.ensureTimeoutsSynced();
+        driver.bridge.ensureTimeoutsSynced(driver.browser);
 
         JSONValue body_ = JSONValue.emptyObject;
         body_["using"] = cast(string)strategy;

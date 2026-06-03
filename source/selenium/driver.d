@@ -12,6 +12,7 @@ import std.net.curl : HTTP;
 class Driver
 {
     Bridge bridge;
+    Browser browser;
     string sessionId;
 
     static Driver start(Bridge bridge, Browser alwaysMatch, Browser[] firstMatch...)
@@ -29,11 +30,11 @@ class Driver
         payload["capabilities"] = capabilities;
 
         string id = bridge.createSession(payload);
-        bridge.getTimeouts();
 
         Driver ret = new Driver();
         ret.bridge = bridge;
         ret.sessionId = id;
+        ret.browser = bridge.sessions[id];
         return ret;
     }
 
@@ -65,7 +66,7 @@ class Driver
 
     void navigate(string url)
     {
-        bridge.ensureTimeoutsSynced();
+        bridge.ensureTimeoutsSynced(browser);
         bridge.request(HTTP.Method.post, "/url", ["url": url]);
     }
 
@@ -131,7 +132,7 @@ class Driver
 
     Element find(Locator strategy, string value)
     {
-        bridge.ensureTimeoutsSynced();
+        bridge.ensureTimeoutsSynced(browser);
 
         JSONValue body_ = JSONValue.emptyObject;
         body_["using"] = cast(string)strategy;
@@ -142,7 +143,7 @@ class Driver
 
     Element[] findAll(Locator strategy, string value)
     {
-        bridge.ensureTimeoutsSynced();
+        bridge.ensureTimeoutsSynced(browser);
 
         JSONValue body_ = JSONValue.emptyObject;
         body_["using"] = cast(string)strategy;
@@ -159,7 +160,7 @@ class Driver
 
     T execute(T = string)(string script, JSONValue args = JSONValue.emptyArray)
     {
-        bridge.ensureTimeoutsSynced();
+        bridge.ensureTimeoutsSynced(browser);
         return bridge.request!T(HTTP.Method.post, "/execute/sync", [
             "script": JSONValue(script),
             "args": args,

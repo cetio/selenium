@@ -1,6 +1,6 @@
 module selenium.bridge;
 
-import selenium.browser : Browser, Timeouts;
+import selenium.browser : Browser;
 import selenium.error;
 
 import conductor.http : Response, send;
@@ -23,7 +23,7 @@ class Bridge
     string address;
     Pid pid;
     string sessionPrefix;
-    Timeouts timeouts;
+    Browser[string] sessions;
 
     static Bridge start(string executable)
     {
@@ -58,6 +58,16 @@ class Bridge
             sessionId = json["value"]["sessionId"].str;
 
         sessionPrefix = address~"/session/"~sessionId;
+
+        JSONValue capabilities;
+        if ("value" in json && "capabilities" in json["value"])
+            capabilities = json["value"]["capabilities"];
+        else if ("value" in json)
+            capabilities = json["value"];
+        else
+            capabilities = JSONValue.emptyObject;
+
+        sessions[sessionId] = Browser.fromJSONValue(capabilities);
         return sessionId;
     }
 
@@ -129,31 +139,15 @@ class Bridge
     }
 
 package:
-    void getTimeouts()
-    {
-        JSONValue json = request(HTTP.Method.get, "/timeouts");
-        JSONValue value = ("value" in json) ? json["value"] : json;
-
-        if (value.type == JSONType.object)
-        {
-            if ("implicit" in value && value["implicit"].type == JSONType.integer)
-                timeouts.implicit = value["implicit"].get!long.msecs;
-            if ("pageLoad" in value && value["pageLoad"].type == JSONType.integer)
-                timeouts.pageLoad = value["pageLoad"].get!long.msecs;
-            if ("script" in value && value["script"].type == JSONType.integer)
-                timeouts.script = value["script"].get!long.msecs;
-        }
-    }
-
-    void ensureTimeoutsSynced()
+    void ensureTimeoutsSynced(Browser browser)
     {
         static int syncedImplicit;
         static int syncedPage;
         static int syncedScript;
 
-        int implicitTimeout = cast(int)timeouts.implicit.total!"msecs";
-        int pageTimeout = cast(int)timeouts.pageLoad.total!"msecs";
-        int scriptTimeout = cast(int)timeouts.script.total!"msecs";
+        int implicitTimeout = cast(int)browser.timeouts.implicit.total!"msecs";
+        int pageTimeout = cast(int)browser.timeouts.pageLoad.total!"msecs";
+        int scriptTimeout = cast(int)browser.timeouts.script.total!"msecs";
 
         if (implicitTimeout == syncedImplicit && pageTimeout == syncedPage && scriptTimeout == syncedScript)
             return;

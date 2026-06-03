@@ -115,14 +115,6 @@ protected:
         import selenium.browser.chrome : Chrome;
         import selenium.browser.firefox : Firefox;
 
-        Browser ret;
-        if ("goog:chromeOptions" in json)
-            ret = new Chrome().fromJSONValue(json);
-        else if ("moz:firefoxOptions" in json)
-            ret = new Firefox().fromJSONValue(json);
-        else
-            ret = new Browser();
-            
         if (json.type != JSONType.object)
             throw new Exception("Browser capabilities must be a JSON object.");
 
