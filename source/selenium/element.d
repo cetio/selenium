@@ -72,7 +72,7 @@ class Element
 
     void click() => driver.bridge.request!void(driver.id, HTTP.Method.post, path("/click"));
     void sendKeys(string[] keys...) 
-        => driver.bridge.request(driver.id, HTTP.Method.post, path("/value"), ["text": keys.join()]);
+        => driver.bridge.request!void(driver.id, HTTP.Method.post, path("/value"), ["text": keys.join()]);
     void clear() => driver.bridge.request!void(driver.id, HTTP.Method.post, path("/clear"));
     string screenshot() => driver.bridge.request!string(driver.id, HTTP.Method.get, path("/screenshot"));
 
