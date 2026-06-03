@@ -33,6 +33,8 @@ public:
     /// Detach process from driver.
     /// If true, the browser will not be closed when the driver is closed.
     bool detach;
+    
+    string[] extensions;
 
     // TODO: Support for setting custom names.
     override string name() const

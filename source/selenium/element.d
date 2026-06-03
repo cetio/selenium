@@ -44,7 +44,7 @@ public:
 
     Element find(Locator strategy, string value)
     {
-        bridge.ensureImplicitWaitSynced();
+        bridge.ensureTimeoutsSynced();
 
         JSONValue body_ = JSONValue.emptyObject;
         body_["using"] = cast(string)strategy;
@@ -55,7 +55,7 @@ public:
 
     Element[] findAll(Locator strategy, string value)
     {
-        bridge.ensureImplicitWaitSynced();
+        bridge.ensureTimeoutsSynced();
 
         JSONValue body_ = JSONValue.emptyObject;
         body_["using"] = cast(string)strategy;

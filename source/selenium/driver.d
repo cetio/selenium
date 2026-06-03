@@ -10,15 +10,12 @@ public import selenium.element : Locator;
 import std.json : JSONType, JSONValue;
 import std.net.curl : HTTP;
 import std.stdio : File, stderr, stdout;
-import core.time : Duration;
 
 class Driver
 {
 public:
     Bridge bridge;
     Options options;
-
-    ref Duration implicitWait() => bridge.implicitWait;
 
     static Driver start(Options options = Options())
     {
@@ -53,6 +50,7 @@ public:
 
     void navigate(string url)
     {
+        bridge.ensureTimeoutsSynced();
         bridge.request(HTTP.Method.post, "/url", ["url": url]);
     }
 
@@ -118,7 +116,7 @@ public:
 
     Element find(Locator strategy, string value)
     {
-        bridge.ensureImplicitWaitSynced();
+        bridge.ensureTimeoutsSynced();
 
         JSONValue body_ = JSONValue.emptyObject;
         body_["using"] = cast(string)strategy;
@@ -129,7 +127,7 @@ public:
 
     Element[] findAll(Locator strategy, string value)
     {
-        bridge.ensureImplicitWaitSynced();
+        bridge.ensureTimeoutsSynced();
 
         JSONValue body_ = JSONValue.emptyObject;
         body_["using"] = cast(string)strategy;
@@ -146,6 +144,7 @@ public:
 
     T execute(T = string)(string script, JSONValue args = JSONValue.emptyArray)
     {
+        bridge.ensureTimeoutsSynced();
         return bridge.request!T(HTTP.Method.post, "/execute/sync", [
             "script": JSONValue(script),
             "args": args,
@@ -154,11 +153,6 @@ public:
 
     string screenshot()
         => bridge.request!string(HTTP.Method.get, "/screenshot");
-
-    // void wait(Duration timeout, Duration interval, bool delegate() poll)
-    // {
-        
-    // }
 
 private:
     this() { }

@@ -12,7 +12,7 @@ import std.net.curl : HTTP;
 import std.process : kill, Pid, spawnProcess;
 import std.socket;
 import core.thread : Thread;
-import core.time : Duration, MonoTime, msecs;
+import core.time : MonoTime, msecs;
 
 class Bridge
 {
@@ -23,7 +23,9 @@ public:
     string serverUrl;
     string sessionId;
     bool running;
-    Duration implicitWait;
+    int implicitTimeout;
+    int pageTimeout;
+    int scriptTimeout;
 
     static Bridge start(Options options)
     {
@@ -32,28 +34,30 @@ public:
         {
             if (browser.generic)
                 continue;
-            string candidate = browser.executablePath;
-            if (candidate.length > 0)
+
+            if (browser.executablePath.length > 0)
             {
-                path = candidate;
+                path = browser.executablePath;
                 break;
             }
         }
-        if (path.length == 0)
+
+        if (path == null)
         {
             foreach (browser; options.browsers)
             {
                 if (!browser.generic)
                     continue;
-                string candidate = browser.executablePath;
-                if (candidate.length > 0)
+
+                if (browser.executablePath != null)
                 {
-                    path = candidate;
+                    path = browser.executablePath;
                     break;
                 }
             }
         }
-        if (path.length == 0)
+
+        if (path == null)
             throw new WebDriverConnectionError("No executable path provided by browsers");
 
         Bridge ret = new Bridge(path);
@@ -96,6 +100,17 @@ public:
             sessionId = json["sessionId"].str;
         else if ("value" in json && "sessionId" in json["value"])
             sessionId = json["value"]["sessionId"].str;
+
+        foreach (browser; options.browsers)
+        {
+            if (browser.generic)
+                continue;
+
+            implicitTimeout = browser.implicitTimeout;
+            pageTimeout = browser.pageTimeout;
+            scriptTimeout = browser.scriptTimeout;
+            break;
+        }
     }
 
     void stop()
@@ -172,18 +187,28 @@ public:
     }
 
 package:
-    void ensureImplicitWaitSynced()
+    void ensureTimeoutsSynced()
     {
-        static Duration syncedImplicitWait;
-        if (implicitWait == syncedImplicitWait)
+        static int syncedImplicit;
+        static int syncedPage;
+        static int syncedScript;
+
+        if (implicitTimeout == syncedImplicit && pageTimeout == syncedPage && scriptTimeout == syncedScript)
             return;
 
         JSONValue body_ = JSONValue.emptyObject;
-        body_["implicit"] = JSONValue(implicitWait.total!"msecs");
+        if (implicitTimeout != 0)
+            body_["implicit"] = JSONValue(implicitTimeout);
+        if (pageTimeout != 0)
+            body_["pageLoad"] = JSONValue(pageTimeout);
+        if (scriptTimeout != 0)
+            body_["script"] = JSONValue(scriptTimeout);
         try
         {
             request(HTTP.Method.post, "/timeouts", body_);
-            syncedImplicitWait = implicitWait;
+            syncedImplicit = implicitTimeout;
+            syncedPage = pageTimeout;
+            syncedScript = scriptTimeout;
         }
         catch (Exception) { }
     }

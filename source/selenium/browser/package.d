@@ -40,6 +40,9 @@ public:
     bool nativeEvents;
     AlertBehaviour unexpectedAlertBehaviour;
     int elementScrollBehavior;
+    int implicitTimeout;
+    int pageTimeout;
+    int scriptTimeout;
 
     string name() const
         => "";
