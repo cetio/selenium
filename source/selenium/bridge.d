@@ -32,9 +32,9 @@ public:
     {
         Browser browser = options.match();
         Bridge ret = new Bridge(browser.executablePath);
-        ret.implicitTimeout = cast(int)browser.implicitTimeout.total!"msecs";
-        ret.pageTimeout = cast(int)browser.pageTimeout.total!"msecs";
-        ret.scriptTimeout = cast(int)browser.scriptTimeout.total!"msecs";
+        ret.implicitTimeout = cast(int)browser.timeouts.implicit.total!"msecs";
+        ret.pageTimeout = cast(int)browser.timeouts.pageLoad.total!"msecs";
+        ret.scriptTimeout = cast(int)browser.timeouts.script.total!"msecs";
         ret.launch();
         try
             ret.beginSession(options);

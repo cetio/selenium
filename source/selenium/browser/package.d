@@ -14,37 +14,54 @@ static this()
     defaultBrowser = new Browser();
 }
 
-enum AlertBehaviour : string
+enum PageLoadStrategy : string
 {
-    Accept = "accept",
+    Normal = "normal",
+    Eager = "eager",
+    None = "none"
+}
+
+enum UnhandledPromptBehavior : string
+{
     Dismiss = "dismiss",
+    Accept = "accept",
+    DismissAndNotify = "dismiss and notify",
+    AcceptAndNotify = "accept and notify",
     Ignore = "ignore"
+}
+
+struct Timeouts
+{
+    /// Time to wait for an element to exist when locating.
+    Duration implicit;
+    /// Time to wait for page navigation to complete.
+    Duration pageLoad;
+    /// Time to wait for script evaluation to complete.
+    Duration script;
 }
 
 class Browser
 {
 private:
     string _executablePath;
-    
+
 public:
+    /// Filter for matching a specific browser version.
     string release;
-    bool takesScreenshot;
-    bool handlesAlerts;
-    bool cssSelectorsEnabled;
-    bool javascriptEnabled;
-    bool databaseEnabled;
-    bool locationContextEnabled;
-    bool applicationCacheEnabled;
-    bool browserConnectionEnabled;
-    bool webStorageEnabled;
-    bool acceptSslCerts;
-    bool rotatable;
-    bool nativeEvents;
-    AlertBehaviour unexpectedAlertBehaviour;
-    int elementScrollBehavior;
-    Duration implicitTimeout;
-    Duration pageTimeout;
-    Duration scriptTimeout;
+    /// Filter for matching a specific platform.
+    string platformName;
+    /// Accept insecure TLS certificates.
+    bool acceptInsecureCerts;
+    /// Page load readiness strategy.
+    PageLoadStrategy pageLoadStrategy;
+    /// Support window resizing and positioning.
+    bool setWindowRect;
+    /// Enforce file input interactability checks.
+    bool strictFileInteractability;
+    /// Strategy for user prompts not handled by commands.
+    UnhandledPromptBehavior unhandledPromptBehavior;
+    /// Session timeout configuration.
+    Timeouts timeouts;
 
     string name() const
         => "";
@@ -69,7 +86,6 @@ public:
         return _executablePath;
     }
 
-
     JSONValue toJSONValue() const
     {
         JSONValue ret = JSONValue.emptyObject;
@@ -77,34 +93,29 @@ public:
             ret["browserName"] = JSONValue(name);
         if (release != null)
             ret["browserVersion"] = JSONValue(release);
-        if (takesScreenshot)
-            ret["takesScreenshot"] = JSONValue(true);
-        if (handlesAlerts)
-            ret["handlesAlerts"] = JSONValue(true);
-        if (cssSelectorsEnabled)
-            ret["cssSelectorsEnabled"] = JSONValue(true);
-        if (javascriptEnabled)
-            ret["javascriptEnabled"] = JSONValue(true);
-        if (databaseEnabled)
-            ret["databaseEnabled"] = JSONValue(true);
-        if (locationContextEnabled)
-            ret["locationContextEnabled"] = JSONValue(true);
-        if (applicationCacheEnabled)
-            ret["applicationCacheEnabled"] = JSONValue(true);
-        if (browserConnectionEnabled)
-            ret["browserConnectionEnabled"] = JSONValue(true);
-        if (webStorageEnabled)
-            ret["webStorageEnabled"] = JSONValue(true);
-        if (acceptSslCerts)
-            ret["acceptSslCerts"] = JSONValue(true);
-        if (rotatable)
-            ret["rotatable"] = JSONValue(true);
-        if (nativeEvents)
-            ret["nativeEvents"] = JSONValue(true);
-        if (unexpectedAlertBehaviour != AlertBehaviour.init)
-            ret["unexpectedAlertBehaviour"] = JSONValue(cast(string)unexpectedAlertBehaviour);
-        if (elementScrollBehavior != 0)
-            ret["elementScrollBehavior"] = JSONValue(elementScrollBehavior);
+        if (platformName != null)
+            ret["platformName"] = JSONValue(platformName);
+        if (acceptInsecureCerts)
+            ret["acceptInsecureCerts"] = JSONValue(true);
+        if (pageLoadStrategy != PageLoadStrategy.init)
+            ret["pageLoadStrategy"] = JSONValue(cast(string)pageLoadStrategy);
+        if (setWindowRect)
+            ret["setWindowRect"] = JSONValue(true);
+        if (strictFileInteractability)
+            ret["strictFileInteractability"] = JSONValue(true);
+        if (unhandledPromptBehavior != UnhandledPromptBehavior.init)
+            ret["unhandledPromptBehavior"] = JSONValue(cast(string)unhandledPromptBehavior);
+
+        JSONValue timeoutsObj = JSONValue.emptyObject;
+        if (timeouts.implicit != Duration.init)
+            timeoutsObj["implicit"] = JSONValue(cast(int)timeouts.implicit.total!"msecs");
+        if (timeouts.pageLoad != Duration.init)
+            timeoutsObj["pageLoad"] = JSONValue(cast(int)timeouts.pageLoad.total!"msecs");
+        if (timeouts.script != Duration.init)
+            timeoutsObj["script"] = JSONValue(cast(int)timeouts.script.total!"msecs");
+        if (timeoutsObj.object.length > 0)
+            ret["timeouts"] = timeoutsObj;
+
         return ret;
     }
 

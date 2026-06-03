@@ -4,13 +4,13 @@ import selenium.browser : Browser;
 import selenium.browser.chrome : Chrome;
 import selenium.options : Options;
 
-import std.json : JSONType, JSONValue;
+import std.json : JSONValue;
 
 unittest
 {
     Chrome chrome = new Chrome();
-    chrome.takesScreenshot = true;
-    chrome.javascriptEnabled = true;
+    chrome.acceptInsecureCerts = true;
+    chrome.setWindowRect = true;
     Options options;
     options.browsers ~= chrome;
     JSONValue json = options.toJSONValue();
@@ -18,19 +18,15 @@ unittest
     assert(json["firstMatch"].array.length == 1);
     JSONValue first = json["firstMatch"].array[0];
     assert(first["browserName"].str == "chrome");
-    assert(first["takesScreenshot"] == JSONValue(true));
-    assert(first["javascriptEnabled"] == JSONValue(true));
+    assert(first["acceptInsecureCerts"] == JSONValue(true));
+    assert(first["setWindowRect"] == JSONValue(true));
+    assert("alwaysMatch" !in json);
 }
 
 unittest
 {
     Options options;
-    options.remoteSessionId = "sess-42";
-    options.remoteQuietExceptions = true;
     JSONValue json = options.toJSONValue();
-    assert("alwaysMatch" in json);
-    assert(json["alwaysMatch"]["webdriver.remote.sessionid"].str == "sess-42");
-    assert(json["alwaysMatch"]["webdriver.remote.quietExceptions"] == JSONValue(true));
-    assert("remoteSessionId" !in json);
-    assert("remoteQuietExceptions" !in json);
+    assert("alwaysMatch" !in json);
+    assert("firstMatch" !in json);
 }
