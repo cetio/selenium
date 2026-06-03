@@ -43,7 +43,7 @@ Driver driver = Driver.start(new Chrome());
 ### Navigation
 
 ```d
-driver.navigate("https://example.com");
+driver.go("https://example.com");
 writeln(driver.title);
 writeln(driver.url);
 
@@ -95,7 +95,7 @@ driver.maximize();
 driver.windowSize = Size(1920, 1080);
 
 string[] handles = driver.windowHandles();
-driver.closeWindow();
+driver.close();
 ```
 
 ## License

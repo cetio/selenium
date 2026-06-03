@@ -101,9 +101,10 @@ class Bridge
         HTTP http = HTTP();
         Response response = send(http, method, address~"/session/"~id~path);
         JSONValue json = checkAndParse(response);
+
         static if (is(T == JSONValue))
             return json;
-        else
+        else static if (!is(T == void))
             return parse!T(json);
     }
 
@@ -112,9 +113,10 @@ class Bridge
         HTTP http = HTTP();
         Response response = send(http, method, address~"/session/"~id~path, body_);
         JSONValue json = checkAndParse(response);
+        
         static if (is(T == JSONValue))
             return json;
-        else
+        else static if (!is(T == void))
             return parse!T(json);
     }
 

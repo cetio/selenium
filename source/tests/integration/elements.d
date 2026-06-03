@@ -26,7 +26,7 @@ unittest
     Driver driver;
     driver = Driver.start();
 
-    driver.navigate(PAGE_A);
+    driver.go(PAGE_A);
 
     assertThrown!NoSuchElementError(
         driver.find(By.css("#does-not-exist"))
@@ -39,9 +39,9 @@ unittest
     Driver driver;
     driver = Driver.start();
 
-    driver.navigate(PAGE_A);
+    driver.go(PAGE_A);
     Element heading = driver.find(By.tagName("h1"));
-    driver.navigate(PAGE_B);
+    driver.go(PAGE_B);
 
     assertThrown!StaleElementReferenceError(heading.text);
     driver.stop();
@@ -52,7 +52,7 @@ unittest
     Driver driver;
     driver = Driver.start();
 
-    driver.navigate(PAGE_A);
+    driver.go(PAGE_A);
     Element[] found = driver.findAll(By.css(".no-such-class"));
     assert(found.length == 0);
     driver.stop();
@@ -63,7 +63,7 @@ unittest
     Driver driver;
     driver = Driver.start();
 
-    driver.navigate(makePage("<input id='in' type='text'/>"));
+    driver.go(makePage("<input id='in' type='text'/>"));
     Element input = driver.find(By.css("#in"));
     input.click();
     Element active = driver.activeElement();

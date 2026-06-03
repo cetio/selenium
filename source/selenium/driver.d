@@ -52,74 +52,35 @@ class Driver
             bridge.closeSession(id);
     }
 
-    string url()
-        => bridge.request!string(id, HTTP.Method.get, "/url");
+    string url() => bridge.request!string(id, HTTP.Method.get, "/url");
+    string title() => bridge.request!string(id, HTTP.Method.get, "/title");
+    string source() => bridge.request!string(id, HTTP.Method.get, "/source");
+    string handle() => bridge.request!string(id, HTTP.Method.get, "/window");
+    string[] handles() => bridge.request!(string[])(id, HTTP.Method.get, "/window/handles");
+    Size size() => bridge.request!Size(id, HTTP.Method.get, "/window/rect");
 
-    void navigate(string url)
+    void go(string url)
     {
         bridge.ensureTimeoutsSynced(id, browser);
         bridge.request(id, HTTP.Method.post, "/url", ["url": url]);
     }
 
-    void back()
-    {
-        bridge.request(id, HTTP.Method.post, "/back");
-    }
+    void back() => bridge.request!void(id, HTTP.Method.post, "/back");
+    void forward() => bridge.request!void(id, HTTP.Method.post, "/forward");
+    void refresh() => bridge.request!void(id, HTTP.Method.post, "/refresh");
 
-    void forward()
-    {
-        bridge.request(id, HTTP.Method.post, "/forward");
-    }
-
-    void refresh()
-    {
-        bridge.request(id, HTTP.Method.post, "/refresh");
-    }
-
-    string title()
-        => bridge.request!string(id, HTTP.Method.get, "/title");
-
-    string source()
-        => bridge.request!string(id, HTTP.Method.get, "/source");
-
-    @property string windowHandle()
-        => bridge.request!string(id, HTTP.Method.get, "/window");
-
-    @property void windowHandle(string handle)
-    {
-        bridge.request(id, HTTP.Method.post, "/window", ["handle": handle]);
-    }
-
-    string[] windowHandles()
-        => bridge.request!(string[])(id, HTTP.Method.get, "/window/handles");
-
-    void closeWindow()
-    {
-        bridge.request(id, HTTP.Method.del, "/window");
-    }
-
-    void maximize()
-    {
-        bridge.request(id, HTTP.Method.post, "/window/maximize");
-    }
-
-    @property Size windowSize()
-        => bridge.request!Size(id, HTTP.Method.get, "/window/rect");
-
-    @property void windowSize(Size value)
-    {
-        bridge.request(id, HTTP.Method.post, "/window/rect", value);
-    }
-
-    void frame(string id)
-    {
-        bridge.request(this.id, HTTP.Method.post, "/frame", ["id": id]);
-    }
+    void close() => bridge.request!void(id, HTTP.Method.del, "/window");
+    void maximize() => bridge.request!void(id, HTTP.Method.post, "/window/maximize");
+    void fullscreen() => bridge.request!void(id, HTTP.Method.post, "/window/fullscreen");
+    void minimize() => bridge.request!void(id, HTTP.Method.post, "/window/minimize");
+    void resize(Size value) => bridge.request!void(id, HTTP.Method.post, "/window/rect", value);
 
     void frame(long id)
     {
         bridge.request(this.id, HTTP.Method.post, "/frame", ["id": id]);
     }
+
+    Element activeElement() => new Element(this, Bridge.parseElementId(bridge.request(id, HTTP.Method.get, "/element/active")));
 
     Element find(By by)
     {
@@ -139,9 +100,6 @@ class Driver
             ret ~= new Element(this, eid);
         return ret;
     }
-
-    Element activeElement()
-        => new Element(this, Bridge.parseElementId(bridge.request(id, HTTP.Method.get, "/element/active")));
 
     T execute(T = string)(string script, JSONValue args = JSONValue.emptyArray)
     {
