@@ -9,5 +9,6 @@
 	},
 	"description": "Modern Selenium SDK for D, inspired by Ruby's Selenium",
 	"license": "MIT",
-	"name": "selenium-sdk"
+	"name": "selenium-sdk",
+	"targetType": "library"
 }
