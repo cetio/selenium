@@ -1,7 +1,8 @@
 module selenium.browser.chrome;
 
 import selenium.browser : Browser;
-import selenium.error : WebDriverError;
+import selenium.error : InvalidArgumentError;
+
 import std.json : JSONValue, JSONType;
 import std.base64 : Base64;
 import std.file : read, isFile;
@@ -74,7 +75,7 @@ class Chrome : Browser
             else if (ext.match(ctRegex!(`^([A-Za-z0-9+/]{4})*([A-Za-z0-9+/]{3}=|[A-Za-z0-9+/]{2}==)?$`)))
                 opts["extensions"] ~= JSONValue(ext);
             else
-                throw new WebDriverError("Extension must be a file path or a base-64 encoded CRX content.");
+                throw new InvalidArgumentError("Extension must be a file path or a base-64 encoded CRX content.");
         }
 
         if (debuggerAddress != null)

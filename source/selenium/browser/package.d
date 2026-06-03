@@ -1,5 +1,7 @@
 module selenium.browser;
 
+import selenium.error : InvalidArgumentError;
+
 import std.json : JSONValue, JSONType;
 import core.time : Duration, dur;
 
@@ -116,7 +118,7 @@ protected:
         import selenium.browser.firefox : Firefox;
 
         if (json.type != JSONType.object)
-            throw new Exception("Browser capabilities must be a JSON object.");
+            throw new InvalidArgumentError("Browser capabilities must be a JSON object.");
 
         if ("platformName" in json && json["platformName"].type == JSONType.string)
             platform = cast(Platform)json["platformName"].str;

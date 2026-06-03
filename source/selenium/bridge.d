@@ -48,7 +48,7 @@ class Bridge
     string createSession(JSONValue payload)
     {
         if (capacity > 0 && sessions.length >= capacity)
-            throw new WebDriverError("Bridge capacity exceeded.");
+            throw new WebDriverConnectionError("Bridge capacity exceeded.");
 
         HTTP http = HTTP();
         Response response = send(http, HTTP.Method.post, address~"/session", payload);
@@ -189,7 +189,7 @@ package:
             if (response.status >= 200 && response.status < 300)
                 return JSONValue.emptyObject;
 
-            throw new WebDriverError("Invalid response from server:"~cast(string)response.content);
+            throw new WebDriverConnectionError("Invalid response from server:"~cast(string)response.content);
         }
 
         if (response.status >= 400)
@@ -237,8 +237,8 @@ private:
             Thread.sleep(100.msecs);
         }
 
-        throw new WebDriverError(
-            "WebDriver did not become ready within "~timeoutMs.to!string~" ms"
+        throw new WebDriverConnectionError(
+            "WebDriver did not become ready within "~timeoutMs.to!string~"ms"
         );
     }
 
