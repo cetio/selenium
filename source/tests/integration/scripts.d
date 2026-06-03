@@ -11,23 +11,19 @@ unittest
     Driver driver;
     driver = Driver.start();
 
-    scope(exit)
-        driver.stop();
-
     driver.navigate("about:blank");
     assert(driver.execute!int("return 42;") == 42);
+    driver.stop();
 }
 
 unittest
 {
     Driver driver;
     driver = Driver.start();
-
-    scope(exit)
-        driver.stop();
 
     driver.navigate("about:blank");
     assert(driver.execute!bool("return true;") == true);
+    driver.stop();
 }
 
 unittest
@@ -35,9 +31,7 @@ unittest
     Driver driver;
     driver = Driver.start();
 
-    scope(exit)
-        driver.stop();
-
     driver.navigate("about:blank");
     assertThrown!WebDriverError(driver.execute("throw new Error('boom');"));
+    driver.stop();
 }

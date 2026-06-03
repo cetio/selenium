@@ -47,7 +47,7 @@ class Bridge
 
     string createSession(JSONValue payload)
     {
-        if (sessions.length >= capacity)
+        if (capacity > 0 && sessions.length >= capacity)
             throw new WebDriverError("Bridge capacity exceeded.");
 
         HTTP http = HTTP();

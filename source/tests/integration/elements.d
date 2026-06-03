@@ -26,51 +26,42 @@ unittest
     Driver driver;
     driver = Driver.start();
 
-    scope(exit)
-        driver.stop();
-
     driver.navigate(PAGE_A);
 
     assertThrown!NoSuchElementError(
         driver.find(By.css("#does-not-exist"))
     );
+    driver.stop();
 }
 
 unittest
 {
     Driver driver;
     driver = Driver.start();
-
-    scope(exit)
-        driver.stop();
 
     driver.navigate(PAGE_A);
     Element heading = driver.find(By.tagName("h1"));
     driver.navigate(PAGE_B);
 
     assertThrown!StaleElementReferenceError(heading.text);
+    driver.stop();
 }
 
 unittest
 {
     Driver driver;
     driver = Driver.start();
-
-    scope(exit)
-        driver.stop();
 
     driver.navigate(PAGE_A);
     Element[] found = driver.findAll(By.css(".no-such-class"));
     assert(found.length == 0);
+    driver.stop();
 }
 
 unittest
 {
     Driver driver;
     driver = Driver.start();
-
-    scope(exit)
-        driver.stop();
 
     driver.navigate(makePage("<input id='in' type='text'/>"));
     Element input = driver.find(By.css("#in"));
@@ -78,4 +69,5 @@ unittest
     Element active = driver.activeElement();
     assert(active !is null);
     assert(input.id == active.id);
+    driver.stop();
 }

@@ -1,7 +1,7 @@
 module selenium.error;
 
 import std.exception : basicExceptionCtors;
-import std.json : JSONValue;
+import std.json : JSONValue, JSONType;
 
 class WebDriverError : Exception
 {
@@ -32,6 +32,8 @@ class WebDriverConnectionError : WebDriverError
 {
     mixin basicExceptionCtors;
 }
+
+package:
 
 static WebDriverError mapError(ushort status, JSONValue json)
 {
