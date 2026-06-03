@@ -1,7 +1,10 @@
 module selenium.browser.firefox;
 
 import selenium.browser : Browser;
+import selenium.error : WebDriverError;
 import std.json : JSONValue;
+import std.file : isDir;
+import std.regex : match, ctRegex;
 
 Firefox defaultFirefox;
 
@@ -40,28 +43,39 @@ public:
     override JSONValue toJSONValue() const
     {
         JSONValue ret = super.toJSONValue();
-        JSONValue chromeOpts = JSONValue.emptyObject;
+        JSONValue opts = JSONValue.emptyObject;
         if (args.length > 0)
         {
             JSONValue arr = JSONValue.emptyArray;
             foreach (arg; args)
                 arr.array ~= JSONValue(arg);
-            chromeOpts["args"] = arr;
+            opts["args"] = arr;
         }
 
         if (binary.length > 0)
-            chromeOpts["binary"] = JSONValue(binary);
+            opts["binary"] = JSONValue(binary);
 
         if (prefs.length > 0)
         {
             JSONValue obj = JSONValue.emptyObject;
             foreach (key, value; prefs)
                 obj[key] = JSONValue(value);
-            chromeOpts["prefs"] = obj;
+            opts["prefs"] = obj;
         }
 
-        if (chromeOpts.object.length > 0)
-            ret["moz:firefoxOptions"] = chromeOpts;
+        if (profile.isDir)
+            opts["args"].array ~= JSONValue("--profile "~profile);
+        else
+        {
+            auto re = ctRegex!(`^([A-Za-z0-9+/]{4})*([A-Za-z0-9+/]{3}=|[A-Za-z0-9+/]{2}==)?$`);
+            if (profile.match(re))
+                opts["profile"] = JSONValue(profile);
+            else
+                throw new WebDriverError("Profile must be a directory path or a base-64 encoded zip file.");
+        }
+
+        if (opts.object.length > 0)
+            ret["moz:firefoxOptions"] = opts;
 
         return ret;
     }

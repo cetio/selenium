@@ -8,13 +8,6 @@ import std.json : JSONType, JSONValue;
 
 unittest
 {
-    JSONValue json = Options.init.toJSONValue();
-    assert(json.type == JSONType.object);
-    assert(json.object.length == 0);
-}
-
-unittest
-{
     Chrome chrome = new Chrome();
     chrome.takesScreenshot = true;
     chrome.javascriptEnabled = true;

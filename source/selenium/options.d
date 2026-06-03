@@ -2,9 +2,11 @@ module selenium.options;
 
 import selenium.browser : AlertBehaviour, Browser, defaultBrowser;
 import selenium.browser.chrome : Chrome, defaultChrome;
+import selenium.error : WebDriverConnectionError;
 
 import conductor.serialize.json : Name;
 import std.json : JSONValue;
+import std.file : isFile;
 
 enum Platform : string
 {
@@ -30,10 +32,30 @@ struct Options
 
     this(Browser[] browsers...)
     {
-        if (browsers.length > 0)
-            this.browsers = browsers;
-        else
-            this.browsers = [defaultBrowser];
+        this.browsers = browsers;
+    }
+
+    Browser match()
+    {
+        bool isValid(Browser browser)
+            => browser !is null && browser.executablePath.isFile;
+
+        foreach (browser; browsers)
+        {
+            if (!browser.generic && isValid(browser))
+                return browser;
+        }
+
+        foreach (browser; browsers)
+        {
+            if (browser.generic && isValid(browser))
+                return browser;
+        }
+
+        if (isValid(defaultBrowser))
+            return defaultBrowser;
+            
+        throw new WebDriverConnectionError("No viable browser was found with valid executable paths.");
     }
 
     JSONValue toJSONValue() const

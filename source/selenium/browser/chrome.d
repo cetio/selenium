@@ -16,13 +16,21 @@ private:
     string _executablePath;
 
 public:
+    struct Preferences
+    {
+        /// Local state preferences.
+        string[string] browser;
+        /// User profile preferences.
+        string[string] user;
+    }
+
     // https://developer.chrome.com/docs/chromedriver/capabilities#chromeoptions_object
     /// Browser binary. To set a custom binary (ie: Vivaldi), set this to the path of the binary.
     string binary;
     /// Arguments to be appended when launching. To exclude initial arguments, see `excludeSwitches`.
     string[] args;
-    /// Preferences. These are client preferences for the active profile.
-    string[string] prefs;
+    /// Preferences for browser (local state) and user.
+    Preferences prefs;
     /// Switch exclusions. All included switches will be excluded from the default binary arguments.
     string[] excludeSwitches;
     /// Debugger address. This must be in the format '<hostname/ip:port>', ie: '127.0.0.1:9222'.
@@ -33,7 +41,7 @@ public:
     /// Detach process from driver.
     /// If true, the browser will not be closed when the driver is closed.
     bool detach;
-    
+
     string[] extensions;
 
     // TODO: Support for setting custom names.
@@ -56,24 +64,24 @@ public:
     override JSONValue toJSONValue() const
     {
         JSONValue ret = super.toJSONValue();
-        JSONValue chromeOpts = JSONValue.emptyObject;
+        JSONValue opts = JSONValue.emptyObject;
         if (args.length > 0)
         {
             JSONValue arr = JSONValue.emptyArray;
             foreach (arg; args)
                 arr.array ~= JSONValue(arg);
-            chromeOpts["args"] = arr;
+            opts["args"] = arr;
         }
 
         if (binary.length > 0)
-            chromeOpts["binary"] = JSONValue(binary);
+            opts["binary"] = JSONValue(binary);
 
         if (prefs.length > 0)
         {
             JSONValue obj = JSONValue.emptyObject;
             foreach (key, value; prefs)
                 obj[key] = JSONValue(value);
-            chromeOpts["prefs"] = obj;
+            opts["prefs"] = obj;
         }
 
         if (extensions.length > 0)
@@ -81,7 +89,7 @@ public:
             JSONValue arr = JSONValue.emptyArray;
             foreach (ext; extensions)
                 arr.array ~= JSONValue(ext);
-            chromeOpts["extensions"] = arr;
+            opts["extensions"] = arr;
         }
 
         if (excludeSwitches.length > 0)
@@ -89,23 +97,23 @@ public:
             JSONValue arr = JSONValue.emptyArray;
             foreach (eachSwitch; excludeSwitches)
                 arr.array ~= JSONValue(eachSwitch);
-            chromeOpts["excludeSwitches"] = arr;
+            opts["excludeSwitches"] = arr;
         }
 
         if (debuggerAddress.length > 0)
-            chromeOpts["debuggerAddress"] = JSONValue(debuggerAddress);
+            opts["debuggerAddress"] = JSONValue(debuggerAddress);
 
         version (linux)
         {
             if (minidumpPath.length > 0)
-                chromeOpts["minidumpPath"] = JSONValue(minidumpPath);
+                opts["minidumpPath"] = JSONValue(minidumpPath);
         }
 
         if (detach)
-            chromeOpts["detach"] = JSONValue(true);
+            opts["detach"] = JSONValue(true);
 
-        if (chromeOpts.object.length > 0)
-            ret["goog:chromeOptions"] = chromeOpts;
+        if (opts.object.length > 0)
+            ret["goog:chromeOptions"] = opts;
 
         return ret;
     }

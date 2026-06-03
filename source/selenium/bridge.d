@@ -1,5 +1,6 @@
 module selenium.bridge;
 
+import selenium.browser : Browser;
 import selenium.error;
 import selenium.options : Options;
 
@@ -12,7 +13,7 @@ import std.net.curl : HTTP;
 import std.process : kill, Pid, spawnProcess;
 import std.socket;
 import core.thread : Thread;
-import core.time : MonoTime, msecs;
+import core.time : MonoTime, msecs, Duration;
 
 class Bridge
 {
@@ -29,38 +30,11 @@ public:
 
     static Bridge start(Options options)
     {
-        string path;
-        foreach (browser; options.browsers)
-        {
-            if (browser.generic)
-                continue;
-
-            if (browser.executablePath.length > 0)
-            {
-                path = browser.executablePath;
-                break;
-            }
-        }
-
-        if (path == null)
-        {
-            foreach (browser; options.browsers)
-            {
-                if (!browser.generic)
-                    continue;
-
-                if (browser.executablePath != null)
-                {
-                    path = browser.executablePath;
-                    break;
-                }
-            }
-        }
-
-        if (path == null)
-            throw new WebDriverConnectionError("No executable path provided by browsers");
-
-        Bridge ret = new Bridge(path);
+        Browser browser = options.match();
+        Bridge ret = new Bridge(browser.executablePath);
+        ret.implicitTimeout = cast(int)browser.implicitTimeout.total!"msecs";
+        ret.pageTimeout = cast(int)browser.pageTimeout.total!"msecs";
+        ret.scriptTimeout = cast(int)browser.scriptTimeout.total!"msecs";
         ret.launch();
         try
             ret.beginSession(options);
@@ -100,17 +74,6 @@ public:
             sessionId = json["sessionId"].str;
         else if ("value" in json && "sessionId" in json["value"])
             sessionId = json["value"]["sessionId"].str;
-
-        foreach (browser; options.browsers)
-        {
-            if (browser.generic)
-                continue;
-
-            implicitTimeout = cast(int)browser.implicitTimeout.total!"msecs";
-            pageTimeout = cast(int)browser.pageTimeout.total!"msecs";
-            scriptTimeout = cast(int)browser.scriptTimeout.total!"msecs";
-            break;
-        }
     }
 
     void stop()
