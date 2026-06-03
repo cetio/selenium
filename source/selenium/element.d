@@ -44,23 +44,23 @@ class Element
 
     Element find(Locator strategy, string value)
     {
-        driver.bridge.ensureTimeoutsSynced(driver.sessionId, driver.browser);
+        driver.bridge.ensureTimeoutsSynced(driver.id, driver.browser);
 
         JSONValue body_ = JSONValue.emptyObject;
         body_["using"] = cast(string)strategy;
         body_["value"] = value;
-        JSONValue resp = driver.bridge.request(driver.sessionId, HTTP.Method.post, path("/element"), body_);
+        JSONValue resp = driver.bridge.request(driver.id, HTTP.Method.post, path("/element"), body_);
         return new Element(driver, Bridge.parseElementId(resp));
     }
 
     Element[] findAll(Locator strategy, string value)
     {
-        driver.bridge.ensureTimeoutsSynced(driver.sessionId, driver.browser);
+        driver.bridge.ensureTimeoutsSynced(driver.id, driver.browser);
 
         JSONValue body_ = JSONValue.emptyObject;
         body_["using"] = cast(string)strategy;
         body_["value"] = value;
-        JSONValue resp = driver.bridge.request(driver.sessionId, HTTP.Method.post, path("/elements"), body_);
+        JSONValue resp = driver.bridge.request(driver.id, HTTP.Method.post, path("/elements"), body_);
         Element[] ret;
         foreach (eid; Bridge.parseElementIds(resp))
             ret ~= new Element(driver, eid);
@@ -68,24 +68,24 @@ class Element
     }
 
     string text()
-        => driver.bridge.request!string(driver.sessionId, HTTP.Method.get, path("/text"));
+        => driver.bridge.request!string(driver.id, HTTP.Method.get, path("/text"));
 
     string tagName()
-        => driver.bridge.request!string(driver.sessionId, HTTP.Method.get, path("/name"));
+        => driver.bridge.request!string(driver.id, HTTP.Method.get, path("/name"));
 
     void click()
     {
-        driver.bridge.request(driver.sessionId, HTTP.Method.post, path("/click"));
+        driver.bridge.request(driver.id, HTTP.Method.post, path("/click"));
     }
 
     void submit()
     {
-        driver.bridge.request(driver.sessionId, HTTP.Method.post, path("/submit"));
+        driver.bridge.request(driver.id, HTTP.Method.post, path("/submit"));
     }
 
     void sendKeys(string[] keys)
     {
-        driver.bridge.request(driver.sessionId, HTTP.Method.post, path("/value"), ["text": keys.join()]);
+        driver.bridge.request(driver.id, HTTP.Method.post, path("/value"), ["text": keys.join()]);
     }
 
     void sendKeys(string keys)
@@ -95,35 +95,35 @@ class Element
 
     void clear()
     {
-        driver.bridge.request(driver.sessionId, HTTP.Method.post, path("/clear"));
+        driver.bridge.request(driver.id, HTTP.Method.post, path("/clear"));
     }
 
     bool selected()
-        => driver.bridge.request!bool(driver.sessionId, HTTP.Method.get, path("/selected"));
+        => driver.bridge.request!bool(driver.id, HTTP.Method.get, path("/selected"));
 
     bool enabled()
-        => driver.bridge.request!bool(driver.sessionId, HTTP.Method.get, path("/enabled"));
+        => driver.bridge.request!bool(driver.id, HTTP.Method.get, path("/enabled"));
 
     bool displayed()
-        => driver.bridge.request!bool(driver.sessionId, HTTP.Method.get, path("/displayed"));
+        => driver.bridge.request!bool(driver.id, HTTP.Method.get, path("/displayed"));
 
     string attribute(string name)
-        => driver.bridge.request!string(driver.sessionId, HTTP.Method.get, path("/attribute/"~name));
+        => driver.bridge.request!string(driver.id, HTTP.Method.get, path("/attribute/"~name));
 
     string cssValue(string property)
-        => driver.bridge.request!string(driver.sessionId, HTTP.Method.get, path("/css/"~property));
+        => driver.bridge.request!string(driver.id, HTTP.Method.get, path("/css/"~property));
 
     Position position()
-        => driver.bridge.request!Position(driver.sessionId, HTTP.Method.get, path("/rect"));
+        => driver.bridge.request!Position(driver.id, HTTP.Method.get, path("/rect"));
 
     Position positionInView()
-        => driver.bridge.request!Position(driver.sessionId, HTTP.Method.get, path("/location_in_view"));
+        => driver.bridge.request!Position(driver.id, HTTP.Method.get, path("/location_in_view"));
 
     Size size()
-        => driver.bridge.request!Size(driver.sessionId, HTTP.Method.get, path("/rect"));
+        => driver.bridge.request!Size(driver.id, HTTP.Method.get, path("/rect"));
 
     string screenshot()
-        => driver.bridge.request!string(driver.sessionId, HTTP.Method.get, path("/screenshot"));
+        => driver.bridge.request!string(driver.id, HTTP.Method.get, path("/screenshot"));
 
 private:
     string path(string suffix)
