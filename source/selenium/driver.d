@@ -152,6 +152,10 @@ class Driver
         ]);
     }
 
+    // TODO: executeAsync
+    // TODO: cookies
+    // TODO: auto retry on stale element references
+
     string screenshot()
         => bridge.request!string(id, HTTP.Method.get, "/screenshot");
 
