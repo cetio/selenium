@@ -201,21 +201,6 @@ package:
         return ret;
     }
 
-    static string extractMessage(JSONValue json)
-    {
-        if ("value" in json && json["value"].type == JSONType.object)
-        {
-            JSONValue value = json["value"];
-            if ("message" in value && value["message"].type == JSONType.string)
-                return value["message"].str;
-        }
-
-        if ("message" in json && json["message"].type == JSONType.string)
-            return json["message"].str;
-
-        return "WebDriver server error";
-    }
-
 private:
     static string findExecutable(string candidate)
     {
