@@ -2,9 +2,8 @@ module selenium.driver;
 
 import selenium.bridge : Bridge;
 import selenium.browser : Browser;
-import selenium.element : Element, Size;
+import selenium.element : By, Element, Size;
 import selenium.error : WebDriverConnectionError;
-public import selenium.element : Locator;
 
 import std.json : JSONValue;
 import std.net.curl : HTTP;
@@ -122,25 +121,19 @@ class Driver
         bridge.request(this.id, HTTP.Method.post, "/frame", ["id": id]);
     }
 
-    Element find(Locator strategy, string value)
+    Element find(By by)
     {
         bridge.ensureTimeoutsSynced(id, browser);
 
-        JSONValue body_ = JSONValue.emptyObject;
-        body_["using"] = cast(string)strategy;
-        body_["value"] = value;
-        JSONValue resp = bridge.request(id, HTTP.Method.post, "/element", body_);
+        JSONValue resp = bridge.request(id, HTTP.Method.post, "/element", by.toJSONValue());
         return new Element(this, Bridge.parseElementId(resp));
     }
 
-    Element[] findAll(Locator strategy, string value)
+    Element[] findAll(By by)
     {
         bridge.ensureTimeoutsSynced(id, browser);
 
-        JSONValue body_ = JSONValue.emptyObject;
-        body_["using"] = cast(string)strategy;
-        body_["value"] = value;
-        JSONValue resp = bridge.request(id, HTTP.Method.post, "/elements", body_);
+        JSONValue resp = bridge.request(id, HTTP.Method.post, "/elements", by.toJSONValue());
         Element[] ret;
         foreach (eid; Bridge.parseElementIds(resp))
             ret ~= new Element(this, eid);

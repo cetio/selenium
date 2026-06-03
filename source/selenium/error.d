@@ -1,6 +1,7 @@
 module selenium.error;
 
 import std.exception : basicExceptionCtors;
+import std.json : JSONValue;
 
 class WebDriverError : Exception
 {

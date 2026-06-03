@@ -2,7 +2,7 @@ module tests.integration.elements;
 
 import selenium.browser : Browser;
 import selenium.driver : Driver;
-import selenium.element : Element, Locator;
+import selenium.element : By, Element;
 import selenium.error : NoSuchElementError, StaleElementReferenceError, WebDriverConnectionError;
 
 import std.conv : to;
@@ -32,7 +32,7 @@ unittest
     driver.navigate(PAGE_A);
 
     assertThrown!NoSuchElementError(
-        driver.find(Locator.CssSelector, "#does-not-exist")
+        driver.find(By.css("#does-not-exist"))
     );
 }
 
@@ -45,7 +45,7 @@ unittest
         driver.stop();
 
     driver.navigate(PAGE_A);
-    Element heading = driver.find(Locator.TagName, "h1");
+    Element heading = driver.find(By.tagName("h1"));
     driver.navigate(PAGE_B);
 
     assertThrown!StaleElementReferenceError(heading.text);
@@ -60,7 +60,7 @@ unittest
         driver.stop();
 
     driver.navigate(PAGE_A);
-    Element[] found = driver.findAll(Locator.CssSelector, ".no-such-class");
+    Element[] found = driver.findAll(By.css(".no-such-class"));
     assert(found.length == 0);
 }
 
@@ -73,7 +73,7 @@ unittest
         driver.stop();
 
     driver.navigate(makePage("<input id='in' type='text'/>"));
-    Element input = driver.find(Locator.CssSelector, "#in");
+    Element input = driver.find(By.css("#in"));
     input.click();
     Element active = driver.activeElement();
     assert(active !is null);

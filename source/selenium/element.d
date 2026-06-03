@@ -69,25 +69,19 @@ class Element
         this.id = id;
     }
 
-    Element find(Locator strategy, string value)
+    Element find(By by)
     {
         driver.bridge.ensureTimeoutsSynced(driver.id, driver.browser);
 
-        JSONValue body_ = JSONValue.emptyObject;
-        body_["using"] = cast(string)strategy;
-        body_["value"] = value;
-        JSONValue resp = driver.bridge.request(driver.id, HTTP.Method.post, path("/element"), body_);
+        JSONValue resp = driver.bridge.request(driver.id, HTTP.Method.post, path("/element"), by.toJSONValue());
         return new Element(driver, Bridge.parseElementId(resp));
     }
 
-    Element[] findAll(Locator strategy, string value)
+    Element[] findAll(By by)
     {
         driver.bridge.ensureTimeoutsSynced(driver.id, driver.browser);
 
-        JSONValue body_ = JSONValue.emptyObject;
-        body_["using"] = cast(string)strategy;
-        body_["value"] = value;
-        JSONValue resp = driver.bridge.request(driver.id, HTTP.Method.post, path("/elements"), body_);
+        JSONValue resp = driver.bridge.request(driver.id, HTTP.Method.post, path("/elements"), by.toJSONValue());
         Element[] ret;
         foreach (eid; Bridge.parseElementIds(resp))
             ret ~= new Element(driver, eid);

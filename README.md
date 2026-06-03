@@ -56,14 +56,14 @@ driver.refresh();
 
 ```d
 import selenium.driver;
-import selenium.element : Locator;
+import selenium.element : By;
 
-Element button = driver.find(Locator.CssSelector, "#submit");
-Element[] items = driver.findAll(Locator.XPath, "//div[@class='item']");
+Element button = driver.find(By.css("#submit"));
+Element[] items = driver.findAll(By.xpath("//div[@class='item']"));
 
 // Search inside an element
-Element form = driver.find(Locator.TagName, "form");
-Element input = form.find(Locator.Name, "username");
+Element form = driver.find(By.tagName("form"));
+Element input = form.find(By.css("input[name='username']"));
 ```
 
 ### Interacting With Elements
