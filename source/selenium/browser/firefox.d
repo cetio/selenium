@@ -8,7 +8,6 @@ import std.regex : match, ctRegex;
 
 class Firefox : Browser
 {
-public:
     /// Wrapper struct for preferences. Firefox only supports user preferences.
     /// Preferences are NOT sanitized or validated, and are expected to be JSON objects.
     /// Preferences can be found at https://searchfox.org/firefox-main/source/modules/libpref/init/all.js
@@ -65,5 +64,39 @@ public:
             ret["moz:firefoxOptions"] = opts;
 
         return ret;
+    }
+
+protected:
+    override void parseFrom(JSONValue json)
+    {
+        super.parseFrom(json);
+
+        if ("browserVersion" in json && json["browserVersion"].type == JSONType.string)
+            release = json["browserVersion"].str;
+
+        if ("moz:firefoxOptions" in json)
+        {
+            JSONValue opts = json["moz:firefoxOptions"];
+            if (opts.type != JSONType.object)
+                return;
+
+            if ("binary" in opts && opts["binary"].type == JSONType.string)
+                binary = opts["binary"].str;
+
+            if ("args" in opts && opts["args"].type == JSONType.array)
+            {
+                foreach (JSONValue arg; opts["args"].array)
+                {
+                    if (arg.type == JSONType.string)
+                        args ~= arg.str;
+                }
+            }
+
+            if ("profile" in opts && opts["profile"].type == JSONType.string)
+                profile = opts["profile"].str;
+
+            if ("prefs" in opts && opts["prefs"].type == JSONType.object)
+                prefs.user = opts["prefs"];
+        }
     }
 }

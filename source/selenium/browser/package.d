@@ -1,8 +1,7 @@
 module selenium.browser;
 
-import std.json : JSONValue;
-
-import core.time : Duration;
+import std.json : JSONValue, JSONType;
+import core.time : Duration, dur;
 
 enum PageLoadStrategy : string
 {
@@ -41,7 +40,6 @@ struct Timeouts
 
 class Browser
 {
-public:
     /// Platform to request from the driver.
     Platform platform;
     /// Accept insecure TLS certificates.
@@ -92,5 +90,83 @@ public:
             ret["timeouts"] = timeoutsObj;
 
         return ret;
+    }
+
+    static Browser fromJSONValue(JSONValue json)
+    {
+        import selenium.browser.chrome : Chrome;
+        import selenium.browser.firefox : Firefox;
+        
+        Browser ret;
+        if ("goog:chromeOptions" in json)
+            ret = new Chrome();
+        else if ("moz:firefoxOptions" in json)
+            ret = new Firefox();
+        else
+            ret = new Browser();
+
+        ret.parseFrom(json);
+        return ret;
+    }
+    
+protected:
+    void parseFrom(JSONValue json)
+    {
+        import selenium.browser.chrome : Chrome;
+        import selenium.browser.firefox : Firefox;
+
+        Browser ret;
+        if ("goog:chromeOptions" in json)
+            ret = new Chrome().fromJSONValue(json);
+        else if ("moz:firefoxOptions" in json)
+            ret = new Firefox().fromJSONValue(json);
+        else
+            ret = new Browser();
+            
+        if (json.type != JSONType.object)
+            throw new Exception("Browser capabilities must be a JSON object.");
+
+        if ("platformName" in json && json["platformName"].type == JSONType.string)
+            platform = cast(Platform)json["platformName"].str;
+
+        if ("acceptInsecureCerts" in json && json["acceptInsecureCerts"].type == JSONType.true_)
+            acceptInsecureCerts = true;
+        else if ("acceptInsecureCerts" in json && json["acceptInsecureCerts"].type == JSONType.false_)
+            acceptInsecureCerts = false;
+
+        if ("pageLoadStrategy" in json && json["pageLoadStrategy"].type == JSONType.string)
+            pageLoadStrategy = cast(PageLoadStrategy)json["pageLoadStrategy"].str;
+
+        if ("setWindowRect" in json && json["setWindowRect"].type == JSONType.true_)
+            setWindowRect = true;
+        else if ("setWindowRect" in json && json["setWindowRect"].type == JSONType.false_)
+            setWindowRect = false;
+
+        if ("strictFileInteractability" in json && json["strictFileInteractability"].type == JSONType.true_)
+            strictFileInteractability = true;
+        else if ("strictFileInteractability" in json && json["strictFileInteractability"].type == JSONType.false_)
+            strictFileInteractability = false;
+
+        if ("unhandledPromptBehavior" in json && json["unhandledPromptBehavior"].type == JSONType.string)
+            unhandledPromptBehavior = cast(UnhandledPromptBehavior)json["unhandledPromptBehavior"].str;
+
+        if ("timeouts" in json)
+        {
+            JSONValue timeoutsObj = json["timeouts"];
+            if (timeoutsObj.type == JSONType.object)
+            {
+                if ("implicit" in timeoutsObj && 
+                    timeoutsObj["implicit"].type == JSONType.integer)
+                    timeouts.implicit = dur!"msecs"(timeoutsObj["implicit"].integer);
+
+                if ("pageLoad" in timeoutsObj && 
+                    timeoutsObj["pageLoad"].type == JSONType.integer)
+                    timeouts.pageLoad = dur!"msecs"(timeoutsObj["pageLoad"].integer);
+
+                if ("script" in timeoutsObj && 
+                    timeoutsObj["script"].type == JSONType.integer)
+                    timeouts.script = dur!"msecs"(timeoutsObj["script"].integer);
+            }
+        }
     }
 }

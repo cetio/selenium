@@ -6,7 +6,6 @@ import selenium.error;
 import conductor.http : Response, send;
 import conductor.serialize.json : fromJSON;
 
-import core.time : Duration;
 import std.json : JSONType, JSONValue, parseJSON;
 import std.conv : to;
 import std.net.curl : HTTP;
@@ -17,7 +16,7 @@ import std.typecons : Tuple;
 static import std.process;
 
 import core.thread : Thread;
-import core.time : MonoTime, msecs;
+import core.time : MonoTime, msecs, Duration;
 
 class Bridge
 {
@@ -67,7 +66,7 @@ class Bridge
         try
             request(HTTP.Method.del, "");
         catch (Exception) { }
-        if (pid != Pid.init)
+        if (pid !is Pid.init)
         {
             tryKill(pid);
             pid = Pid.init;

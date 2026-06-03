@@ -9,7 +9,6 @@ import std.regex : match, ctRegex;
 
 class Chrome : Browser
 {
-public:
     /// Wrapper struct for preferences. Chrome supports both browser (local state) and user preferences.
     /// Preferences are NOT sanitized or validated, and are expected to be JSON arrays.
     struct Preferences
@@ -94,5 +93,71 @@ public:
             ret["goog:chromeOptions"] = opts;
 
         return ret;
+    }
+
+protected:
+    override void parseFrom(JSONValue value)
+    {
+        super.parseFrom(value);
+
+        if ("browserVersion" in value && value["browserVersion"].type == JSONType.string)
+            release = value["browserVersion"].str;
+
+        if ("goog:chromeOptions" in value)
+        {
+            JSONValue opts = value["goog:chromeOptions"];
+            if (opts.type != JSONType.object)
+                return;
+
+            if ("binary" in opts && opts["binary"].type == JSONType.string)
+                binary = opts["binary"].str;
+
+            if ("args" in opts && opts["args"].type == JSONType.array)
+            {
+                foreach (JSONValue arg; opts["args"].array)
+                {
+                    if (arg.type == JSONType.string)
+                        includeSwitches ~= arg.str;
+                }
+            }
+
+            if ("excludeSwitches" in opts && opts["excludeSwitches"].type == JSONType.array)
+            {
+                foreach (JSONValue sw; opts["excludeSwitches"].array)
+                {
+                    if (sw.type == JSONType.string)
+                        excludeSwitches ~= sw.str;
+                }
+            }
+
+            if ("localState" in opts && opts["localState"].type == JSONType.object)
+                prefs.browser = opts["localState"];
+
+            if ("prefs" in opts && opts["prefs"].type == JSONType.object)
+                prefs.user = opts["prefs"];
+
+            if ("debuggerAddress" in opts && opts["debuggerAddress"].type == JSONType.string)
+                debuggerAddress = opts["debuggerAddress"].str;
+
+            version (linux)
+            {
+                if ("minidumpPath" in opts && opts["minidumpPath"].type == JSONType.string)
+                    minidumpPath = opts["minidumpPath"].str;
+            }
+
+            if ("detach" in opts && opts["detach"].type == JSONType.true_)
+                detach = true;
+            else if ("detach" in opts && opts["detach"].type == JSONType.false_)
+                detach = false;
+
+            if ("extensions" in opts && opts["extensions"].type == JSONType.array)
+            {
+                foreach (JSONValue ext; opts["extensions"].array)
+                {
+                    if (ext.type == JSONType.string)
+                        extensions ~= ext.str;
+                }
+            }
+        }
     }
 }
