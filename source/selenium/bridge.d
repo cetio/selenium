@@ -113,7 +113,7 @@ class Bridge
         HTTP http = HTTP();
         Response response = send(http, method, address~"/session/"~id~path, body_);
         JSONValue json = checkAndParse(response);
-        
+
         static if (is(T == JSONValue))
             return json;
         else static if (!is(T == void))
@@ -151,17 +151,17 @@ class Bridge
     }
 
 package:
+    int syncImplicit;
+    int syncPage;
+    int syncScript;
+
     void ensureTimeoutsSynced(string id, Browser browser)
     {
-        static int syncedImplicit;
-        static int syncedPage;
-        static int syncedScript;
-
         int implicitTimeout = cast(int)browser.timeouts.implicit.total!"msecs";
         int pageTimeout = cast(int)browser.timeouts.pageLoad.total!"msecs";
         int scriptTimeout = cast(int)browser.timeouts.script.total!"msecs";
 
-        if (implicitTimeout == syncedImplicit && pageTimeout == syncedPage && scriptTimeout == syncedScript)
+        if (implicitTimeout == syncImplicit && pageTimeout == syncPage && scriptTimeout == syncScript)
             return;
 
         JSONValue body_ = JSONValue.emptyObject;
@@ -174,9 +174,9 @@ package:
         try
         {
             request(id, HTTP.Method.post, "/timeouts", body_);
-            syncedImplicit = implicitTimeout;
-            syncedPage = pageTimeout;
-            syncedScript = scriptTimeout;
+            syncImplicit = implicitTimeout;
+            syncPage = pageTimeout;
+            syncScript = scriptTimeout;
         }
         catch (Exception) { }
     }
