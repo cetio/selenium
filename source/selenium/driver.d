@@ -14,22 +14,39 @@ class Driver
     Bridge bridge;
     string sessionId;
 
-    static Driver start(
-        Browser alwaysMatch, 
-        string executable = null, 
-        string address = null, 
-        Browser[] firstMatch...
-    )
+    static Driver start(Bridge bridge, Browser alwaysMatch, Browser[] firstMatch...)
     {
+        JSONValue payload = JSONValue.emptyObject;
+        JSONValue capabilities = JSONValue.emptyObject;
+        capabilities["alwaysMatch"] = alwaysMatch.toJSONValue();
+
+        JSONValue[] firstMatchJson;
+        foreach (browser; firstMatch)
+            firstMatchJson ~= browser.toJSONValue();
+        if (firstMatchJson.length > 0)
+            capabilities["firstMatch"] = JSONValue(firstMatchJson);
+
+        payload["capabilities"] = capabilities;
+
+        string id = bridge.createSession(payload);
+        bridge.timeouts = alwaysMatch.timeouts;
+        bridge.ensureTimeoutsSynced();
+
         Driver ret = new Driver();
-        ret.bridge = new Bridge(
-            alwaysMatch, 
-            executable, 
-            address, 
-            firstMatch
-        );
-        ret.sessionId = ret.bridge.start();
+        ret.bridge = bridge;
+        ret.sessionId = id;
         return ret;
+    }
+
+    static Driver start(Browser alwaysMatch, Browser[] firstMatch...)
+    {
+        Bridge spawned = Bridge.start(null);
+        return start(spawned, alwaysMatch, firstMatch);
+    }
+
+    static Driver start()
+    {
+        return start(new Browser());
     }
 
     void quit()

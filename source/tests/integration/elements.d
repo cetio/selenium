@@ -24,7 +24,7 @@ private enum PAGE_B = "http://example.org/";
 unittest
 {
     Driver driver;
-    driver = Driver.start(new Browser());
+    driver = Driver.start();
 
     scope(exit)
         driver.quit();
@@ -39,7 +39,7 @@ unittest
 unittest
 {
     Driver driver;
-    driver = Driver.start(new Browser());
+    driver = Driver.start();
 
     scope(exit)
         driver.quit();
@@ -54,7 +54,7 @@ unittest
 unittest
 {
     Driver driver;
-    driver = Driver.start(new Browser());
+    driver = Driver.start();
 
     scope(exit)
         driver.quit();
@@ -67,7 +67,7 @@ unittest
 unittest
 {
     Driver driver;
-    driver = Driver.start(new Browser());
+    driver = Driver.start();
 
     scope(exit)
         driver.quit();

@@ -9,7 +9,7 @@ import std.exception : assertThrown;
 unittest
 {
     Driver driver;
-    driver = Driver.start(new Browser());
+    driver = Driver.start();
 
     scope(exit)
         driver.quit();
@@ -21,7 +21,7 @@ unittest
 unittest
 {
     Driver driver;
-    driver = Driver.start(new Browser());
+    driver = Driver.start();
 
     scope(exit)
         driver.quit();
@@ -33,7 +33,7 @@ unittest
 unittest
 {
     Driver driver;
-    driver = Driver.start(new Browser());
+    driver = Driver.start();
 
     scope(exit)
         driver.quit();

@@ -1,6 +1,6 @@
 module selenium.bridge;
 
-import selenium.browser : Browser;
+import selenium.browser : Browser, Timeouts;
 import selenium.error;
 
 import conductor.http : Response, send;
@@ -21,51 +21,33 @@ import core.time : MonoTime, msecs;
 
 class Bridge
 {
-    string executable;
     string address;
-    Browser alwaysMatch;
-    Browser[] firstMatch;
     Pid pid;
     string sessionPrefix;
+    Timeouts timeouts;
 
-    this(
-        Browser alwaysMatch, 
-        string executable = null, 
-        string address = null, 
-        Browser[] firstMatch...
-    )
+    static Bridge start(string executable)
     {
-        this.alwaysMatch = alwaysMatch;
-        this.executable = executable;
-        this.address = address;
-        this.firstMatch = firstMatch;
+        Bridge ret = new Bridge();
+        if (executable is null)
+            executable = findExecutable("chromedriver");
+
+        ushort port = findFreePort();
+        ret.pid = spawnProcess([executable, "--port="~port.to!string]);
+        ret.address = "http://127.0.0.1:"~port.to!string;
+        ret.waitForServer(5000);
+        return ret;
     }
 
-    string start()
+    static Bridge connect(string address)
     {
-        if (address is null)
-        {
-            if (executable is null)
-                executable = findExecutable("chromedriver");
+        Bridge ret = new Bridge();
+        ret.address = address;
+        return ret;
+    }
 
-            ushort port = findFreePort();
-            pid = spawnProcess([executable, "--port="~port.to!string]);
-            address = "http://127.0.0.1:"~port.to!string;
-            waitForServer(5000);
-        }
-
-        JSONValue payload = JSONValue.emptyObject;
-        JSONValue capabilities = JSONValue.emptyObject;
-        capabilities["alwaysMatch"] = alwaysMatch.toJSONValue();
-
-        JSONValue[] firstMatchJson;
-        foreach (browser; firstMatch)
-            firstMatchJson ~= browser.toJSONValue();
-        if (firstMatchJson.length > 0)
-            capabilities["firstMatch"] = JSONValue(firstMatchJson);
-
-        payload["capabilities"] = capabilities;
-
+    string createSession(JSONValue payload)
+    {
         HTTP http = HTTP();
         Response response = send(http, HTTP.Method.post, address~"/session", payload);
         JSONValue json = checkAndParse(response);
@@ -77,8 +59,6 @@ class Bridge
             sessionId = json["value"]["sessionId"].str;
 
         sessionPrefix = address~"/session/"~sessionId;
-        ensureTimeoutsSynced();
-
         return sessionId;
     }
 
@@ -156,9 +136,9 @@ package:
         static int syncedPage;
         static int syncedScript;
 
-        int implicitTimeout = cast(int)alwaysMatch.timeouts.implicit.total!"msecs";
-        int pageTimeout = cast(int)alwaysMatch.timeouts.pageLoad.total!"msecs";
-        int scriptTimeout = cast(int)alwaysMatch.timeouts.script.total!"msecs";
+        int implicitTimeout = cast(int)timeouts.implicit.total!"msecs";
+        int pageTimeout = cast(int)timeouts.pageLoad.total!"msecs";
+        int scriptTimeout = cast(int)timeouts.script.total!"msecs";
 
         if (implicitTimeout == syncedImplicit && pageTimeout == syncedPage && scriptTimeout == syncedScript)
             return;
@@ -276,7 +256,7 @@ private:
         return null;
     }
 
-    ushort findFreePort()
+    static ushort findFreePort()
     {
         Socket socket = new Socket(AddressFamily.INET, SocketType.STREAM);
         socket.setOption(SocketOptionLevel.SOCKET, SocketOption.REUSEADDR, true);
