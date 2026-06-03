@@ -33,7 +33,6 @@ struct Position
 
 class Element
 {
-public:
     Driver driver;
     string id;
 

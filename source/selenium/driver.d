@@ -11,7 +11,6 @@ import std.net.curl : HTTP;
 
 class Driver
 {
-public:
     Bridge bridge;
     string sessionId;
 

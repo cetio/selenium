@@ -13,7 +13,6 @@ import std.net.curl : HTTP;
 
 class Bridge
 {
-public:
     Target target;
     Browser browser;
     string sessionPrefix;

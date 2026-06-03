@@ -17,7 +17,6 @@ enum Platform : string
 
 class Target
 {
-public:
     Platform platform;
     Browser[] browsers;
 
