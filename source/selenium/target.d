@@ -1,6 +1,6 @@
 module selenium.target;
 
-import selenium.browser : Browser, defaultBrowser, Timeouts;
+import selenium.browser : Browser, Timeouts;
 import selenium.error : WebDriverConnectionError;
 
 import std.json : JSONValue;

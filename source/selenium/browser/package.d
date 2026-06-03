@@ -14,13 +14,6 @@ static import std.process;
 import core.thread : Thread;
 import core.time : Duration, MonoTime, msecs;
 
-Browser defaultBrowser;
-
-static this()
-{
-    defaultBrowser = new Browser();
-}
-
 enum PageLoadStrategy : string
 {
     Normal = "normal",

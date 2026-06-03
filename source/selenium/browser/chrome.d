@@ -7,13 +7,6 @@ import std.base64 : Base64;
 import std.file : read, isFile;
 import std.regex : match, ctRegex;
 
-Chrome defaultChrome;
-
-static this()
-{
-    defaultChrome = new Chrome();
-}
-
 class Chrome : Browser
 {
 private:

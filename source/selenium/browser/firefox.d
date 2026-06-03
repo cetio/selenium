@@ -6,13 +6,6 @@ import std.json : JSONValue, JSONType;
 import std.file : isDir;
 import std.regex : match, ctRegex;
 
-Firefox defaultFirefox;
-
-static this()
-{
-    defaultFirefox = new Firefox();
-}
-
 class Firefox : Browser
 {
 private:

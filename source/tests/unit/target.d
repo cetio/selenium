@@ -1,6 +1,6 @@
 module tests.unit.target;
 
-import selenium.browser : Browser, defaultBrowser;
+import selenium.browser : Browser;
 import selenium.browser.chrome : Chrome;
 import selenium.target : Platform, Target;
 
