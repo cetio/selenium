@@ -8,11 +8,7 @@ import std.exception : assertThrown;
 unittest
 {
     Driver driver;
-
-    try
-        driver = Driver.start();
-    catch (WebDriverConnectionError)
-        return;
+    driver = Driver.start();
 
     scope(exit)
         driver.quit();
@@ -24,11 +20,7 @@ unittest
 unittest
 {
     Driver driver;
-
-    try
-        driver = Driver.start();
-    catch (WebDriverConnectionError)
-        return;
+    driver = Driver.start();
 
     scope(exit)
         driver.quit();
@@ -40,11 +32,7 @@ unittest
 unittest
 {
     Driver driver;
-
-    try
-        driver = Driver.start();
-    catch (WebDriverConnectionError)
-        return;
+    driver = Driver.start();
 
     scope(exit)
         driver.quit();

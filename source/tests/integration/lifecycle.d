@@ -41,29 +41,3 @@ unittest
 
     assertThrown!WebDriverConnectionError(Driver.start(Options(defaultChrome)));
 }
-
-unittest
-{
-    Driver driver;
-
-    try
-        driver = Driver.start();
-    catch (WebDriverConnectionError)
-        return;
-
-    driver.quit();
-    driver.stop();
-}
-
-unittest
-{
-    Driver driver;
-
-    try
-        driver = Driver.start();
-    catch (WebDriverConnectionError)
-        return;
-
-    driver.quit();
-    driver.stop();
-}
