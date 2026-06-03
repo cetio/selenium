@@ -18,11 +18,11 @@ class Driver
     {
         JSONValue payload = JSONValue.emptyObject;
         JSONValue capabilities = JSONValue.emptyObject;
-        capabilities["alwaysMatch"] = alwaysMatch.toJSONValue();
+        capabilities["alwaysMatch"] = alwaysMatch.toJSON();
 
         JSONValue[] firstMatchJson;
         foreach (browser; firstMatch)
-            firstMatchJson ~= browser.toJSONValue();
+            firstMatchJson ~= browser.toJSON();
         if (firstMatchJson.length > 0)
             capabilities["firstMatch"] = JSONValue(firstMatchJson);
 
@@ -125,7 +125,7 @@ class Driver
     {
         bridge.ensureTimeoutsSynced(id, browser);
 
-        JSONValue resp = bridge.request(id, HTTP.Method.post, "/element", by.toJSONValue());
+        JSONValue resp = bridge.request(id, HTTP.Method.post, "/element", by.toJSON());
         return new Element(this, Bridge.parseElementId(resp));
     }
 
@@ -133,7 +133,7 @@ class Driver
     {
         bridge.ensureTimeoutsSynced(id, browser);
 
-        JSONValue resp = bridge.request(id, HTTP.Method.post, "/elements", by.toJSONValue());
+        JSONValue resp = bridge.request(id, HTTP.Method.post, "/elements", by.toJSON());
         Element[] ret;
         foreach (eid; Bridge.parseElementIds(resp))
             ret ~= new Element(this, eid);

@@ -61,7 +61,7 @@ class Browser
     bool generic() const
         => name.length == 0;
 
-    JSONValue toJSONValue() const
+    JSONValue toJSON() const
     {
         JSONValue ret = JSONValue.emptyObject;
         if (name != null)

@@ -37,7 +37,7 @@ struct By
         return By("xpath", value);
     }
 
-    JSONValue toJSONValue()
+    JSONValue toJSON()
     {
         JSONValue ret = JSONValue.emptyObject;
         ret["using"] = using;
@@ -73,7 +73,7 @@ class Element
     {
         driver.bridge.ensureTimeoutsSynced(driver.id, driver.browser);
 
-        JSONValue resp = driver.bridge.request(driver.id, HTTP.Method.post, path("/element"), by.toJSONValue());
+        JSONValue resp = driver.bridge.request(driver.id, HTTP.Method.post, path("/element"), by.toJSON());
         return new Element(driver, Bridge.parseElementId(resp));
     }
 
@@ -81,7 +81,7 @@ class Element
     {
         driver.bridge.ensureTimeoutsSynced(driver.id, driver.browser);
 
-        JSONValue resp = driver.bridge.request(driver.id, HTTP.Method.post, path("/elements"), by.toJSONValue());
+        JSONValue resp = driver.bridge.request(driver.id, HTTP.Method.post, path("/elements"), by.toJSON());
         Element[] ret;
         foreach (eid; Bridge.parseElementIds(resp))
             ret ~= new Element(driver, eid);

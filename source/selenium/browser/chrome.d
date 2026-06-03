@@ -45,9 +45,9 @@ class Chrome : Browser
     override string name() const
         => "chrome";
 
-    override JSONValue toJSONValue() const
+    override JSONValue toJSON() const
     {
-        JSONValue ret = super.toJSONValue();
+        JSONValue ret = super.toJSON();
         if (release != null)
             ret["browserVersion"] = JSONValue(release);
             

@@ -13,7 +13,7 @@ unittest
     chrome.acceptInsecureCerts = true;
     chrome.setWindowRect = true;
 
-    JSONValue json = chrome.toJSONValue();
+    JSONValue json = chrome.toJSON();
     assert(json["browserName"].str == "chrome");
     assert(json["acceptInsecureCerts"] == JSONValue(true));
     assert(json["setWindowRect"] == JSONValue(true));
@@ -25,7 +25,7 @@ unittest
     browser.platform = Platform.Windows;
     browser.timeouts.implicit = 5000.msecs;
 
-    JSONValue json = browser.toJSONValue();
+    JSONValue json = browser.toJSON();
     assert(json["platformName"].str == "Windows");
     assert(json["timeouts"]["implicit"].get!long == 5000);
 }
@@ -33,7 +33,7 @@ unittest
 unittest
 {
     Browser browser = new Browser();
-    JSONValue json = browser.toJSONValue();
+    JSONValue json = browser.toJSON();
     assert(json.object.length == 0);
 }
 

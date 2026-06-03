@@ -33,9 +33,9 @@ class Firefox : Browser
     override string name() const
         => "firefox";
 
-    override JSONValue toJSONValue() const
+    override JSONValue toJSON() const
     {
-        JSONValue ret = super.toJSONValue();
+        JSONValue ret = super.toJSON();
         if (release != null)
             ret["browserVersion"] = JSONValue(release);
 
