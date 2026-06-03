@@ -1,7 +1,6 @@
 module selenium.options;
 
 import selenium.browser : AlertBehaviour, Browser, defaultBrowser;
-import selenium.browser.chrome : Chrome, defaultChrome;
 import selenium.error : WebDriverConnectionError;
 
 import conductor.serialize.json : Name;
