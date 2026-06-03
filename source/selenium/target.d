@@ -48,11 +48,14 @@ class Target
     {
         JSONValue ret = JSONValue.emptyObject;
         ret["alwaysMatch"] = alwaysMatch.toJSONValue();
-        ret["alwaysMatch"]["platformName"] = JSONValue(cast(string)platform);
+        if (platform != Platform.Any)
+            ret["alwaysMatch"]["platformName"] = JSONValue(cast(string)platform);
 
-        ret["firstMatch"] = JSONValue.emptyArray;
+        JSONValue[] firstMatchJson;
         foreach (browser; firstMatch)
-            ret["firstMatch"].array ~= browser.toJSONValue();
+            firstMatchJson ~= browser.toJSONValue();
+        if (firstMatchJson.length > 0)
+            ret["firstMatch"] = JSONValue(firstMatchJson);
 
         return ret;
     }

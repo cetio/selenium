@@ -21,7 +21,8 @@ unittest
     assert(first["browserName"].str == "chrome");
     assert(first["acceptInsecureCerts"] == JSONValue(true));
     assert(first["setWindowRect"] == JSONValue(true));
-    assert("alwaysMatch" !in json);
+    assert("alwaysMatch" in json);
+    assert(json["alwaysMatch"].object.length == 0);
 }
 
 unittest
@@ -42,6 +43,6 @@ unittest
     auto target = new Target();
     JSONValue json = target.toJSONValue();
     assert("alwaysMatch" in json);
-    assert(json["alwaysMatch"]["browserName"].str == defaultBrowser.name);
+    assert(json["alwaysMatch"].object.length == 0);
     assert("firstMatch" !in json);
 }
