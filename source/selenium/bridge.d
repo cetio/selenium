@@ -29,7 +29,7 @@ class Bridge
     static Bridge start(string executable)
     {
         Bridge ret = new Bridge();
-        if (executable is null)
+        if (executable == null)
             executable = findExecutable("chromedriver");
 
         ushort port = findFreePort();
@@ -67,7 +67,7 @@ class Bridge
         try
             request(HTTP.Method.del, "");
         catch (Exception) { }
-        if (pid !is Pid.init)
+        if (pid != Pid.init)
         {
             tryKill(pid);
             pid = Pid.init;
@@ -101,7 +101,7 @@ class Bridge
 
     static string parseElementId(JSONValue json)
     {
-        enum W3C_KEY = "element-6066-11e4-a52e-4f735466cecf";
+        enum string W3C_KEY = "element-6066-11e4-a52e-4f735466cecf";
         JSONValue value = ("value" in json) ? json["value"] : json;
 
         if (value.type == JSONType.object)
