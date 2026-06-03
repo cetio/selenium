@@ -18,11 +18,13 @@ enum Platform : string
 class Target
 {
     Platform platform;
-    Browser[] browsers;
+    // TODO: `defaultX` needs to be removed.
+    Browser alwaysMatch = new Browser();
+    Browser[] firstMatch;
 
-    this(Browser[] browsers...)
+    this(Browser[] firstMatch...)
     {
-        this.browsers = browsers;
+        this.firstMatch = firstMatch;
     }
 
     Browser match()
@@ -30,49 +32,27 @@ class Target
         bool isValid(Browser browser)
             => browser !is null && browser.executablePath.isFile;
 
-        foreach (browser; browsers)
+        foreach (browser; firstMatch)
         {
-            if (!browser.generic && isValid(browser))
+            if (isValid(browser))
                 return browser;
         }
 
-        foreach (browser; browsers)
-        {
-            if (browser.generic && isValid(browser))
-                return browser;
-        }
-
-        if (isValid(defaultBrowser))
-            return defaultBrowser;
+        if (isValid(alwaysMatch))
+            return alwaysMatch;
 
         throw new WebDriverConnectionError("No viable browser was found with valid executable paths.");
     }
 
     JSONValue toJSONValue() const
     {
-        JSONValue alwaysMatch = JSONValue.emptyObject;
-        if (platform != Platform.init)
-            alwaysMatch["platformName"] = JSONValue(cast(string)platform);
-
-        JSONValue[] firstMatch;
-        bool anyGeneric = false;
-        foreach (browser; browsers)
-        {
-            if (browser.generic)
-            {
-                anyGeneric = true;
-                continue;
-            }
-            firstMatch ~= browser.toJSONValue();
-        }
-        if (anyGeneric)
-            firstMatch ~= JSONValue.emptyObject;
-
         JSONValue ret = JSONValue.emptyObject;
-        if (alwaysMatch.object.length > 0)
-            ret["alwaysMatch"] = alwaysMatch;
-        if (firstMatch.length > 0)
-            ret["firstMatch"] = JSONValue(firstMatch);
+        ret["alwaysMatch"] = alwaysMatch.toJSONValue();
+        ret["alwaysMatch"]["platformName"] = JSONValue(cast(string)platform);
+
+        ret["firstMatch"] = JSONValue.emptyArray;
+        foreach (browser; firstMatch)
+            ret["firstMatch"].array ~= browser.toJSONValue();
 
         return ret;
     }
