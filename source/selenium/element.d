@@ -7,16 +7,43 @@ import std.array : join;
 import std.json : JSONValue;
 import std.net.curl : HTTP;
 
-enum Locator : string
+struct By
 {
-    ClassName = "class name",
-    CssSelector = "css selector",
-    Id = "id",
-    Name = "name",
-    LinkText = "link text",
-    PartialLinkText = "partial link text",
-    TagName = "tag name",
-    XPath = "xpath"
+    string using;
+    string value;
+
+    static By css(string value)
+    {
+        return By("css selector", value);
+    }
+
+    static By tagName(string value)
+    {
+        return By("tag name", value);
+    }
+
+    static By linkText(string value)
+    {
+        return By("link text", value);
+    }
+
+    static By partialLinkText(string value)
+    {
+        return By("partial link text", value);
+    }
+
+    static By xpath(string value)
+    {
+        return By("xpath", value);
+    }
+
+    JSONValue toJSONValue()
+    {
+        JSONValue ret = JSONValue.emptyObject;
+        ret["using"] = using;
+        ret["value"] = value;
+        return ret;
+    }
 }
 
 struct Size
@@ -78,11 +105,6 @@ class Element
         driver.bridge.request(driver.id, HTTP.Method.post, path("/click"));
     }
 
-    void submit()
-    {
-        driver.bridge.request(driver.id, HTTP.Method.post, path("/submit"));
-    }
-
     void sendKeys(string[] keys)
     {
         driver.bridge.request(driver.id, HTTP.Method.post, path("/value"), ["text": keys.join()]);
@@ -104,9 +126,6 @@ class Element
     bool enabled()
         => driver.bridge.request!bool(driver.id, HTTP.Method.get, path("/enabled"));
 
-    bool displayed()
-        => driver.bridge.request!bool(driver.id, HTTP.Method.get, path("/displayed"));
-
     string attribute(string name)
         => driver.bridge.request!string(driver.id, HTTP.Method.get, path("/attribute/"~name));
 
@@ -115,9 +134,6 @@ class Element
 
     Position position()
         => driver.bridge.request!Position(driver.id, HTTP.Method.get, path("/rect"));
-
-    Position positionInView()
-        => driver.bridge.request!Position(driver.id, HTTP.Method.get, path("/location_in_view"));
 
     Size size()
         => driver.bridge.request!Size(driver.id, HTTP.Method.get, path("/rect"));
