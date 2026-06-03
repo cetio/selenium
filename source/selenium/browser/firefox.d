@@ -36,7 +36,7 @@ public:
     /// Preferences. These are client preferences for the active profile.
     Preferences prefs;
     /// This is universal for both the recommended `--profile` and the legacy `firefox_profile`.
-    /// This should be a directory path containing a Firefox profile, but Base-64 Zip is supported for compatibility.
+    /// Must be either a directory path or base-64 archive.
     string profile;
 
     override string name() const
@@ -58,11 +58,11 @@ public:
         if (profile != null)
         {
             if (profile.isDir)
-                launchArgs ~= "--profile " ~ profile;
+                launchArgs ~= "--profile "~profile;
             else if (profile.match(ctRegex!(`^([A-Za-z0-9+/]{4})*([A-Za-z0-9+/]{3}=|[A-Za-z0-9+/]{2}==)?$`)))
                 opts["profile"] = JSONValue(profile);
             else
-                throw new WebDriverError("Profile must be a directory path or a base-64 encoded zip file.");
+                throw new WebDriverError("Profile must be a directory path or a base-64 encoded archive.");
         }
         if (launchArgs != null)
             opts["args"] = JSONValue(launchArgs);

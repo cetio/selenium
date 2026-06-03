@@ -1,7 +1,11 @@
 module selenium.browser.chrome;
 
 import selenium.browser : Browser;
+import selenium.error : WebDriverError;
 import std.json : JSONValue, JSONType;
+import std.base64 : Base64;
+import std.file : read, isFile;
+import std.regex : match, ctRegex;
 
 Chrome defaultChrome;
 
@@ -35,7 +39,7 @@ public:
     string[] excludeSwitches;
     /// Preferences for browser (local state) and user.
     Preferences prefs;
-    /// Debugger address. This must be in the format '<hostname/ip:port>', ie: '127.0.0.1:9222'.
+    /// Debugger address. Must be in the format '<hostname/ip:port>', ie: '127.0.0.1:9222'.
     string debuggerAddress;
     /// Minidump path. Only supported for Linux environments.
     /// Setting this on a non-linux compilation will have no effect.
@@ -43,18 +47,12 @@ public:
     /// Detach process from driver.
     /// If true, the browser will not be closed when the driver is closed.
     bool detach;
-
+    /// Extensions to load. May be provided as either base-64 encoded CRX content or a path to a CRX file.
     string[] extensions;
 
     // TODO: Support for setting custom names.
     override string name() const
         => "chrome";
-
-    bool addExtension(string extension)
-    {
-        extensions ~= extension;
-        return true;
-    }
 
     override ref string executablePath()
     {
@@ -82,8 +80,15 @@ public:
         if (prefs.user.type == JSONType.object && prefs.user.object.length > 0)
             opts["prefs"] = prefs.user;
 
-        if (extensions != null)
-            opts["extensions"] = JSONValue(extensions);
+        foreach (ext; extensions)
+        {
+            if (ext.isFile)
+                opts["extensions"] ~= JSONValue(cast(string)Base64.encode(cast(ubyte[])read(ext)));
+            else if (ext.match(ctRegex!(`^([A-Za-z0-9+/]{4})*([A-Za-z0-9+/]{3}=|[A-Za-z0-9+/]{2}==)?$`)))
+                opts["extensions"] ~= JSONValue(ext);
+            else
+                throw new WebDriverError("Extension must be a file path or a base-64 encoded CRX content.");
+        }
 
         if (debuggerAddress != null)
             opts["debuggerAddress"] = JSONValue(debuggerAddress);
