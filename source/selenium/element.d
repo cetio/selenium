@@ -59,6 +59,23 @@ class Element
         this.id = id;
     }
 
+    string text() => driver.bridge.request!string(driver.id, HTTP.Method.get, path("/text"));
+    string tagName() => driver.bridge.request!string(driver.id, HTTP.Method.get, path("/name"));
+    string attribute(string name) => driver.bridge.request!string(driver.id, HTTP.Method.get, path("/attribute/"~name));
+    string cssValue(string property) 
+        => driver.bridge.request!string(driver.id, HTTP.Method.get, path("/css/"~property));
+
+    Size size() => driver.bridge.request!Size(driver.id, HTTP.Method.get, path("/rect"));
+    Position position() => driver.bridge.request!Position(driver.id, HTTP.Method.get, path("/rect"));
+    bool selected() => driver.bridge.request!bool(driver.id, HTTP.Method.get, path("/selected"));
+    bool enabled() => driver.bridge.request!bool(driver.id, HTTP.Method.get, path("/enabled"));
+
+    void click() => driver.bridge.request!void(driver.id, HTTP.Method.post, path("/click"));
+    void sendKeys(string[] keys...) 
+        => driver.bridge.request(driver.id, HTTP.Method.post, path("/value"), ["text": keys.join()]);
+    void clear() => driver.bridge.request!void(driver.id, HTTP.Method.post, path("/clear"));
+    string screenshot() => driver.bridge.request!string(driver.id, HTTP.Method.get, path("/screenshot"));
+
     Element find(By by)
     {
         driver.bridge.ensureTimeoutsSynced(driver.id, driver.browser);
@@ -77,53 +94,6 @@ class Element
             ret ~= new Element(driver, eid);
         return ret;
     }
-
-    string text()
-        => driver.bridge.request!string(driver.id, HTTP.Method.get, path("/text"));
-
-    string tagName()
-        => driver.bridge.request!string(driver.id, HTTP.Method.get, path("/name"));
-
-    void click()
-    {
-        driver.bridge.request(driver.id, HTTP.Method.post, path("/click"));
-    }
-
-    void sendKeys(string[] keys)
-    {
-        driver.bridge.request(driver.id, HTTP.Method.post, path("/value"), ["text": keys.join()]);
-    }
-
-    void sendKeys(string keys)
-    {
-        sendKeys([keys]);
-    }
-
-    void clear()
-    {
-        driver.bridge.request(driver.id, HTTP.Method.post, path("/clear"));
-    }
-
-    bool selected()
-        => driver.bridge.request!bool(driver.id, HTTP.Method.get, path("/selected"));
-
-    bool enabled()
-        => driver.bridge.request!bool(driver.id, HTTP.Method.get, path("/enabled"));
-
-    string attribute(string name)
-        => driver.bridge.request!string(driver.id, HTTP.Method.get, path("/attribute/"~name));
-
-    string cssValue(string property)
-        => driver.bridge.request!string(driver.id, HTTP.Method.get, path("/css/"~property));
-
-    Position position()
-        => driver.bridge.request!Position(driver.id, HTTP.Method.get, path("/rect"));
-
-    Size size()
-        => driver.bridge.request!Size(driver.id, HTTP.Method.get, path("/rect"));
-
-    string screenshot()
-        => driver.bridge.request!string(driver.id, HTTP.Method.get, path("/screenshot"));
 
 private:
     string path(string suffix)
