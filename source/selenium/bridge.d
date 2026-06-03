@@ -130,6 +130,22 @@ class Bridge
     }
 
 package:
+    void getTimeouts()
+    {
+        JSONValue json = request(HTTP.Method.get, "/timeouts");
+        JSONValue value = ("value" in json) ? json["value"] : json;
+
+        if (value.type == JSONType.object)
+        {
+            if ("implicit" in value && value["implicit"].type == JSONType.integer)
+                timeouts.implicit = value["implicit"].get!long.msecs;
+            if ("pageLoad" in value && value["pageLoad"].type == JSONType.integer)
+                timeouts.pageLoad = value["pageLoad"].get!long.msecs;
+            if ("script" in value && value["script"].type == JSONType.integer)
+                timeouts.script = value["script"].get!long.msecs;
+        }
+    }
+
     void ensureTimeoutsSynced()
     {
         static int syncedImplicit;

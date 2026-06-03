@@ -29,8 +29,7 @@ class Driver
         payload["capabilities"] = capabilities;
 
         string id = bridge.createSession(payload);
-        bridge.timeouts = alwaysMatch.timeouts;
-        bridge.ensureTimeoutsSynced();
+        bridge.getTimeouts();
 
         Driver ret = new Driver();
         ret.bridge = bridge;
