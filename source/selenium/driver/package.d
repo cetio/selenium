@@ -52,6 +52,8 @@ class Driver
             bridge.closeSession(id);
     }
 
+    
+
     string url() => bridge.request!string(id, HTTP.Method.get, "/url");
     string title() => bridge.request!string(id, HTTP.Method.get, "/title");
     string source() => bridge.request!string(id, HTTP.Method.get, "/source");
