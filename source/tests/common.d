@@ -62,7 +62,6 @@ version(integration)
         foreach (config; configs)
         {
             Driver driver;
-            try
             driver = Driver.start(config.bridge, config.browser, null);
             scope (exit) driver.stop();
             dg(driver);

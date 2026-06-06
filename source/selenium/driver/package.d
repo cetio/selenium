@@ -6,6 +6,8 @@ import selenium.element : By, Element, Size;
 import std.json : JSONValue;
 import std.net.curl : HTTP;
 
+// Unlike Bridge, Driver does NOT automatically destruct.
+// Stopping a Driver and failing to clean up the Bridge is fine.
 class Driver
 {
     Bridge bridge;
