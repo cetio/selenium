@@ -67,7 +67,8 @@ class Driver
     void forward() => bridge.request!void(id, HTTP.Method.post, "/forward");
     void refresh() => bridge.request!void(id, HTTP.Method.post, "/refresh");
 
-    Element activeElement() => new Element(this, Bridge.parseElementId(bridge.request(id, HTTP.Method.get, "/element/active")));
+    Element activeElement() 
+        => new Element(this, Bridge.parseElementId(bridge.request(id, HTTP.Method.get, "/element/active")));
 
     Element find(By by)
     {
