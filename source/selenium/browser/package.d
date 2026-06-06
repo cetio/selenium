@@ -67,7 +67,7 @@ class Browser
         => name.length == 0;
 
     bool isInstalled()
-        => resolveExecutable(false) != null;
+        => resolveBinary(false) != null;
 
     JSONValue toJSON() const
     {
@@ -134,9 +134,9 @@ class Browser
     }
 
 package(selenium):
-    string resolveExecutable(bool throwOnNotFound = true)
+    string resolveBinary(bool throwOnNotFound = true)
     {
-        string findExecutable(string candidate)
+        string findBinary(string candidate)
         {
             Tuple!(int, "status", string, "output") result =
                 std.process.execute(["which", candidate]);
@@ -157,7 +157,7 @@ package(selenium):
 
         if (!generic && name in byName)
         {
-            string ret = findExecutable(byName[name]);
+            string ret = findBinary(byName[name]);
             if (ret != null)
                 return ret;
         }
@@ -171,7 +171,7 @@ package(selenium):
                 "safaridriver",
             ])
             {
-                string ret = findExecutable(candidate);
+                string ret = findBinary(candidate);
                 if (ret != null)
                     return ret;
             }

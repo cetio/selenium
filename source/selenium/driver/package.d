@@ -39,7 +39,7 @@ class Driver
     }
 
     static Driver start(Browser alwaysMatch, Browser[] firstMatch = null)
-        => start(Bridge.start(alwaysMatch.resolveExecutable()), alwaysMatch, firstMatch);
+        => start(Bridge.start(alwaysMatch.resolveBinary()), alwaysMatch, firstMatch);
 
     static Driver start()
         => start(new Browser());
