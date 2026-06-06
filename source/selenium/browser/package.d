@@ -1,9 +1,11 @@
 module selenium.browser;
 
-import selenium.error : InvalidArgumentError;
-//import selenium.driver : Driver;
+import selenium.error : InvalidArgumentError, WebDriverConnectionError;
 
 import std.json : JSONValue, JSONType;
+import std.typecons : Tuple;
+import std.string : strip;
+static import std.process;
 import core.time : Duration, dur;
 
 enum PageLoadStrategy : string
@@ -64,8 +66,8 @@ class Browser
     bool generic() const
         => name.length == 0;
 
-    // bool isInstalled() const
-    //     => Driver.resolveExecutable(this, false) != null;
+    bool isInstalled()
+        => resolveExecutable(false) != null;
 
     JSONValue toJSON() const
     {
@@ -130,7 +132,56 @@ class Browser
         ret.parseFrom(json);
         return ret;
     }
-    
+
+package(selenium):
+    string resolveExecutable(bool throwOnNotFound = true)
+    {
+        string findExecutable(string candidate)
+        {
+            Tuple!(int, "status", string, "output") result =
+                std.process.execute(["which", candidate]);
+            if (result.status == 0)
+                return result.output.strip;
+            return null;
+        }
+
+        immutable string[string] byName = [
+            "chrome": "chromedriver",
+            "firefox": "geckodriver",
+            "MicrosoftEdge": "msedgedriver",
+            "safari": "safaridriver",
+        ];
+
+        if (this is null)
+            throw new WebDriverConnectionError("Browser instance must not be null for Web Driver executable.");
+
+        if (!generic && name in byName)
+        {
+            string ret = findExecutable(byName[name]);
+            if (ret != null)
+                return ret;
+        }
+
+        if (generic && name !in byName)
+        {
+            foreach (string candidate; [
+                "chromedriver",
+                "geckodriver",
+                "msedgedriver",
+                "safaridriver",
+            ])
+            {
+                string ret = findExecutable(candidate);
+                if (ret != null)
+                    return ret;
+            }
+        }
+
+        if (throwOnNotFound)
+            throw new WebDriverConnectionError("No WebDriver executable found on PATH.");
+        return null;
+    }
+
 protected:
     void parseFrom(JSONValue json)
     {
