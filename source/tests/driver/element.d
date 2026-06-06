@@ -27,8 +27,9 @@ version(integration)
         driver.go(dataUri(
             "<html><body><input id='field' value='initial'></body></html>"
         ));
+        driver.find(By.css("#field")).clear();
         driver.find(By.css("#field")).sendKeys("abc");
-        assert(driver.find(By.css("#field")).attribute("value") == "abc");
+        assert(driver.find(By.css("#field")).property("value") == "abc");
     }
 
     unittest
@@ -40,7 +41,7 @@ version(integration)
             "<html><body><input id='field' value='prefilled'></body></html>"
         ));
         driver.find(By.css("#field")).clear();
-        assert(driver.find(By.css("#field")).attribute("value") == "");
+        assert(driver.find(By.css("#field")).property("value") == "");
     }
 
     unittest

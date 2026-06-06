@@ -63,7 +63,8 @@ class Element
     string text() => driver.bridge.request!string(driver.id, HTTP.Method.get, path("/text"));
     string tagName() => driver.bridge.request!string(driver.id, HTTP.Method.get, path("/name"));
     string attribute(string name) => driver.bridge.request!string(driver.id, HTTP.Method.get, path("/attribute/"~name));
-    string cssValue(string property) 
+    string property(string name) => driver.bridge.request!string(driver.id, HTTP.Method.get, path("/property/"~name));
+    string cssValue(string property)
         => driver.bridge.request!string(driver.id, HTTP.Method.get, path("/css/"~property));
 
     Size size() => driver.bridge.request!Size(driver.id, HTTP.Method.get, path("/rect"));

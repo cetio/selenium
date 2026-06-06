@@ -7,6 +7,9 @@ import selenium.error : WebDriverConnectionError;
 
 import std.json : JSONValue;
 import std.net.curl : HTTP;
+static import std.process;
+import std.typecons : Tuple;
+import std.string : strip;
 
 class Driver
 {
@@ -41,10 +44,57 @@ class Driver
     }
 
     static Driver start(Browser alwaysMatch, Browser[] firstMatch = null)
-        => start(Bridge.start(null), alwaysMatch, firstMatch);
+        => start(Bridge.start(resolveExecutable(alwaysMatch)), alwaysMatch, firstMatch);
 
     static Driver start()
         => start(new Browser());
+
+    static string resolveExecutable(Browser browser)
+    {
+        string findExecutable(string candidate)
+        {
+            Tuple!(int, "status", string, "output") result =
+                std.process.execute(["which", candidate]);
+            if (result.status == 0)
+                return result.output.strip;
+            return null;
+        }
+
+        immutable string[string] byName = [
+            "chrome": "chromedriver",
+            "firefox": "geckodriver",
+            "MicrosoftEdge": "msedgedriver",
+            "safari": "safaridriver",
+        ];
+
+        if (browser !is null && !browser.generic)
+        {
+            string candidate = browser.name in byName
+                ? byName[browser.name]
+                : null;
+
+            if (candidate !is null)
+            {
+                string ret = findExecutable(candidate);
+                if (ret !is null)
+                    return ret;
+            }
+        }
+
+        foreach (string candidate; [
+            "chromedriver",
+            "geckodriver",
+            "msedgedriver",
+            "safaridriver",
+        ])
+        {
+            string ret = findExecutable(candidate);
+            if (ret !is null)
+                return ret;
+        }
+
+        throw new WebDriverConnectionError("No WebDriver executable found on PATH.");
+    }
 
     void stop()
     {

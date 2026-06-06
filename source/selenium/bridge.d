@@ -11,10 +11,6 @@ import std.conv : to;
 import std.net.curl : HTTP;
 import std.process : kill, Pid, spawnProcess;
 import std.socket;
-import std.string : strip;
-import std.typecons : Tuple;
-static import std.process;
-
 import core.thread : Thread;
 import core.time : MonoTime, msecs, Duration;
 
@@ -61,10 +57,10 @@ public:
 
     static Bridge start(string executable)
     {
-        Bridge ret = new Bridge();
         if (executable == null)
-            executable = findExecutable("chromedriver");
+            throw new InvalidArgumentError("Valid executable path must be provided.");
 
+        Bridge ret = new Bridge();
         ushort port = findFreePort();
         ret.pid = spawnProcess([executable, "--port="~port.to!string]);
         ret.address = "http://127.0.0.1:"~port.to!string;
@@ -208,15 +204,6 @@ private:
             throw mapError(ret);
 
         return ret;
-    }
-
-    static string findExecutable(string candidate)
-    {
-        Tuple!(int, "status", string, "output") result =
-            std.process.execute(["which", candidate]);
-        if (result.status == 0)
-            return result.output.strip;
-        return null;
     }
 
     static ushort findFreePort()

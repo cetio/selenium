@@ -44,10 +44,10 @@ version(integration)
         Driver driver = Driver.start();
         scope (exit) driver.stop();
 
-        string inner = dataUri("<html><body><p id='inner'>inside</p></body></html>");
+        string inner = "<p id='inner'>inside</p>";
         string html = "<html><body>"~
             "<p id='top'>top</p>"~
-            "<iframe id='frame1' src='"~inner~"'></iframe>"~
+            "<iframe id='frame1' srcdoc=\""~inner~"\"></iframe>"~
             "</body></html>";
 
         driver.go(dataUri(html));
@@ -60,8 +60,8 @@ version(integration)
         Driver driver = Driver.start();
         scope (exit) driver.stop();
 
-        string iframeSrc = dataUri("<html><body><p id='nested'>nested</p></body></html>");
-        string html = "<html><body><iframe id='frame1' src='"~iframeSrc~"'></iframe></body></html>";
+        string iframeHtml = "<p id='nested'>nested</p>";
+        string html = "<html><body><iframe id='frame1' srcdoc=\""~iframeHtml~"\"></iframe></body></html>";
 
         driver.go(dataUri(html));
         Element iframe = driver.find(By.css("iframe"));
@@ -74,8 +74,8 @@ version(integration)
         Driver driver = Driver.start();
         scope (exit) driver.stop();
 
-        string iframeSrc = dataUri("<html><body><p id='child'>child</p></body></html>");
-        string html = "<html><body><p id='parent'>parent</p><iframe src='"~iframeSrc~"'></iframe></body></html>";
+        string iframeHtml = "<p id='child'>child</p>";
+        string html = "<html><body><p id='parent'>parent</p><iframe srcdoc=\""~iframeHtml~"\"></iframe></body></html>";
 
         driver.go(dataUri(html));
         driver.frame.switchTo(0);
@@ -89,8 +89,9 @@ version(integration)
         Driver driver = Driver.start();
         scope (exit) driver.stop();
 
-        string iframeSrc = dataUri("<html><body><p id='deep'>deep</p></body></html>");
-        string html = "<html><body><p id='surface'>surface</p><iframe src='"~iframeSrc~"'></iframe></body></html>";
+        string iframeHtml = "<p id='deep'>deep</p>";
+        string html = "<html><body><p id='surface'>surface</p>"~
+            "<iframe srcdoc=\""~iframeHtml~"\"></iframe></body></html>";
 
         driver.go(dataUri(html));
         assert(driver.find(By.css("#surface")).text == "surface");
