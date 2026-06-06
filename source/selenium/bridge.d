@@ -20,6 +20,10 @@ import core.time : MonoTime, msecs, Duration;
 
 class Bridge
 {
+package(selenium):
+    enum string W3C_KEY = "element-6066-11e4-a52e-4f735466cecf";
+
+public:
     string address;
     Pid pid;
     int capacity;
@@ -117,7 +121,6 @@ class Bridge
 
     static string parseElementId(JSONValue json)
     {
-        enum string W3C_KEY = "element-6066-11e4-a52e-4f735466cecf";
         JSONValue value = ("value" in json) ? json["value"] : json;
 
         if (value.type == JSONType.object)

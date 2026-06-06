@@ -14,17 +14,23 @@ class Driver
     Browser browser;
     string id;
 
-    static Driver start(Bridge bridge, Browser alwaysMatch, Browser[] firstMatch...)
+    static Driver start(
+        Bridge bridge, 
+        Browser alwaysMatch, 
+        Browser[] firstMatch
+    )
     {
+
         JSONValue payload = JSONValue.emptyObject;
         JSONValue capabilities = JSONValue.emptyObject;
         capabilities["alwaysMatch"] = alwaysMatch.toJSON();
 
-        JSONValue[] firstMatchJson;
-        foreach (browser; firstMatch)
-            firstMatchJson ~= browser.toJSON();
-        if (firstMatchJson.length > 0)
-            capabilities["firstMatch"] = JSONValue(firstMatchJson);
+        if (firstMatch != null)
+        {
+            capabilities["firstMatch"] = JSONValue.emptyArray;
+            foreach (browser; firstMatch)
+                capabilities["firstMatch"] ~= browser.toJSON();
+        }
 
         payload["capabilities"] = capabilities;
 
@@ -35,16 +41,11 @@ class Driver
         return ret;
     }
 
-    static Driver start(Browser alwaysMatch, Browser[] firstMatch...)
-    {
-        Bridge spawned = Bridge.start(null);
-        return start(spawned, alwaysMatch, firstMatch);
-    }
+    static Driver start(Browser alwaysMatch, Browser[] firstMatch = null)
+        => start(Bridge.start(null), alwaysMatch, firstMatch);
 
     static Driver start()
-    {
-        return start(new Browser());
-    }
+        => start(new Browser());
 
     void stop()
     {
@@ -117,10 +118,14 @@ class Driver
 
     template Frame()
     {
-        void switchTo() => bridge.request!void(this.id, HTTP.Method.post, "/frame");
+        void switchTo() => bridge.request!void(this.id, HTTP.Method.post, "/frame", ["id": JSONValue(null)]);
         void switchTo(long id) => bridge.request!void(this.id, HTTP.Method.post, "/frame", ["id": id]);
-        // TODO: No idea if this is correct.
-        void switchTo(Element element) => bridge.request!void(this.id, HTTP.Method.post, "/frame", ["id": element.id]);
+        void switchTo(Element element)
+        {
+            JSONValue elementRef = JSONValue.emptyObject;
+            elementRef[Bridge.W3C_KEY] = JSONValue(element.id);
+            bridge.request!void(this.id, HTTP.Method.post, "/frame", ["id": elementRef]);
+        }
         void switchToParent() => bridge.request!void(this.id, HTTP.Method.post, "/frame/parent");
     }
     alias frame = Frame!();

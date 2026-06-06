@@ -4,6 +4,7 @@ import selenium.bridge : Bridge;
 import selenium.driver : Driver;
 
 import std.array : join;
+import std.conv : to;
 import std.json : JSONValue;
 import std.net.curl : HTTP;
 
@@ -71,8 +72,18 @@ class Element
     bool enabled() => driver.bridge.request!bool(driver.id, HTTP.Method.get, path("/enabled"));
 
     void click() => driver.bridge.request!void(driver.id, HTTP.Method.post, path("/click"));
-    void sendKeys(string[] keys...) 
-        => driver.bridge.request!void(driver.id, HTTP.Method.post, path("/value"), ["text": keys.join()]);
+    void sendKeys(string[] keys...)
+    {
+        JSONValue[] value;
+        foreach (key; keys)
+            foreach (dchar ch; key)
+                value ~= JSONValue(ch.to!string);
+
+        driver.bridge.request!void(driver.id, HTTP.Method.post, path("/value"), [
+            "text": JSONValue(keys.join()),
+            "value": JSONValue(value),
+        ]);
+    }
     void clear() => driver.bridge.request!void(driver.id, HTTP.Method.post, path("/clear"));
     string screenshot() => driver.bridge.request!string(driver.id, HTTP.Method.get, path("/screenshot"));
 
