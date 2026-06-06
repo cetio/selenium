@@ -53,14 +53,6 @@ package(selenium):
         catch (Exception) { }
     }
 
-private:
-    HTTP http;
-
-    this()
-    {
-        http = HTTP();
-    }
-
 public:
     string address;
     Pid pid;
@@ -92,6 +84,7 @@ public:
         if (capacity > 0 && sessions.length >= capacity)
             throw new WebDriverConnectionError("Bridge capacity exceeded.");
 
+        HTTP http = HTTP();
         Response response = send(http, HTTP.Method.post, address~"/session", payload);
         JSONValue json = checkAndParse(response);
 
@@ -135,21 +128,19 @@ public:
         if (method == HTTP.Method.post)
             return request!T(id, method, path, JSONValue.emptyObject);
 
+        HTTP http = HTTP();
         Response response = send(http, method, address~"/session/"~id~path);
         JSONValue json = checkAndParse(response);
 
         static if (is(T == JSONValue))
             return json;
         else static if (!is(T == void))
-        {
-            import std.stdio;
-            writeln("1231231aaghh");
             return parse!T(json);
-        }
     }
 
     T request(T = JSONValue, D)(string id, HTTP.Method method, string path, D data)
     {
+        HTTP http = HTTP();
         Response response = send(http, method, address~"/session/"~id~path, data);
         JSONValue json = checkAndParse(response);
 
