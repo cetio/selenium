@@ -55,6 +55,11 @@ public:
     int capacity;
     Browser[string] sessions;
 
+    ~this()
+    {
+        stop();
+    }
+    
     static Bridge start(string binary, string[] args = null)
     {
         if (binary == null)
@@ -104,9 +109,6 @@ public:
             request(id, HTTP.Method.del, "");
         catch (Exception) { }
         sessions.remove(id);
-
-        if (sessions.length == 0)
-            stop();
     }
 
     void stop()

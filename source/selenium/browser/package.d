@@ -69,6 +69,54 @@ class Browser
     bool isInstalled()
         => resolveBinary(false) != null;
 
+    string resolveBinary(bool throwOnNotFound = true)
+    {
+        string findBinary(string candidate)
+        {
+            Tuple!(int, "status", string, "output") result =
+                std.process.execute(["which", candidate]);
+            if (result.status == 0)
+                return result.output.strip;
+            return null;
+        }
+
+        immutable string[string] byName = [
+            "chrome": "chromedriver",
+            "firefox": "geckodriver",
+            "MicrosoftEdge": "msedgedriver",
+            "safari": "safaridriver",
+        ];
+
+        if (this is null)
+            throw new WebDriverConnectionError("Browser instance must not be null for Web Driver binary.");
+
+        if (!generic && name in byName)
+        {
+            string ret = findBinary(byName[name]);
+            if (ret != null)
+                return ret;
+        }
+
+        if (generic && name !in byName)
+        {
+            foreach (string candidate; [
+                "chromedriver",
+                "geckodriver",
+                "msedgedriver",
+                "safaridriver",
+            ])
+            {
+                string ret = findBinary(candidate);
+                if (ret != null)
+                    return ret;
+            }
+        }
+
+        if (throwOnNotFound)
+            throw new WebDriverConnectionError("No WebDriver binary found on PATH for '"~name~"'.");
+        return null;
+    }
+
     JSONValue toJSON() const
     {
         JSONValue ret = JSONValue.emptyObject;
@@ -131,55 +179,6 @@ class Browser
 
         ret.parseFrom(json);
         return ret;
-    }
-
-package(selenium):
-    string resolveBinary(bool throwOnNotFound = true)
-    {
-        string findBinary(string candidate)
-        {
-            Tuple!(int, "status", string, "output") result =
-                std.process.execute(["which", candidate]);
-            if (result.status == 0)
-                return result.output.strip;
-            return null;
-        }
-
-        immutable string[string] byName = [
-            "chrome": "chromedriver",
-            "firefox": "geckodriver",
-            "MicrosoftEdge": "msedgedriver",
-            "safari": "safaridriver",
-        ];
-
-        if (this is null)
-            throw new WebDriverConnectionError("Browser instance must not be null for Web Driver binary.");
-
-        if (!generic && name in byName)
-        {
-            string ret = findBinary(byName[name]);
-            if (ret != null)
-                return ret;
-        }
-
-        if (generic && name !in byName)
-        {
-            foreach (string candidate; [
-                "chromedriver",
-                "geckodriver",
-                "msedgedriver",
-                "safaridriver",
-            ])
-            {
-                string ret = findBinary(candidate);
-                if (ret != null)
-                    return ret;
-            }
-        }
-
-        if (throwOnNotFound)
-            throw new WebDriverConnectionError("No WebDriver binary found on PATH for '"~name~"'.");
-        return null;
     }
 
 protected:
