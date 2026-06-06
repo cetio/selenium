@@ -47,64 +47,59 @@ version(integration)
 
     unittest
     {
-        Driver driver = Driver.start();
-        scope (exit) driver.stop();
-
-        driver.go(dataUri("<html><title>WindowTest</title><body></body></html>"));
-        assert(driver.title == "WindowTest");
+        testWithBrowsers((driver) {
+            driver.go(dataUri("<html><title>WindowTest</title><body></body></html>"));
+            assert(driver.title == "WindowTest", "title failed for "~driver.browser.name);
+        });
     }
 
     unittest
     {
-        Driver driver = Driver.start();
-        scope (exit) driver.stop();
-
-        driver.go(dataUri("<html><body></body></html>"));
-        assert(driver.window.handle.length > 0);
+        testWithBrowsers((driver) {
+            driver.go(dataUri("<html><body></body></html>"));
+            assert(driver.window.handle.length > 0, "window handle failed for "~driver.browser.name);
+        });
     }
 
     unittest
     {
-        Driver driver = Driver.start();
-        scope (exit) driver.stop();
-
-        driver.go(dataUri("<html><body></body></html>"));
-        Size original = driver.window.size;
-        driver.window.resize(Size(original.width - 50, original.height - 50));
-        Size changed = driver.window.size;
-        assert(changed.width == original.width - 50);
-        assert(changed.height == original.height - 50);
+        testWithBrowsers((driver) {
+            driver.go(dataUri("<html><body></body></html>"));
+            Size original = driver.window.size;
+            driver.window.resize(Size(original.width - 50, original.height - 50));
+            Size changed = driver.window.size;
+            assert(changed.width == original.width - 50, "resize width failed for "~driver.browser.name);
+            assert(changed.height == original.height - 50, "resize height failed for "~driver.browser.name);
+        });
     }
 
     unittest
     {
-        Driver driver = Driver.start();
-        scope (exit) driver.stop();
-
-        driver.go(dataUri("<html><body></body></html>"));
-        driver.window.resize(Size(400, 400));
-        driver.window.maximize();
-        Size maximized = driver.window.size;
-        assert(maximized.width >= 400);
-        assert(maximized.height >= 400);
+        testWithBrowsers((driver) {
+            driver.go(dataUri("<html><body></body></html>"));
+            driver.window.resize(Size(400, 400));
+            driver.window.maximize();
+            Size maximized = driver.window.size;
+            assert(maximized.width >= 400, "maximize width failed for "~driver.browser.name);
+            assert(maximized.height >= 400, "maximize height failed for "~driver.browser.name);
+        });
     }
 
     unittest
     {
-        Driver driver = Driver.start();
-        scope (exit) driver.stop();
-
-        driver.go(dataUri("<html><body></body></html>"));
-        driver.window.minimize();
-        assert(driver.execute!bool("return document.hidden;") == true);
+        testWithBrowsers((driver) {
+            driver.go(dataUri("<html><body></body></html>"));
+            driver.window.minimize();
+            assert(driver.execute!bool("return document.hidden;") == true,
+                "minimize hidden failed for "~driver.browser.name);
+        });
     }
 
     unittest
     {
-        Driver driver = Driver.start();
-        scope (exit) driver.stop();
-
-        driver.go(dataUri("<html><body></body></html>"));
-        assert(driver.window.handles.length >= 1);
+        testWithBrowsers((driver) {
+            driver.go(dataUri("<html><body></body></html>"));
+            assert(driver.window.handles.length >= 1, "handles failed for "~driver.browser.name);
+        });
     }
 }

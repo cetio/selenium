@@ -1,6 +1,7 @@
 module selenium.browser;
 
 import selenium.error : InvalidArgumentError;
+//import selenium.driver : Driver;
 
 import std.json : JSONValue, JSONType;
 import core.time : Duration, dur;
@@ -62,6 +63,9 @@ class Browser
 
     bool generic() const
         => name.length == 0;
+
+    // bool isInstalled() const
+    //     => Driver.resolveExecutable(this, false) != null;
 
     JSONValue toJSON() const
     {

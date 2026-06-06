@@ -49,53 +49,6 @@ class Driver
     static Driver start()
         => start(new Browser());
 
-    static string resolveExecutable(Browser browser)
-    {
-        string findExecutable(string candidate)
-        {
-            Tuple!(int, "status", string, "output") result =
-                std.process.execute(["which", candidate]);
-            if (result.status == 0)
-                return result.output.strip;
-            return null;
-        }
-
-        immutable string[string] byName = [
-            "chrome": "chromedriver",
-            "firefox": "geckodriver",
-            "MicrosoftEdge": "msedgedriver",
-            "safari": "safaridriver",
-        ];
-
-        if (browser !is null && !browser.generic)
-        {
-            string candidate = browser.name in byName
-                ? byName[browser.name]
-                : null;
-
-            if (candidate !is null)
-            {
-                string ret = findExecutable(candidate);
-                if (ret !is null)
-                    return ret;
-            }
-        }
-
-        foreach (string candidate; [
-            "chromedriver",
-            "geckodriver",
-            "msedgedriver",
-            "safaridriver",
-        ])
-        {
-            string ret = findExecutable(candidate);
-            if (ret !is null)
-                return ret;
-        }
-
-        throw new WebDriverConnectionError("No WebDriver executable found on PATH.");
-    }
-
     void stop()
     {
         if (bridge !is null)
@@ -191,4 +144,61 @@ class Driver
         void switchToParent() => bridge.request!void(this.id, HTTP.Method.post, "/frame/parent");
     }
     alias frame = Frame!();
+
+package(selenium):
+    static string resolveExecutable(Browser browser, bool throwOnNotFound = true)
+    {
+        string findExecutable(string candidate)
+        {
+            Tuple!(int, "status", string, "output") result =
+                std.process.execute(["which", candidate]);
+            if (result.status == 0)
+                return result.output.strip;
+            return null;
+        }
+
+        immutable string[string] byName = [
+            "chrome": "chromedriver",
+            "firefox": "geckodriver",
+            "MicrosoftEdge": "msedgedriver",
+            "safari": "safaridriver",
+        ];
+
+        if (browser is null)
+            throw new WebDriverConnectionError("Browser instance must not be null for Web Driver executable.");
+
+        if (!browser.generic)
+        {
+            string candidate = browser.name in byName
+                ? byName[browser.name]
+                : null;
+
+            if (candidate != null)
+            {
+                string ret = findExecutable(candidate);
+                if (ret != null)
+                    return ret;
+            }
+        }
+
+        if (browser.generic)
+        {
+            foreach (string candidate; [
+                "chromedriver",
+                "geckodriver",
+                "msedgedriver",
+                "safaridriver",
+            ])
+            {
+                string ret = findExecutable(candidate);
+                if (ret != null)
+                    return ret;
+            }
+        }
+
+
+        if (throwOnNotFound)
+            throw new WebDriverConnectionError("No WebDriver executable found on PATH.");
+        return null;
+    }
 }

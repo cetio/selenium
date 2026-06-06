@@ -30,77 +30,74 @@ version(integration)
 
     unittest
     {
-        Driver driver = Driver.start();
-        scope (exit) driver.stop();
-
-        driver.go(dataUri("<html><title>ScriptTest</title><body></body></html>"));
-        assert(driver.execute!string("return document.title;") == "ScriptTest");
+        testWithBrowsers((driver) {
+            driver.go(dataUri("<html><title>ScriptTest</title><body></body></html>"));
+            assert(driver.execute!string("return document.title;") == "ScriptTest",
+                "title script failed for "~driver.browser.name);
+        });
     }
 
     unittest
     {
-        Driver driver = Driver.start();
-        scope (exit) driver.stop();
-
-        driver.go(dataUri("<html><body><p id='count'>3</p></body></html>"));
-        assert(driver.execute!long("return document.getElementsByTagName('p').length;") == 1);
+        testWithBrowsers((driver) {
+            driver.go(dataUri("<html><body><p id='count'>3</p></body></html>"));
+            assert(driver.execute!long("return document.getElementsByTagName('p').length;") == 1,
+                "element count script failed for "~driver.browser.name);
+        });
     }
 
     unittest
     {
-        Driver driver = Driver.start();
-        scope (exit) driver.stop();
-
-        driver.go(dataUri("<html><body></body></html>"));
-        assert(driver.execute!bool("return true;") == true);
+        testWithBrowsers((driver) {
+            driver.go(dataUri("<html><body></body></html>"));
+            assert(driver.execute!bool("return true;") == true,
+                "bool script failed for "~driver.browser.name);
+        });
     }
 
     unittest
     {
-        Driver driver = Driver.start();
-        scope (exit) driver.stop();
-
-        driver.go(dataUri("<html><body><a id='link'>test</a></body></html>"));
-        assert(driver.execute!Element("return document.getElementById('link');").tagName == "a");
+        testWithBrowsers((driver) {
+            driver.go(dataUri("<html><body><a id='link'>test</a></body></html>"));
+            assert(driver.execute!Element("return document.getElementById('link');").tagName == "a",
+                "element script failed for "~driver.browser.name);
+        });
     }
 
     unittest
     {
-        Driver driver = Driver.start();
-        scope (exit) driver.stop();
-
-        driver.go(dataUri("<html><body></body></html>"));
-        assert(driver.execute!string(
-            "return arguments[0] + arguments[1];",
-            JSONValue([JSONValue("Hello, "), JSONValue("World!")])
-        ) == "Hello, World!");
+        testWithBrowsers((driver) {
+            driver.go(dataUri("<html><body></body></html>"));
+            assert(driver.execute!string(
+                "return arguments[0] + arguments[1];",
+                JSONValue([JSONValue("Hello, "), JSONValue("World!")])
+            ) == "Hello, World!", "args script failed for "~driver.browser.name);
+        });
     }
 
     unittest
     {
-        Driver driver = Driver.start();
-        scope (exit) driver.stop();
+        testWithBrowsers((driver) {
+            driver.go(dataUri("<html><body></body></html>"));
 
-        driver.go(dataUri("<html><body></body></html>"));
-
-        bool threw = false;
-        try
-            driver.execute("return nonExistentFunction();");
-        catch (Exception)
-            threw = true;
-        assert(threw);
+            bool threw = false;
+            try
+                driver.execute("return nonExistentFunction();");
+            catch (Exception)
+                threw = true;
+            assert(threw, "script error did not throw for "~driver.browser.name);
+        });
     }
 
     unittest
     {
-        Driver driver = Driver.start();
-        scope (exit) driver.stop();
-
-        driver.go(dataUri("<html><body></body></html>"));
-        string[] arr = driver.execute!(string[])("return ['zero', 'one', 'two'];");
-        assert(arr.length == 3);
-        assert(arr[0] == "zero");
-        assert(arr[1] == "one");
-        assert(arr[2] == "two");
+        testWithBrowsers((driver) {
+            driver.go(dataUri("<html><body></body></html>"));
+            string[] arr = driver.execute!(string[])("return ['zero', 'one', 'two'];");
+            assert(arr.length == 3, "array length failed for "~driver.browser.name);
+            assert(arr[0] == "zero", "array[0] failed for "~driver.browser.name);
+            assert(arr[1] == "one", "array[1] failed for "~driver.browser.name);
+            assert(arr[2] == "two", "array[2] failed for "~driver.browser.name);
+        });
     }
 }
