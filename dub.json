@@ -9,5 +9,22 @@
 	"description": "Modern Selenium SDK for D, inspired by Ruby's Selenium",
 	"license": "AGPL-3.0",
 	"name": "selenium-sdk",
-	"targetType": "library"
+	"targetType": "library",
+	"configurations": [
+		{
+			"name": "library",
+			"targetType": "library"
+		},
+		{
+			"name": "unittest",
+			"targetType": "library",
+			"buildOptions": ["unittests"]
+		},
+		{
+			"name": "integration",
+			"targetType": "library",
+			"buildOptions": ["unittests"],
+			"versions": ["integration"]
+		}
+	]
 }

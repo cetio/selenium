@@ -95,7 +95,7 @@ class UnexpectedAlertOpenError : WebDriverError
 
 package:
 
-static WebDriverError mapError(ushort status, JSONValue json)
+static WebDriverError mapError(JSONValue json)
 {
     string message = extractMessage(json);
 

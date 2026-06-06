@@ -9,11 +9,11 @@ struct Cookie
 {
     string name;
     string value;
-    string path = "/";
+    string path;
     string domain;
     bool secure;
     bool httpOnly;
-    long expiry = -1;
+    uint expiry;
     string sameSite;
 
     JSONValue toJSON() const
@@ -21,17 +21,16 @@ struct Cookie
         JSONValue ret = JSONValue.emptyObject;
         ret["name"] = JSONValue(name);
         ret["value"] = JSONValue(value);
-        if (path.length > 0)
-            ret["path"] = JSONValue(path);
-        if (domain.length > 0)
+        ret["httpOnly"] = JSONValue(httpOnly);
+        ret["secure"] = JSONValue(secure);
+        ret["path"] = path == null ? "/" : path;
+        
+        // Should not be provided if not set.
+        if (domain != null)
             ret["domain"] = JSONValue(domain);
-        if (secure)
-            ret["secure"] = JSONValue(true);
-        if (httpOnly)
-            ret["httpOnly"] = JSONValue(true);
-        if (expiry >= 0)
+        if (expiry > 0)
             ret["expiry"] = JSONValue(expiry);
-        if (sameSite.length > 0)
+        if (sameSite != null)
             ret["sameSite"] = JSONValue(sameSite);
         return ret;
     }
@@ -57,6 +56,7 @@ public:
 
     void add(Cookie cookie)
     {
+        // TODO: Must set cookie domain to current URL??
         driver.bridge.request(
             driver.id,
             HTTP.Method.post,

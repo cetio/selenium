@@ -20,7 +20,6 @@ class Driver
         Browser[] firstMatch
     )
     {
-
         JSONValue payload = JSONValue.emptyObject;
         JSONValue capabilities = JSONValue.emptyObject;
         capabilities["alwaysMatch"] = alwaysMatch.toJSON();
@@ -130,7 +129,4 @@ class Driver
         void switchToParent() => bridge.request!void(this.id, HTTP.Method.post, "/frame/parent");
     }
     alias frame = Frame!();
-
-private:
-    this() { }
 }

@@ -4,7 +4,7 @@ import selenium.browser : Browser;
 import selenium.error : InvalidArgumentError;
 
 import std.json : JSONValue, JSONType;
-import std.file : isDir;
+import std.file : exists, isDir;
 import std.regex : match, ctRegex;
 
 class Firefox : Browser
@@ -45,7 +45,7 @@ class Firefox : Browser
         string[] launchArgs = args.dup;
         if (profile != null)
         {
-            if (profile.isDir)
+            if (profile.exists && profile.isDir)
                 launchArgs ~= "--profile "~profile;
             else if (profile.match(ctRegex!(`^([A-Za-z0-9+/]{4})*([A-Za-z0-9+/]{3}=|[A-Za-z0-9+/]{2}==)?$`)))
                 opts["profile"] = JSONValue(profile);

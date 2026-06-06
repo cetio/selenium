@@ -1,11 +1,13 @@
 module tests.browser;
 
-import selenium.browser : Browser, Platform;
+import selenium.browser : Browser, PageLoadStrategy, Platform, UnhandledPromptBehavior;
 import selenium.browser.chrome : Chrome;
 import selenium.browser.firefox : Firefox;
 
 import core.time : msecs;
 import std.json;
+
+// ========== Offline tests ==========
 
 unittest
 {
@@ -23,11 +25,11 @@ unittest
 {
     Browser browser = new Browser();
     browser.platform = Platform.Windows;
-    browser.timeouts.implicit = 5000.msecs;
+    browser.timeouts.implicit = 5_000.msecs;
 
     JSONValue json = browser.toJSON();
     assert(json["platformName"].str == "Windows");
-    assert(json["timeouts"]["implicit"].get!long == 5000);
+    assert(json["timeouts"]["implicit"].get!long == 5_000);
 }
 
 unittest
@@ -78,4 +80,84 @@ unittest
     assert(browser.platform == Platform.Linux);
     assert(browser.acceptInsecureCerts == true);
     assert(browser.setWindowRect == true);
+}
+
+unittest
+{
+    Chrome chrome = new Chrome();
+    chrome.release = "120";
+    chrome.binary = "/opt/chrome";
+    chrome.includeSwitches = ["--incognito"];
+    chrome.excludeSwitches = ["--enable-automation"];
+    chrome.debuggerAddress = "127.0.0.1:9222";
+    chrome.detach = true;
+
+    JSONValue json = chrome.toJSON();
+    Chrome roundTrip = cast(Chrome)Browser.fromJSONValue(json);
+    assert(roundTrip.release == "120");
+    assert(roundTrip.binary == "/opt/chrome");
+    assert(roundTrip.includeSwitches == ["--incognito"]);
+    assert(roundTrip.excludeSwitches == ["--enable-automation"]);
+    assert(roundTrip.debuggerAddress == "127.0.0.1:9222");
+    assert(roundTrip.detach == true);
+}
+
+unittest
+{
+    Firefox firefox = new Firefox();
+    firefox.release = "121";
+    firefox.binary = "/opt/firefox";
+    firefox.args = ["--private"];
+    firefox.profile = "YWJj"; // base64 for "abc"
+
+    JSONValue json = firefox.toJSON();
+    Firefox roundTrip = cast(Firefox)Browser.fromJSONValue(json);
+    assert(roundTrip.release == "121");
+    assert(roundTrip.binary == "/opt/firefox");
+    assert(roundTrip.args == ["--private"]);
+    assert(roundTrip.profile == "YWJj");
+}
+
+unittest
+{
+    Browser browser = new Browser();
+    browser.platform = Platform.Linux;
+    browser.pageLoadStrategy = PageLoadStrategy.Eager;
+    browser.unhandledPromptBehavior = UnhandledPromptBehavior.Dismiss;
+    browser.timeouts.implicit = 1_000.msecs;
+    browser.timeouts.pageLoad = 10_000.msecs;
+    browser.timeouts.script = 30_000.msecs;
+
+    JSONValue json = browser.toJSON();
+    Browser roundTrip = Browser.fromJSONValue(json);
+    assert(roundTrip.pageLoadStrategy == PageLoadStrategy.Eager);
+    assert(roundTrip.unhandledPromptBehavior == UnhandledPromptBehavior.Dismiss);
+    assert(roundTrip.timeouts.implicit == 1_000.msecs);
+    assert(roundTrip.timeouts.pageLoad == 10_000.msecs);
+    assert(roundTrip.timeouts.script == 30_000.msecs);
+}
+
+version(integration)
+{
+    import selenium.driver : Driver;
+    import tests.common;
+
+    unittest
+    {
+        Driver driver = startTestDriver();
+        scope (exit) driver.stop();
+
+        assert(driver.id.length > 0);
+        assert(driver.bridge !is null);
+        assert(driver.browser !is null);
+    }
+
+    unittest
+    {
+        Driver driver = startTestDriver();
+        scope (exit) driver.stop();
+
+        driver.go(dataUri("<html><title>BrowserInt</title><body></body></html>"));
+        assert(driver.title() == "BrowserInt");
+    }
 }

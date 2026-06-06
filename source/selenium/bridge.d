@@ -23,6 +23,44 @@ class Bridge
 package(selenium):
     enum string W3C_KEY = "element-6066-11e4-a52e-4f735466cecf";
 
+    int syncImplicit;
+    int syncPage;
+    int syncScript;
+
+    void ensureTimeoutsSynced(string id, Browser browser)
+    {
+        int implicitTimeout = cast(int)browser.timeouts.implicit.total!"msecs";
+        int pageTimeout = cast(int)browser.timeouts.pageLoad.total!"msecs";
+        int scriptTimeout = cast(int)browser.timeouts.script.total!"msecs";
+
+        if (implicitTimeout == syncImplicit && pageTimeout == syncPage && scriptTimeout == syncScript)
+            return;
+
+        JSONValue data = JSONValue.emptyObject;
+        if (implicitTimeout != 0)
+            data["implicit"] = JSONValue(implicitTimeout);
+        if (pageTimeout != 0)
+            data["pageLoad"] = JSONValue(pageTimeout);
+        if (scriptTimeout != 0)
+            data["script"] = JSONValue(scriptTimeout);
+        try
+        {
+            request(id, HTTP.Method.post, "/timeouts", data);
+            syncImplicit = implicitTimeout;
+            syncPage = pageTimeout;
+            syncScript = scriptTimeout;
+        }
+        catch (Exception) { }
+    }
+
+private:
+    HTTP http;
+
+    this()
+    {
+        http = HTTP();
+    }
+
 public:
     string address;
     Pid pid;
@@ -54,7 +92,6 @@ public:
         if (capacity > 0 && sessions.length >= capacity)
             throw new WebDriverConnectionError("Bridge capacity exceeded.");
 
-        HTTP http = HTTP();
         Response response = send(http, HTTP.Method.post, address~"/session", payload);
         JSONValue json = checkAndParse(response);
 
@@ -78,6 +115,7 @@ public:
             request(id, HTTP.Method.del, "");
         catch (Exception) { }
         sessions.remove(id);
+
         if (sessions.length == 0)
             stop();
     }
@@ -97,31 +135,37 @@ public:
         if (method == HTTP.Method.post)
             return request!T(id, method, path, JSONValue.emptyObject);
 
-        HTTP http = HTTP();
         Response response = send(http, method, address~"/session/"~id~path);
         JSONValue json = checkAndParse(response);
 
         static if (is(T == JSONValue))
             return json;
         else static if (!is(T == void))
+        {
+            import std.stdio;
+            writeln("1231231aaghh");
             return parse!T(json);
+        }
     }
 
-    T request(T = JSONValue, B)(string id, HTTP.Method method, string path, B body_)
+    T request(T = JSONValue, D)(string id, HTTP.Method method, string path, D data)
     {
-        HTTP http = HTTP();
-        Response response = send(http, method, address~"/session/"~id~path, body_);
+        Response response = send(http, method, address~"/session/"~id~path, data);
         JSONValue json = checkAndParse(response);
 
         static if (is(T == JSONValue))
             return json;
         else static if (!is(T == void))
+        {
+            import std.stdio;
+            writeln("1231231aaghh");
             return parse!T(json);
+        }
     }
 
     static string parseElementId(JSONValue json)
     {
-        JSONValue value = ("value" in json) ? json["value"] : json;
+        JSONValue value = (json.type == JSONType.object && "value" in json) ? json["value"] : json;
 
         if (value.type == JSONType.object)
         {
@@ -136,7 +180,7 @@ public:
 
     static string[] parseElementIds(JSONValue json)
     {
-        JSONValue value = ("value" in json) ? json["value"] : json;
+        JSONValue value = (json.type == JSONType.object && "value" in json) ? json["value"] : json;
         string[] ret;
 
         if (value.type == JSONType.array)
@@ -148,37 +192,7 @@ public:
         return ret;
     }
 
-package:
-    int syncImplicit;
-    int syncPage;
-    int syncScript;
-
-    void ensureTimeoutsSynced(string id, Browser browser)
-    {
-        int implicitTimeout = cast(int)browser.timeouts.implicit.total!"msecs";
-        int pageTimeout = cast(int)browser.timeouts.pageLoad.total!"msecs";
-        int scriptTimeout = cast(int)browser.timeouts.script.total!"msecs";
-
-        if (implicitTimeout == syncImplicit && pageTimeout == syncPage && scriptTimeout == syncScript)
-            return;
-
-        JSONValue body_ = JSONValue.emptyObject;
-        if (implicitTimeout != 0)
-            body_["implicit"] = JSONValue(implicitTimeout);
-        if (pageTimeout != 0)
-            body_["pageLoad"] = JSONValue(pageTimeout);
-        if (scriptTimeout != 0)
-            body_["script"] = JSONValue(scriptTimeout);
-        try
-        {
-            request(id, HTTP.Method.post, "/timeouts", body_);
-            syncImplicit = implicitTimeout;
-            syncPage = pageTimeout;
-            syncScript = scriptTimeout;
-        }
-        catch (Exception) { }
-    }
-
+private:
     static JSONValue checkAndParse(Response response)
     {
         if (response.content.length == 0)
@@ -196,12 +210,11 @@ package:
         }
 
         if (response.status >= 400)
-            throw mapError(response.status, ret);
+            throw mapError(ret);
 
         return ret;
     }
 
-private:
     static string findExecutable(string candidate)
     {
         Tuple!(int, "status", string, "output") result =
@@ -223,10 +236,7 @@ private:
 
     void waitForServer(long timeoutMs)
     {
-        import std.conv : to;
-
         MonoTime startTime = MonoTime.currTime;
-
         while ((MonoTime.currTime - startTime).total!"msecs" < timeoutMs)
         {
             try
