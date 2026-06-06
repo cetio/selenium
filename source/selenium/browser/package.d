@@ -97,13 +97,29 @@ class Browser
     static Browser fromJSONValue(JSONValue json)
     {
         import selenium.browser.chrome : Chrome;
+        import selenium.browser.edge : Edge;
         import selenium.browser.firefox : Firefox;
-        
+        import selenium.browser.safari : Safari;
+
+        bool hasBrowserName(string name)
+        {
+            return "browserName" in json
+                && json["browserName"].type == JSONType.string
+                && json["browserName"].str == name;
+        }
+
         Browser ret;
         if ("goog:chromeOptions" in json)
             ret = new Chrome();
+        else if ("ms:edgeOptions" in json)
+            ret = new Edge();
         else if ("moz:firefoxOptions" in json)
             ret = new Firefox();
+        else if ("safari:automaticInspection" in json
+            || "safari:automaticProfiling" in json
+            || hasBrowserName("safari")
+            || hasBrowserName("Safari Technology Preview"))
+            ret = new Safari();
         else
             ret = new Browser();
 
