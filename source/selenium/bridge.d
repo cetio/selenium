@@ -147,11 +147,7 @@ public:
         static if (is(T == JSONValue))
             return json;
         else static if (!is(T == void))
-        {
-            import std.stdio;
-            writeln("1231231aaghh");
             return parse!T(json);
-        }
     }
 
     static string parseElementId(JSONValue json)
@@ -181,6 +177,14 @@ public:
         }
 
         return ret;
+    }
+
+    static T parse(T)(JSONValue json)
+    {
+        if ("value" in json)
+            return fromJSON!T(json["value"]);
+
+        return fromJSON!T(json);
     }
 
 private:
@@ -251,13 +255,5 @@ private:
         try
             kill(process);
         catch (Exception) { }
-    }
-
-    static T parse(T)(JSONValue json)
-    {
-        if ("value" in json)
-            return fromJSON!T(json["value"]);
-
-        return fromJSON!T(json);
     }
 }

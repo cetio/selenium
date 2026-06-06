@@ -91,10 +91,22 @@ class Driver
     T execute(T = string)(string script, JSONValue args = JSONValue.emptyArray)
     {
         bridge.ensureTimeoutsSynced(id, browser);
-        return bridge.request!T(id, HTTP.Method.post, "/execute/sync", [
+        JSONValue resp = bridge.request(id, HTTP.Method.post, "/execute/sync", [
             "script": JSONValue(script),
             "args": args,
         ]);
+
+        static if (is(T == Element))
+            return new Element(this, Bridge.parseElementId(resp));
+        else static if (is(T == Element[]))
+        {
+            Element[] ret;
+            foreach (eid; Bridge.parseElementIds(resp))
+                ret ~= new Element(this, eid);
+            return ret;
+        }
+        else
+            return bridge.parse!T(resp);
     }
 
     // TODO: executeAsync
