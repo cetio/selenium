@@ -153,7 +153,7 @@ package(selenium):
         ];
 
         if (this is null)
-            throw new WebDriverConnectionError("Browser instance must not be null for Web Driver executable.");
+            throw new WebDriverConnectionError("Browser instance must not be null for Web Driver binary.");
 
         if (!generic && name in byName)
         {
@@ -178,7 +178,7 @@ package(selenium):
         }
 
         if (throwOnNotFound)
-            throw new WebDriverConnectionError("No WebDriver executable found on PATH.");
+            throw new WebDriverConnectionError("No WebDriver binary found on PATH for '"~name~"'.");
         return null;
     }
 

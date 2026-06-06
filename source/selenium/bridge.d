@@ -55,14 +55,14 @@ public:
     int capacity;
     Browser[string] sessions;
 
-    static Bridge start(string executable)
+    static Bridge start(string binary, string[] args = null)
     {
-        if (executable == null)
-            throw new InvalidArgumentError("Valid executable path must be provided.");
+        if (binary == null)
+            throw new InvalidArgumentError("Valid binary path must be provided.");
 
         Bridge ret = new Bridge();
         ushort port = findFreePort();
-        ret.pid = spawnProcess([executable, "--port="~port.to!string]);
+        ret.pid = spawnProcess([binary, "--port="~port.to!string]~args);
         ret.address = "http://127.0.0.1:"~port.to!string;
         ret.waitForServer(5000);
         return ret;
