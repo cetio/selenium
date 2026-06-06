@@ -52,35 +52,19 @@ class Driver
             bridge.closeSession(id);
     }
 
-    
-
     string url() => bridge.request!string(id, HTTP.Method.get, "/url");
     string title() => bridge.request!string(id, HTTP.Method.get, "/title");
     string source() => bridge.request!string(id, HTTP.Method.get, "/source");
-    string handle() => bridge.request!string(id, HTTP.Method.get, "/window");
-    string[] handles() => bridge.request!(string[])(id, HTTP.Method.get, "/window/handles");
-    Size size() => bridge.request!Size(id, HTTP.Method.get, "/window/rect");
+    string screenshot() => bridge.request!string(id, HTTP.Method.get, "/screenshot");
 
     void go(string url)
     {
         bridge.ensureTimeoutsSynced(id, browser);
         bridge.request(id, HTTP.Method.post, "/url", ["url": url]);
     }
-
     void back() => bridge.request!void(id, HTTP.Method.post, "/back");
     void forward() => bridge.request!void(id, HTTP.Method.post, "/forward");
     void refresh() => bridge.request!void(id, HTTP.Method.post, "/refresh");
-
-    void close() => bridge.request!void(id, HTTP.Method.del, "/window");
-    void maximize() => bridge.request!void(id, HTTP.Method.post, "/window/maximize");
-    void fullscreen() => bridge.request!void(id, HTTP.Method.post, "/window/fullscreen");
-    void minimize() => bridge.request!void(id, HTTP.Method.post, "/window/minimize");
-    void resize(Size value) => bridge.request!void(id, HTTP.Method.post, "/window/rect", value);
-
-    void frame(long id)
-    {
-        bridge.request(this.id, HTTP.Method.post, "/frame", ["id": id]);
-    }
 
     Element activeElement() => new Element(this, Bridge.parseElementId(bridge.request(id, HTTP.Method.get, "/element/active")));
 
@@ -113,11 +97,33 @@ class Driver
     }
 
     // TODO: executeAsync
-    // TODO: cookies
     // TODO: auto retry on stale element references
 
-    string screenshot()
-        => bridge.request!string(id, HTTP.Method.get, "/screenshot");
+    // Templates are used for grouping. Adding an alias is required to allow for functionality like `driver.window.handles`.
+    // This is NOT used for some capabilities (ie: Cookies) which may be desirable to decouple from the driver itself.
+
+    template Window()
+    {
+        string handle() => bridge.request!string(id, HTTP.Method.get, "/window");
+        string[] handles() => bridge.request!(string[])(id, HTTP.Method.get, "/window/handles");
+        Size size() => bridge.request!Size(id, HTTP.Method.get, "/window/rect");
+        void close() => bridge.request!void(id, HTTP.Method.del, "/window");
+        void maximize() => bridge.request!void(id, HTTP.Method.post, "/window/maximize");
+        void fullscreen() => bridge.request!void(id, HTTP.Method.post, "/window/fullscreen");
+        void minimize() => bridge.request!void(id, HTTP.Method.post, "/window/minimize");
+        void resize(Size value) => bridge.request!void(id, HTTP.Method.post, "/window/rect", value);
+    }
+    alias window = Window!();
+
+    template Frame()
+    {
+        void switchTo() => bridge.request!void(this.id, HTTP.Method.post, "/frame");
+        void switchTo(long id) => bridge.request!void(this.id, HTTP.Method.post, "/frame", ["id": id]);
+        // TODO: No idea if this is correct.
+        void switchTo(Element element) => bridge.request!void(this.id, HTTP.Method.post, "/frame", ["id": element.id]);
+        void switchToParent() => bridge.request!void(this.id, HTTP.Method.post, "/frame/parent");
+    }
+    alias frame = Frame!();
 
 private:
     this() { }

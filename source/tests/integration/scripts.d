@@ -35,3 +35,13 @@ unittest
     assertThrown!JavaScriptError(driver.execute("throw new Error('boom');"));
     driver.stop();
 }
+
+unittest
+{
+    Driver driver;
+    driver = Driver.start();
+
+    driver.go("about:blank");
+    assert(driver.window.handle == driver.window.handle);
+    driver.stop();
+}
