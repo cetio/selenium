@@ -34,9 +34,7 @@ unittest
 
 unittest
 {
-    Browser browser = new Browser();
-    JSONValue json = browser.toJSON();
-    assert(json.object.length == 0);
+    assert((new Browser()).toJSON().object.length == 0);
 }
 
 unittest
@@ -45,8 +43,7 @@ unittest
         `{"browserName":"chrome","goog:chromeOptions":`
         ~`{"binary":"/usr/bin/chrome","args":["--headless"],`
         ~`"debuggerAddress":"127.0.0.1:9222"}}`);
-    Browser browser = Browser.fromJSONValue(json);
-    Chrome chrome = cast(Chrome)browser;
+    Chrome chrome = cast(Chrome)Browser.fromJSONValue(json);
     assert(chrome !is null);
     assert(chrome.name == "chrome");
     assert(chrome.binary == "/usr/bin/chrome");
@@ -60,8 +57,7 @@ unittest
         `{"browserName":"firefox","moz:firefoxOptions":`
         ~`{"binary":"/usr/bin/firefox","args":["--private"],`
         ~`"profile":"base64abc"}}`);
-    Browser browser = Browser.fromJSONValue(json);
-    Firefox firefox = cast(Firefox)browser;
+    Firefox firefox = cast(Firefox)Browser.fromJSONValue(json);
     assert(firefox !is null);
     assert(firefox.name == "firefox");
     assert(firefox.binary == "/usr/bin/firefox");
@@ -92,8 +88,7 @@ unittest
     chrome.debuggerAddress = "127.0.0.1:9222";
     chrome.detach = true;
 
-    JSONValue json = chrome.toJSON();
-    Chrome roundTrip = cast(Chrome)Browser.fromJSONValue(json);
+    Chrome roundTrip = cast(Chrome)Browser.fromJSONValue(chrome.toJSON());
     assert(roundTrip.release == "120");
     assert(roundTrip.binary == "/opt/chrome");
     assert(roundTrip.includeSwitches == ["--incognito"]);
@@ -110,8 +105,7 @@ unittest
     firefox.args = ["--private"];
     firefox.profile = "YWJj"; // base64 for "abc"
 
-    JSONValue json = firefox.toJSON();
-    Firefox roundTrip = cast(Firefox)Browser.fromJSONValue(json);
+    Firefox roundTrip = cast(Firefox)Browser.fromJSONValue(firefox.toJSON());
     assert(roundTrip.release == "121");
     assert(roundTrip.binary == "/opt/firefox");
     assert(roundTrip.args == ["--private"]);
@@ -128,8 +122,7 @@ unittest
     browser.timeouts.pageLoad = 10_000.msecs;
     browser.timeouts.script = 30_000.msecs;
 
-    JSONValue json = browser.toJSON();
-    Browser roundTrip = Browser.fromJSONValue(json);
+    Browser roundTrip = Browser.fromJSONValue(browser.toJSON());
     assert(roundTrip.pageLoadStrategy == PageLoadStrategy.Eager);
     assert(roundTrip.unhandledPromptBehavior == UnhandledPromptBehavior.Dismiss);
     assert(roundTrip.timeouts.implicit == 1_000.msecs);
@@ -144,7 +137,7 @@ version(integration)
 
     unittest
     {
-        Driver driver = startTestDriver();
+        Driver driver = Driver.start();
         scope (exit) driver.stop();
 
         assert(driver.id.length > 0);
@@ -154,10 +147,10 @@ version(integration)
 
     unittest
     {
-        Driver driver = startTestDriver();
+        Driver driver = Driver.start();
         scope (exit) driver.stop();
 
         driver.go(dataUri("<html><title>BrowserInt</title><body></body></html>"));
-        assert(driver.title() == "BrowserInt");
+        assert(driver.title == "BrowserInt");
     }
 }
