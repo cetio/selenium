@@ -6,11 +6,14 @@ import selenium.browser.edge : Edge;
 import selenium.browser.firefox : Firefox;
 import selenium.browser.safari : Safari;
 
+import unit_threaded;
+
 import core.time : msecs;
 import std.json;
 
 // ========== Offline tests ==========
 
+@Name("Chrome toJSON includes browserName and flags")
 unittest
 {
     Chrome chrome = new Chrome();
@@ -18,11 +21,12 @@ unittest
     chrome.setWindowRect = true;
 
     JSONValue json = chrome.toJSON();
-    assert(json["browserName"].str == "chrome");
-    assert(json["acceptInsecureCerts"] == JSONValue(true));
-    assert(json["setWindowRect"] == JSONValue(true));
+    json["browserName"].str.should == "chrome";
+    json["acceptInsecureCerts"].should == JSONValue(true);
+    json["setWindowRect"].should == JSONValue(true);
 }
 
+@Name("Browser toJSON includes platform and timeouts")
 unittest
 {
     Browser browser = new Browser();
@@ -30,15 +34,17 @@ unittest
     browser.timeouts.implicit = 5_000.msecs;
 
     JSONValue json = browser.toJSON();
-    assert(json["platformName"].str == "Windows");
-    assert(json["timeouts"]["implicit"].get!long == 5_000);
+    json["platformName"].str.should == "Windows";
+    json["timeouts"]["implicit"].get!long.should == 5_000;
 }
 
+@Name("Empty Browser toJSON has no keys")
 unittest
 {
-    assert((new Browser()).toJSON().object.length == 0);
+    (new Browser()).toJSON().object.length.should == 0;
 }
 
+@Name("Chrome fromJSONValue parses options")
 unittest
 {
     JSONValue json = parseJSON(
@@ -46,13 +52,14 @@ unittest
         ~`{"binary":"/usr/bin/chrome","args":["--headless"],`
         ~`"debuggerAddress":"127.0.0.1:9222"}}`);
     Chrome chrome = cast(Chrome)Browser.fromJSONValue(json);
-    assert(chrome !is null);
-    assert(chrome.name == "chrome");
-    assert(chrome.binary == "/usr/bin/chrome");
-    assert(chrome.includeSwitches == ["--headless"]);
-    assert(chrome.debuggerAddress == "127.0.0.1:9222");
+    chrome.shouldNotBeNull;
+    chrome.name.should == "chrome";
+    chrome.binary.should == "/usr/bin/chrome";
+    chrome.includeSwitches.should == ["--headless"];
+    chrome.debuggerAddress.should == "127.0.0.1:9222";
 }
 
+@Name("Firefox fromJSONValue parses options")
 unittest
 {
     JSONValue json = parseJSON(
@@ -60,28 +67,30 @@ unittest
         ~`{"binary":"/usr/bin/firefox","args":["--private"],`
         ~`"profile":"base64abc"}}`);
     Firefox firefox = cast(Firefox)Browser.fromJSONValue(json);
-    assert(firefox !is null);
-    assert(firefox.name == "firefox");
-    assert(firefox.binary == "/usr/bin/firefox");
-    assert(firefox.args == ["--private"]);
-    assert(firefox.profile == "base64abc");
+    firefox.shouldNotBeNull;
+    firefox.name.should == "firefox";
+    firefox.binary.should == "/usr/bin/firefox";
+    firefox.args.should == ["--private"];
+    firefox.profile.should == "base64abc";
 }
 
+@Name("Custom browser fromJSONValue roundtrips")
 unittest
 {
     JSONValue json = parseJSON(
         `{"browserName":"MyCustomBrowser","platformName":"Linux",`
         ~`"acceptInsecureCerts":true,"setWindowRect":true}`);
     Browser browser = Browser.fromJSONValue(json);
-    assert(cast(Chrome)browser is null);
-    assert(cast(Edge)browser is null);
-    assert(cast(Firefox)browser is null);
-    assert(cast(Safari)browser is null);
-    assert(browser.platform == Platform.Linux);
-    assert(browser.acceptInsecureCerts == true);
-    assert(browser.setWindowRect == true);
+    (cast(Chrome)browser).shouldBeNull;
+    (cast(Edge)browser).shouldBeNull;
+    (cast(Firefox)browser).shouldBeNull;
+    (cast(Safari)browser).shouldBeNull;
+    browser.platform.should == Platform.Linux;
+    browser.acceptInsecureCerts.should == true;
+    browser.setWindowRect.should == true;
 }
 
+@Name("Chrome roundtrips through toJSON/fromJSONValue")
 unittest
 {
     Chrome chrome = new Chrome();
@@ -93,14 +102,15 @@ unittest
     chrome.detach = true;
 
     Chrome roundTrip = cast(Chrome)Browser.fromJSONValue(chrome.toJSON());
-    assert(roundTrip.release == "120");
-    assert(roundTrip.binary == "/opt/chrome");
-    assert(roundTrip.includeSwitches == ["--incognito"]);
-    assert(roundTrip.excludeSwitches == ["--enable-automation"]);
-    assert(roundTrip.debuggerAddress == "127.0.0.1:9222");
-    assert(roundTrip.detach == true);
+    roundTrip.release.should == "120";
+    roundTrip.binary.should == "/opt/chrome";
+    roundTrip.includeSwitches.should == ["--incognito"];
+    roundTrip.excludeSwitches.should == ["--enable-automation"];
+    roundTrip.debuggerAddress.should == "127.0.0.1:9222";
+    roundTrip.detach.should == true;
 }
 
+@Name("Firefox roundtrips through toJSON/fromJSONValue")
 unittest
 {
     Firefox firefox = new Firefox();
@@ -110,12 +120,13 @@ unittest
     firefox.profile = "YWJj"; // base64 for "abc"
 
     Firefox roundTrip = cast(Firefox)Browser.fromJSONValue(firefox.toJSON());
-    assert(roundTrip.release == "121");
-    assert(roundTrip.binary == "/opt/firefox");
-    assert(roundTrip.args == ["--private"]);
-    assert(roundTrip.profile == "YWJj");
+    roundTrip.release.should == "121";
+    roundTrip.binary.should == "/opt/firefox";
+    roundTrip.args.should == ["--private"];
+    roundTrip.profile.should == "YWJj";
 }
 
+@Name("Edge fromJSONValue parses options")
 unittest
 {
     JSONValue json = parseJSON(
@@ -123,13 +134,14 @@ unittest
         ~`{"binary":"/usr/bin/edge","args":["--headless"],`
         ~`"debuggerAddress":"127.0.0.1:9222"}}`);
     Edge edge = cast(Edge)Browser.fromJSONValue(json);
-    assert(edge !is null);
-    assert(edge.name == "MicrosoftEdge");
-    assert(edge.binary == "/usr/bin/edge");
-    assert(edge.includeSwitches == ["--headless"]);
-    assert(edge.debuggerAddress == "127.0.0.1:9222");
+    edge.shouldNotBeNull;
+    edge.name.should == "MicrosoftEdge";
+    edge.binary.should == "/usr/bin/edge";
+    edge.includeSwitches.should == ["--headless"];
+    edge.debuggerAddress.should == "127.0.0.1:9222";
 }
 
+@Name("Edge roundtrips through toJSON/fromJSONValue")
 unittest
 {
     Edge edge = new Edge();
@@ -147,32 +159,34 @@ unittest
     edge.windowsApp = "Microsoft.MicrosoftEdge.Stable_8wekyb3d8bbwe!MSEDGE";
 
     Edge roundTrip = cast(Edge)Browser.fromJSONValue(edge.toJSON());
-    assert(roundTrip.release == "130");
-    assert(roundTrip.binary == "/opt/edge");
-    assert(roundTrip.includeSwitches == ["--inprivate"]);
-    assert(roundTrip.excludeSwitches == ["--enable-automation"]);
-    assert(roundTrip.debuggerAddress == "127.0.0.1:9222");
-    assert(roundTrip.detach == true);
-    assert(roundTrip.mobileEmulation["deviceName"].str == "iPhone X");
-    assert(roundTrip.wdpAddress == "127.0.0.1:50080");
-    assert(roundTrip.wdpUsername == "user");
-    assert(roundTrip.wdpPassword == "pass");
-    assert(roundTrip.webviewOptions["additionalBrowserArguments"].array[0].str == "--foo");
-    assert(roundTrip.windowsApp == "Microsoft.MicrosoftEdge.Stable_8wekyb3d8bbwe!MSEDGE");
+    roundTrip.release.should == "130";
+    roundTrip.binary.should == "/opt/edge";
+    roundTrip.includeSwitches.should == ["--inprivate"];
+    roundTrip.excludeSwitches.should == ["--enable-automation"];
+    roundTrip.debuggerAddress.should == "127.0.0.1:9222";
+    roundTrip.detach.should == true;
+    roundTrip.mobileEmulation["deviceName"].str.should == "iPhone X";
+    roundTrip.wdpAddress.should == "127.0.0.1:50080";
+    roundTrip.wdpUsername.should == "user";
+    roundTrip.wdpPassword.should == "pass";
+    roundTrip.webviewOptions["additionalBrowserArguments"].array[0].str.should == "--foo";
+    roundTrip.windowsApp.should == "Microsoft.MicrosoftEdge.Stable_8wekyb3d8bbwe!MSEDGE";
 }
 
+@Name("Safari fromJSONValue parses options")
 unittest
 {
     JSONValue json = parseJSON(
         `{"browserName":"safari","safari:automaticInspection":true,`
         ~`"safari:automaticProfiling":false}`);
     Safari safari = cast(Safari)Browser.fromJSONValue(json);
-    assert(safari !is null);
-    assert(safari.name == "safari");
-    assert(safari.automaticInspection == true);
-    assert(safari.automaticProfiling == false);
+    safari.shouldNotBeNull;
+    safari.name.should == "safari";
+    safari.automaticInspection.should == true;
+    safari.automaticProfiling.should == false;
 }
 
+@Name("Safari roundtrips through toJSON/fromJSONValue")
 unittest
 {
     Safari safari = new Safari();
@@ -181,11 +195,12 @@ unittest
     safari.technologyPreview = true;
 
     Safari roundTrip = cast(Safari)Browser.fromJSONValue(safari.toJSON());
-    assert(roundTrip.automaticInspection == true);
-    assert(roundTrip.automaticProfiling == true);
-    assert(roundTrip.name == "Safari Technology Preview");
+    roundTrip.automaticInspection.should == true;
+    roundTrip.automaticProfiling.should == true;
+    roundTrip.name.should == "Safari Technology Preview";
 }
 
+@Name("Browser roundtrips platform, strategy, and timeouts")
 unittest
 {
     Browser browser = new Browser();
@@ -197,9 +212,9 @@ unittest
     browser.timeouts.script = 30_000.msecs;
 
     Browser roundTrip = Browser.fromJSONValue(browser.toJSON());
-    assert(roundTrip.pageLoadStrategy == PageLoadStrategy.Eager);
-    assert(roundTrip.unhandledPromptBehavior == UnhandledPromptBehavior.Dismiss);
-    assert(roundTrip.timeouts.implicit == 1_000.msecs);
-    assert(roundTrip.timeouts.pageLoad == 10_000.msecs);
-    assert(roundTrip.timeouts.script == 30_000.msecs);
+    roundTrip.pageLoadStrategy.should == PageLoadStrategy.Eager;
+    roundTrip.unhandledPromptBehavior.should == UnhandledPromptBehavior.Dismiss;
+    roundTrip.timeouts.implicit.should == 1_000.msecs;
+    roundTrip.timeouts.pageLoad.should == 10_000.msecs;
+    roundTrip.timeouts.script.should == 30_000.msecs;
 }

@@ -4,63 +4,72 @@ import selenium.bridge : Bridge;
 import selenium.driver : Driver;
 import selenium.element : Size;
 
+import unit_threaded;
+
 import std.json : JSONValue;
 
 // ========== Offline tests ==========
 
+@Name("parseElementId W3C key")
 unittest
 {
-    assert(Bridge.parseElementId(
+    Bridge.parseElementId(
         JSONValue(["element-6066-11e4-a52e-4f735466cecf": JSONValue("abc-123")])
-    ) == "abc-123");
+    ).should == "abc-123";
 }
 
+@Name("parseElementId legacy ELEMENT key")
 unittest
 {
-    assert(Bridge.parseElementId(
+    Bridge.parseElementId(
         JSONValue(["ELEMENT": JSONValue("legacy-id")])
-    ) == "legacy-id");
+    ).should == "legacy-id";
 }
 
+@Name("parseElementId wrapped value")
 unittest
 {
     JSONValue wrapper = JSONValue.emptyObject;
     wrapper["value"] = JSONValue.emptyObject;
     wrapper["value"]["element-6066-11e4-a52e-4f735466cecf"] = JSONValue("wrapped-id");
-    assert(Bridge.parseElementId(wrapper) == "wrapped-id");
+    Bridge.parseElementId(wrapper).should == "wrapped-id";
 }
 
+@Name("parseElementIds array")
 unittest
 {
     JSONValue arr = JSONValue.emptyArray;
     arr.array ~= JSONValue(["element-6066-11e4-a52e-4f735466cecf": JSONValue("e1")]);
     arr.array ~= JSONValue(["element-6066-11e4-a52e-4f735466cecf": JSONValue("e2")]);
     string[] ids = Bridge.parseElementIds(arr);
-    assert(ids.length == 2);
-    assert(ids[0] == "e1");
-    assert(ids[1] == "e2");
+    ids.length.should == 2;
+    ids[0].should == "e1";
+    ids[1].should == "e2";
 }
 
 version(integration)
 {
     import tests.common;
 
+    @Name("title returns page title") @Serial
     unittest
     {
         testWithBrowsers((driver) {
             driver.go(dataUri("<html><title>WindowTest</title><body></body></html>"));
-            assert(driver.title == "WindowTest", "title failed for "~driver.browser.name);
+            driver.title.should == "WindowTest";
         });
     }
 
+    @Name("handle returns window handle") @Serial
     unittest
     {
         testWithBrowsers((driver) {
             driver.go(dataUri("<html><body></body></html>"));
-            assert(driver.window.handle.length > 0, "window handle failed for "~driver.browser.name);
+            driver.window.handle.length.shouldBeGreaterThan(0);
         });
     }
 
+    @Name("resize changes window size") @Serial
     unittest
     {
         testWithBrowsers((driver) {
@@ -68,11 +77,12 @@ version(integration)
             Size original = driver.window.size;
             driver.window.resize(Size(original.width - 50, original.height - 50));
             Size changed = driver.window.size;
-            assert(changed.width == original.width - 50, "resize width failed for "~driver.browser.name);
-            assert(changed.height == original.height - 50, "resize height failed for "~driver.browser.name);
+            changed.width.should == original.width - 50;
+            changed.height.should == original.height - 50;
         });
     }
 
+    @Name("maximize enlarges window") @Serial
     unittest
     {
         testWithBrowsers((driver) {
@@ -80,26 +90,27 @@ version(integration)
             driver.window.resize(Size(400, 400));
             driver.window.maximize();
             Size maximized = driver.window.size;
-            assert(maximized.width >= 400, "maximize width failed for "~driver.browser.name);
-            assert(maximized.height >= 400, "maximize height failed for "~driver.browser.name);
+            maximized.width.shouldBeGreaterThan(399);
+            maximized.height.shouldBeGreaterThan(399);
         });
     }
 
+    @Name("minimize hides document") @Serial
     unittest
     {
         testWithBrowsers((driver) {
             driver.go(dataUri("<html><body></body></html>"));
             driver.window.minimize();
-            assert(driver.execute!bool("return document.hidden;") == true,
-                "minimize hidden failed for "~driver.browser.name);
+            driver.execute!bool("return document.hidden;").should == true;
         });
     }
 
+    @Name("handles returns window list") @Serial
     unittest
     {
         testWithBrowsers((driver) {
             driver.go(dataUri("<html><body></body></html>"));
-            assert(driver.window.handles.length >= 1, "handles failed for "~driver.browser.name);
+            driver.window.handles.length.shouldBeGreaterThan(0);
         });
     }
 }

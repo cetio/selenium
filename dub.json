@@ -17,14 +17,28 @@
 		},
 		{
 			"name": "unittest",
-			"targetType": "library",
-			"buildOptions": ["unittests"]
+			"targetType": "executable",
+			"preBuildCommands": [
+				"$DUB run --compiler=$$DC unit-threaded -c gen_ut_main -- -f bin/ut.d"
+			],
+			"mainSourceFile": "bin/ut.d",
+			"buildOptions": ["unittests"],
+			"dependencies": {
+				"unit-threaded": "~>2.2.0"
+			}
 		},
 		{
 			"name": "integration",
-			"targetType": "library",
+			"targetType": "executable",
+			"preBuildCommands": [
+				"$DUB run --compiler=$$DC unit-threaded -c gen_ut_main -- -f bin/ut.d"
+			],
+			"mainSourceFile": "bin/ut.d",
 			"buildOptions": ["unittests"],
-			"versions": ["integration"]
+			"versions": ["integration"],
+			"dependencies": {
+				"unit-threaded": "~>2.2.0"
+			}
 		}
 	]
 }

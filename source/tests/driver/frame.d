@@ -3,42 +3,50 @@ module tests.driver.frame;
 import selenium.driver : Driver;
 import selenium.element : By, Element;
 
+import unit_threaded;
+
 // ========== Offline tests ==========
 
+@Name("By.css serializes correctly")
 unittest
 {
-    assert(By.css("div.test").toJSON()["using"].str == "css selector");
-    assert(By.css("div.test").toJSON()["value"].str == "div.test");
+    By.css("div.test").toJSON()["using"].str.should == "css selector";
+    By.css("div.test").toJSON()["value"].str.should == "div.test";
 }
 
+@Name("By.xpath serializes correctly")
 unittest
 {
-    assert(By.xpath("//div[@class='test']").toJSON()["using"].str == "xpath");
-    assert(By.xpath("//div[@class='test']").toJSON()["value"].str == "//div[@class='test']");
+    By.xpath("//div[@class='test']").toJSON()["using"].str.should == "xpath";
+    By.xpath("//div[@class='test']").toJSON()["value"].str.should == "//div[@class='test']";
 }
 
+@Name("By.tagName serializes correctly")
 unittest
 {
-    assert(By.tagName("span").toJSON()["using"].str == "tag name");
-    assert(By.tagName("span").toJSON()["value"].str == "span");
+    By.tagName("span").toJSON()["using"].str.should == "tag name";
+    By.tagName("span").toJSON()["value"].str.should == "span";
 }
 
+@Name("By.linkText serializes correctly")
 unittest
 {
-    assert(By.linkText("Click me").toJSON()["using"].str == "link text");
-    assert(By.linkText("Click me").toJSON()["value"].str == "Click me");
+    By.linkText("Click me").toJSON()["using"].str.should == "link text";
+    By.linkText("Click me").toJSON()["value"].str.should == "Click me";
 }
 
+@Name("By.partialLinkText serializes correctly")
 unittest
 {
-    assert(By.partialLinkText("Click").toJSON()["using"].str == "partial link text");
-    assert(By.partialLinkText("Click").toJSON()["value"].str == "Click");
+    By.partialLinkText("Click").toJSON()["using"].str.should == "partial link text";
+    By.partialLinkText("Click").toJSON()["value"].str.should == "Click";
 }
 
 version(integration)
 {
     import tests.common;
 
+    @Name("frame switch by index") @Serial
     unittest
     {
         testWithBrowsers((driver) {
@@ -50,10 +58,11 @@ version(integration)
 
             driver.go(dataUri(html));
             driver.frame.switchTo(0);
-            assert(driver.find(By.css("#inner")).text == "inside", "frame by index failed for "~driver.browser.name);
+            driver.find(By.css("#inner")).text.should == "inside";
         });
     }
 
+    @Name("frame switch by element") @Serial
     unittest
     {
         testWithBrowsers((driver) {
@@ -63,10 +72,11 @@ version(integration)
             driver.go(dataUri(html));
             Element iframe = driver.find(By.css("iframe"));
             driver.frame.switchTo(iframe);
-            assert(driver.find(By.css("#nested")).text == "nested", "frame by element failed for "~driver.browser.name);
+            driver.find(By.css("#nested")).text.should == "nested";
         });
     }
 
+    @Name("frame switch to parent") @Serial
     unittest
     {
         testWithBrowsers((driver) {
@@ -76,12 +86,13 @@ version(integration)
 
             driver.go(dataUri(html));
             driver.frame.switchTo(0);
-            assert(driver.find(By.css("#child")).text == "child", "child frame failed for "~driver.browser.name);
+            driver.find(By.css("#child")).text.should == "child";
             driver.frame.switchToParent();
-            assert(driver.find(By.css("#parent")).text == "parent", "parent frame failed for "~driver.browser.name);
+            driver.find(By.css("#parent")).text.should == "parent";
         });
     }
 
+    @Name("frame switch to top") @Serial
     unittest
     {
         testWithBrowsers((driver) {
@@ -90,11 +101,11 @@ version(integration)
                 "<iframe srcdoc=\""~iframeHtml~"\"></iframe></body></html>";
 
             driver.go(dataUri(html));
-            assert(driver.find(By.css("#surface")).text == "surface", "surface text failed for "~driver.browser.name);
+            driver.find(By.css("#surface")).text.should == "surface";
             driver.frame.switchTo(0);
-            assert(driver.find(By.css("#deep")).text == "deep", "deep text failed for "~driver.browser.name);
+            driver.find(By.css("#deep")).text.should == "deep";
             driver.frame.switchTo();
-            assert(driver.find(By.css("#surface")).text == "surface", "switchTo top failed for "~driver.browser.name);
+            driver.find(By.css("#surface")).text.should == "surface";
         });
     }
 }
