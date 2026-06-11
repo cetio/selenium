@@ -125,6 +125,9 @@ class Driver
         void fullscreen() => bridge.request!void(id, HTTP.Method.post, "/window/fullscreen");
         void minimize() => bridge.request!void(id, HTTP.Method.post, "/window/minimize");
         void resize(Size value) => bridge.request!void(id, HTTP.Method.post, "/window/rect", value);
+        void switchTo(string handle) => bridge.request!void(id, HTTP.Method.post, "/window", ["handle": handle]);
+        string open(string type = "tab")
+            => bridge.request(id, HTTP.Method.post, "/window/new", ["type": type])["value"]["handle"].str;
     }
     alias window = Window!();
 
@@ -133,11 +136,7 @@ class Driver
         void switchTo() => bridge.request!void(this.id, HTTP.Method.post, "/frame", ["id": JSONValue(null)]);
         void switchTo(long id) => bridge.request!void(this.id, HTTP.Method.post, "/frame", ["id": id]);
         void switchTo(Element element)
-        {
-            JSONValue elementRef = JSONValue.emptyObject;
-            elementRef[Bridge.W3C_KEY] = JSONValue(element.id);
-            bridge.request!void(this.id, HTTP.Method.post, "/frame", ["id": elementRef]);
-        }
+            => bridge.request!void(this.id, HTTP.Method.post, "/frame", ["id": element.toJSON()]);
         void switchToParent() => bridge.request!void(this.id, HTTP.Method.post, "/frame/parent");
     }
     alias frame = Frame!();

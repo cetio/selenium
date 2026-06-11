@@ -51,6 +51,11 @@ struct Position
 
 class Element
 {
+private:
+    string path(string suffix)
+        => "/element/"~id~suffix;
+
+public:
     Driver driver;
     string id;
 
@@ -107,7 +112,10 @@ class Element
         return ret;
     }
 
-private:
-    string path(string suffix)
-        => "/element/"~id~suffix;
+    JSONValue toJSON() const
+    {
+        JSONValue ret = JSONValue.emptyObject;
+        ret[Bridge.W3C_KEY] = JSONValue(id);
+        return ret;
+    }
 }

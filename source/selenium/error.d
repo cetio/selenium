@@ -93,6 +93,16 @@ class UnexpectedAlertOpenError : WebDriverError
     mixin basicExceptionCtors;
 }
 
+class NoSuchAlertError : WebDriverError
+{
+    mixin basicExceptionCtors;
+}
+
+class UnableToSetCookieError : WebDriverError
+{
+    mixin basicExceptionCtors;
+}
+
 package:
 
 static WebDriverError mapError(JSONValue json)
@@ -142,6 +152,10 @@ static WebDriverError mapError(JSONValue json)
                     return new UnsupportedOperationError(message);
                 case "unexpected alert open":
                     return new UnexpectedAlertOpenError(message);
+                case "no such alert":
+                    return new NoSuchAlertError(message);
+                case "unable to set cookie":
+                    return new UnableToSetCookieError(message);
                 default:
                     return new WebDriverError(message);
             }
