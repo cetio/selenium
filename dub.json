@@ -6,7 +6,7 @@
 	"dependencies": {
 		"conductor": "~>2.1.0"
 	},
-	"description": "Modern Selenium SDK for D, inspired by Ruby's Selenium",
+	"description": "Browser automation with WebDriver lifecycle, element interaction, JavaScript execution, and multi-browser support.",
 	"license": "AGPL-3.0",
 	"name": "selenium-sdk",
 	"targetType": "library",
