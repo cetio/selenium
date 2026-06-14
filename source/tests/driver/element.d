@@ -2,7 +2,7 @@ module tests.driver.element;
 
 import selenium.driver : Driver;
 import selenium.element : By, Element;
-import selenium.error : StaleElementReferenceError;
+import selenium.exception : StaleElementReferenceException;
 
 import unit_threaded;
 
@@ -80,7 +80,7 @@ version(integration)
             Element elem = driver.find(By.css("#stale"));
             driver.refresh();
 
-            elem.attribute("value").shouldThrow!StaleElementReferenceError;
+            elem.attribute("value").shouldThrow!StaleElementReferenceException;
         });
     }
 

@@ -2,7 +2,7 @@ module tests.driver.script;
 
 import selenium.driver : Driver;
 import selenium.element : Element;
-import selenium.error : JavaScriptError;
+import selenium.exception : JavaScriptException;
 
 import unit_threaded;
 
@@ -85,7 +85,7 @@ version(integration)
     {
         testWithBrowsers((driver) {
             driver.go(dataUri("<html><body></body></html>"));
-            driver.execute("return nonExistentFunction();").shouldThrow!JavaScriptError;
+            driver.execute("return nonExistentFunction();").shouldThrow!JavaScriptException;
         });
     }
 

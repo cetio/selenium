@@ -9,4 +9,4 @@ public import selenium.driver.cookies;
 
 public import selenium.bridge;
 public import selenium.element;
-public import selenium.error;
+public import selenium.exception;

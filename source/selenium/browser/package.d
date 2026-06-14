@@ -1,6 +1,6 @@
 module selenium.browser;
 
-import selenium.error : InvalidArgumentError, WebDriverConnectionError;
+import selenium.exception : InvalidArgumentException, WebDriverConnectionException;
 
 import std.json : JSONValue, JSONType;
 import std.typecons : Tuple;
@@ -88,7 +88,7 @@ class Browser
         ];
 
         if (this is null)
-            throw new WebDriverConnectionError("Browser instance must not be null for Web Driver binary.");
+            throw new WebDriverConnectionException("Browser instance must not be null for Web Driver binary.");
 
         if (!generic && name in byName)
         {
@@ -113,7 +113,7 @@ class Browser
         }
 
         if (throwOnNotFound)
-            throw new WebDriverConnectionError("No WebDriver binary found on PATH for '"~name~"'.");
+            throw new WebDriverConnectionException("No WebDriver binary found on PATH for '"~name~"'.");
         return null;
     }
 
@@ -188,7 +188,7 @@ protected:
         import selenium.browser.firefox : Firefox;
 
         if (json.type != JSONType.object)
-            throw new InvalidArgumentError("Browser capabilities must be a JSON object.");
+            throw new InvalidArgumentException("Browser capabilities must be a JSON object.");
 
         if ("platformName" in json && json["platformName"].type == JSONType.string)
             platform = cast(Platform)json["platformName"].str;

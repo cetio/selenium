@@ -1,7 +1,7 @@
 module selenium.bridge;
 
 import selenium.browser : Browser;
-import selenium.error;
+import selenium.exception;
 
 import conductor.http : Response, send;
 import conductor.serialize.json : fromJSON;
@@ -63,7 +63,7 @@ public:
     static Bridge start(string binary, string[] args = null)
     {
         if (binary == null)
-            throw new InvalidArgumentError("Valid binary path must be provided.");
+            throw new InvalidArgumentException("Valid binary path must be provided.");
 
         Bridge ret = new Bridge();
         ushort port = findFreePort();
@@ -83,7 +83,7 @@ public:
     string createSession(JSONValue payload)
     {
         if (capacity > 0 && sessions.length >= capacity)
-            throw new WebDriverConnectionError("Bridge capacity exceeded.");
+            throw new WebDriverConnectionException("Bridge capacity exceeded.");
 
         HTTP http = HTTP();
         Response response = send(http, HTTP.Method.post, address~"/session", payload);
@@ -199,11 +199,11 @@ private:
             if (response.status >= 200 && response.status < 300)
                 return JSONValue.emptyObject;
 
-            throw new WebDriverConnectionError("Invalid response from server:"~cast(string)response.content);
+            throw new WebDriverConnectionException("Invalid response from server:"~cast(string)response.content);
         }
 
         if (response.status >= 400)
-            throw mapError(ret);
+            throw mapException(ret);
 
         return ret;
     }
@@ -234,7 +234,7 @@ private:
             Thread.sleep(100.msecs);
         }
 
-        throw new WebDriverConnectionError(
+        throw new WebDriverConnectionException(
             "WebDriver did not become ready within "~timeoutMs.to!string~"ms"
         );
     }

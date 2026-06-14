@@ -1,7 +1,7 @@
 module selenium.browser.firefox;
 
 import selenium.browser : Browser;
-import selenium.error : InvalidArgumentError;
+import selenium.exception : InvalidArgumentException;
 
 import std.json : JSONValue, JSONType;
 import std.file : exists, isDir;
@@ -50,7 +50,7 @@ class Firefox : Browser
             else if (profile.match(ctRegex!(`^([A-Za-z0-9+/]{4})*([A-Za-z0-9+/]{3}=|[A-Za-z0-9+/]{2}==)?$`)))
                 opts["profile"] = JSONValue(profile);
             else
-                throw new InvalidArgumentError("Profile must be a directory path or a base-64 encoded archive.");
+                throw new InvalidArgumentException("Profile must be a directory path or a base-64 encoded archive.");
         }
         if (launchArgs != null)
             opts["args"] = JSONValue(launchArgs);

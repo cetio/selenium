@@ -13,7 +13,7 @@ version(integration)
     import selenium.browser.chrome : Chrome;
     import selenium.browser.firefox : Firefox;
     import selenium.driver : Driver;
-    import selenium.error : WebDriverConnectionError;
+    import selenium.exception : WebDriverConnectionException;
 
     struct TestConfig
     {
