@@ -1,6 +1,7 @@
 module selenium.browser;
 
 import selenium.exception : InvalidArgumentException, WebDriverConnectionException;
+import selenium.logger : Logger;
 
 import std.json : JSONValue, JSONType;
 import std.typecons : Tuple;
@@ -65,6 +66,14 @@ class Browser
 
     bool generic() const
         => name.length == 0;
+
+    /// Driver service arguments to pass when launching the WebDriver process.
+    /// Browsers override this to wire features (ie: log output) into the bridge.
+    string[] driverArgs() const
+        => null;
+
+    /// Fuses browser-specific logging settings into the generic `Logger`.
+    void merge(Logger logger) { }
 
     bool isInstalled()
         => resolveBinary(false) != null;

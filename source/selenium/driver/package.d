@@ -3,6 +3,7 @@ module selenium.driver;
 import selenium.bridge : Bridge;
 import selenium.browser : Browser;
 import selenium.element : By, Element, Size;
+import selenium.logger : Logger;
 import std.json : JSONValue;
 import std.net.curl : HTTP;
 
@@ -12,36 +13,47 @@ class Driver
 {
     Bridge bridge;
     Browser browser;
+    Logger logger;
     string id;
 
-    static Driver start(
-        Bridge bridge, 
-        Browser alwaysMatch, 
-        Browser[] firstMatch
-    )
+    static Driver start(Bridge bridge, Browser alwaysMatch, Browser[] firstMatch, Logger logger = null)
     {
+        if (logger is null)
+            logger = new Logger();
+
+        alwaysMatch.merge(logger);
+        if (firstMatch != null)
+        {
+            foreach (browser; firstMatch)
+                browser.merge(logger);
+        }
+
         JSONValue payload = JSONValue.emptyObject;
         JSONValue capabilities = JSONValue.emptyObject;
         capabilities["alwaysMatch"] = alwaysMatch.toJSON();
-
         if (firstMatch != null)
         {
             capabilities["firstMatch"] = JSONValue.emptyArray;
             foreach (browser; firstMatch)
                 capabilities["firstMatch"] ~= browser.toJSON();
         }
-
         payload["capabilities"] = capabilities;
 
         Driver ret = new Driver();
         ret.bridge = bridge;
+        ret.logger = logger;
         ret.id = bridge.createSession(payload);
         ret.browser = bridge.sessions[ret.id];
+        ret.logger.driver = ret;
         return ret;
     }
 
-    static Driver start(Browser alwaysMatch, Browser[] firstMatch = null)
-        => start(Bridge.start(alwaysMatch.resolveBinary()), alwaysMatch, firstMatch);
+    static Driver start(Browser alwaysMatch, Browser[] firstMatch = null, Logger logger = null)
+    {
+        if (logger is null)
+            logger = new Logger();
+        return start(Bridge.start(alwaysMatch.resolveBinary(), logger.toDriverArgs()), alwaysMatch, firstMatch, logger);
+    }
 
     static Driver start()
         => start(new Browser());

@@ -2,6 +2,7 @@ module selenium.browser.chrome;
 
 import selenium.browser : Browser;
 import selenium.exception : InvalidArgumentException;
+import selenium.logger;
 
 import std.json : JSONValue, JSONType;
 import std.base64 : Base64;
@@ -41,7 +42,9 @@ class Chrome : Browser
     bool detach;
     /// Extensions to load. May be provided as either base-64 encoded CRX content or a path to a CRX file.
     string[] extensions;
-
+    /// Remote log level preferences per log type, serialized as `goog:loggingPrefs`.
+    LogLevel[string] logging;
+    
     // TODO: Support for setting custom names.
     override string name() const
         => "chrome";
@@ -93,7 +96,21 @@ class Chrome : Browser
         if (opts.object.length > 0)
             ret["goog:chromeOptions"] = opts;
 
+        if (logging.length > 0)
+        {
+            JSONValue logPrefs = JSONValue.emptyObject;
+            foreach (type, level; logging)
+                logPrefs[type] = JSONValue(toWebDriverLevel(level));
+            ret["goog:loggingPrefs"] = logPrefs;
+        }
+
         return ret;
+    }
+
+    override void merge(Logger logger)
+    {
+        foreach (type, level; logging)
+            logger.levels[type] = level;
     }
 
 protected:
@@ -103,6 +120,15 @@ protected:
 
         if ("browserVersion" in value && value["browserVersion"].type == JSONType.string)
             release = value["browserVersion"].str;
+
+        if ("goog:loggingPrefs" in value && value["goog:loggingPrefs"].type == JSONType.object)
+        {
+            foreach (type, level; value["goog:loggingPrefs"].object)
+            {
+                if (level.type == JSONType.string)
+                    logging[type] = fromWebDriverLevel(level.str);
+            }
+        }
 
         if ("goog:chromeOptions" in value)
         {

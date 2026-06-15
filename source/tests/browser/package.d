@@ -5,6 +5,7 @@ import selenium.browser.chrome : Chrome;
 import selenium.browser.edge : Edge;
 import selenium.browser.firefox : Firefox;
 import selenium.browser.safari : Safari;
+import selenium.logger : LogLevel, LogType, Logger;
 
 import unit_threaded;
 
@@ -198,6 +199,75 @@ unittest
     roundTrip.automaticInspection.should == true;
     roundTrip.automaticProfiling.should == true;
     roundTrip.name.should == "Safari Technology Preview";
+}
+
+@Name("Logger toCapabilities serializes per-type levels")
+unittest
+{
+    Logger logger = new Logger();
+    logger.levels["browser"] = LogLevel.all;
+    logger.levels["driver"] = LogLevel.warning;
+
+    JSONValue json = logger.toCapabilities();
+    json["browser"].str.should == "ALL";
+    json["driver"].str.should == "WARNING";
+}
+
+@Name("Logger toDriverArgs builds service arguments")
+unittest
+{
+    Logger logger = new Logger();
+    logger.toDriverArgs().length.should == 0;
+
+    logger.path = "/tmp/chromedriver.log";
+    logger.driverLevel = LogLevel.trace;
+    logger.append = true;
+    logger.readableTimestamp = true;
+
+    logger.toDriverArgs().should == [
+        "--log-path=/tmp/chromedriver.log",
+        "--log-level=DEBUG",
+        "--append-log",
+        "--readable-timestamp",
+    ];
+}
+
+@Name("Chrome merges logging into Logger and serializes goog:loggingPrefs")
+unittest
+{
+    Chrome chrome = new Chrome();
+    chrome.binary = "/opt/chrome";
+    chrome.logging["performance"] = LogLevel.all;
+
+    Logger logger = new Logger();
+    chrome.merge(logger);
+    logger.levels["performance"].should == LogLevel.all;
+
+    JSONValue json = chrome.toJSON();
+    json["goog:loggingPrefs"]["performance"].str.should == "ALL";
+
+    Chrome roundTrip = cast(Chrome)Browser.fromJSONValue(json);
+    roundTrip.shouldNotBeNull;
+    roundTrip.logging["performance"].should == LogLevel.all;
+}
+
+@Name("Edge merges logging into Logger and serializes goog:loggingPrefs")
+unittest
+{
+    Edge edge = new Edge();
+    edge.binary = "/opt/edge";
+    edge.logging["browser"] = LogLevel.error;
+
+    Logger logger = new Logger();
+    edge.merge(logger);
+    logger.levels["browser"].should == LogLevel.error;
+
+    JSONValue json = edge.toJSON();
+    json["goog:loggingPrefs"]["browser"].str.should == "SEVERE";
+
+    Edge roundTrip = cast(Edge)Browser.fromJSONValue(json);
+    roundTrip.shouldNotBeNull;
+    roundTrip.logging["browser"].should == LogLevel.error;
 }
 
 @Name("Browser roundtrips platform, strategy, and timeouts")
