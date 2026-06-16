@@ -2,7 +2,7 @@
 
 Selenium SDK is a D library for browser automation over the WebDriver protocol. It mirrors the usage patterns of the Selenium Ruby bindings so the API stays familiar, and most of the W3C surface maps to what you would expect. Where the library deviates from W3C, the caveat is documented inline and called out here.
 
-This guide gets you from an empty project to driving a real browser. For the testing workflow see [TESTS.md](../TESTS.md), and for contribution guidelines see [CONTRIBUTING.md](../CONTRIBUTING.md).
+This guide gets you from an empty project to driving a real browser. For the testing workflow see [TESTING.md](../TESTING.md), and for contribution guidelines see [CONTRIBUTING.md](../CONTRIBUTING.md).
 
 ## Installation
 

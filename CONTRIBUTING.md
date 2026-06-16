@@ -25,7 +25,7 @@ Thanks for your interest in contributing. This documentation covers how contribu
 
 ## Tests
 
-Tests are required for any new feature or bug fix. The full testing workflow, directory layout, and conventions live in [TESTS.md](TESTS.md), and contributions are expected to comply with it.
+Tests are required for any new feature or bug fix. The full testing workflow, directory layout, and conventions live in [TESTING.md](TESTING.md), and contributions are expected to comply with it.
 
 At minimum:
 
@@ -45,7 +45,7 @@ Run integration tests locally when your change touches live behavior:
 dub test -c integration
 ```
 
-See [TESTS.md](TESTS.md) for browser configuration, naming, filtering, and debugging.
+See [TESTING.md](TESTING.md) for browser configuration, naming, filtering, and debugging.
 
 ## Code Style
 

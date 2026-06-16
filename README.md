@@ -20,7 +20,7 @@ Selenium SDK is a D SDK for browser automation over the WebDriver protocol. It m
 | Document | Contents |
 | --- | --- |
 | [Quick Start](docs/QUICK_START.md) | Install, configure a browser, and drive a session. |
-| [Tests](TESTS.md) | Offline and integration testing workflow and conventions. |
+| [Testing](TESTING.md) | Offline and integration testing workflow and conventions. |
 | [Contributing](CONTRIBUTING.md) | How to report issues and submit changes. |
 
 ## Getting Started
@@ -38,7 +38,7 @@ Add the package to your project with `dub add selenium-sdk`, then install a WebD
 
 ## Contributing
 
-Contributions are welcome. Please read [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines, and note that any new feature or bug fix is expected to ship with tests as described in [TESTS.md](TESTS.md).
+Contributions are welcome. Please read [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines, and note that any new feature or bug fix is expected to ship with tests as described in [TESTING.md](TESTING.md).
 
 ## License
 
