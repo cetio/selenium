@@ -1,31 +1,59 @@
+/// A handle to a single WebDriver session and its navigation commands.
 module selenium.driver;
 
 import selenium.bridge : Bridge;
 import selenium.browser : Browser;
 import selenium.element : By, Element, Size;
-import selenium.logger : Logger;
+import selenium.driver.logger : Logger;
 import std.json : JSONValue;
 import std.net.curl : HTTP;
 
-// Unlike Bridge, Driver does NOT automatically destruct.
-// Stopping a Driver and failing to clean up the Bridge is fine.
+/// A handle to one WebDriver session living on a `Bridge`.
+///
+/// W3C and most clients treat a driver as 1:1 with a session, but that is not the
+/// shape here. A `Bridge` can own several sessions at once, and each Driver is a
+/// handle to exactly one of them, so multiple drivers may share a single Bridge.
+///
+/// Unlike `Bridge`, a Driver does not destruct automatically. `stop` ends only this
+/// driver's session and deliberately leaves the Bridge alive for its other sessions.
 class Driver
 {
+    /// The connection hosting this session.
     Bridge bridge;
+    /// The browser whose capabilities were negotiated for this session.
     Browser browser;
+    /// The logger aggregating client, driver, and remote logging for this session.
     Logger logger;
+    /// The W3C session id.
     string id;
 
+    /**
+     * Starts a session on an existing bridge.
+     *
+     * Each browser's logging configuration is merged into the logger before the
+     * capabilities are built, so per-browser preferences propagate upward into the
+     * single session logger. The capabilities use `alwaysMatch` for the required
+     * browser and `firstMatch` for acceptable alternatives.
+     *
+     * Params:
+     *  bridge = The connection to create the session on.
+     *  alwaysMatch = The required browser capabilities.
+     *  firstMatch = Alternative capability sets the server may pick from.
+     *  logger = The logger to attach, or null to create a default one.
+     *
+     * Returns:
+     *  A driver bound to the new session.
+     */
     static Driver start(Bridge bridge, Browser alwaysMatch, Browser[] firstMatch, Logger logger = null)
     {
         if (logger is null)
             logger = new Logger();
 
-        alwaysMatch.merge(logger);
+        alwaysMatch.normalizeLogger(logger);
         if (firstMatch != null)
         {
             foreach (browser; firstMatch)
-                browser.merge(logger);
+                browser.normalizeLogger(logger);
         }
 
         JSONValue payload = JSONValue.emptyObject;
@@ -48,6 +76,20 @@ class Driver
         return ret;
     }
 
+    /**
+     * Resolves a driver binary, spawns a bridge for it, and starts a session.
+     *
+     * Convenience entry point for the common case of owning a freshly spawned
+     * driver process. Driver-process logging arguments are derived from the logger.
+     *
+     * Params:
+     *  alwaysMatch = The required browser capabilities, also used to resolve the binary.
+     *  firstMatch = Alternative capability sets the server may pick from.
+     *  logger = The logger to attach, or null to create a default one.
+     *
+     * Returns:
+     *  A driver bound to a session on a newly spawned bridge.
+     */
     static Driver start(Browser alwaysMatch, Browser[] firstMatch = null, Logger logger = null)
     {
         if (logger is null)
@@ -55,32 +97,60 @@ class Driver
         return start(Bridge.start(alwaysMatch.resolveBinary(), logger.toDriverArgs()), alwaysMatch, firstMatch, logger);
     }
 
+    /// Starts a session with a generic browser, letting the first driver on PATH win.
     static Driver start()
         => start(new Browser());
 
+    /// Ends this session, leaving the bridge and its other sessions intact.
     void stop()
     {
         if (bridge !is null)
             bridge.closeSession(id);
     }
 
+    /// The current document URL.
     string url() => bridge.request!string(id, HTTP.Method.get, "/url");
+    /// The current document title.
     string title() => bridge.request!string(id, HTTP.Method.get, "/title");
+    /// The serialized source of the current document.
     string source() => bridge.request!string(id, HTTP.Method.get, "/source");
+    /// A base64 PNG screenshot of the current viewport.
     string screenshot() => bridge.request!string(id, HTTP.Method.get, "/screenshot");
 
+    /**
+     * Navigates the session to a URL.
+     *
+     * Params:
+     *  url = The destination URL.
+     */
     void go(string url)
     {
         bridge.ensureTimeoutsSynced(id, browser);
         bridge.request(id, HTTP.Method.post, "/url", ["url": url]);
     }
+    /// Navigates back one entry in history.
     void back() => bridge.request!void(id, HTTP.Method.post, "/back");
+    /// Navigates forward one entry in history.
     void forward() => bridge.request!void(id, HTTP.Method.post, "/forward");
+    /// Reloads the current document.
     void refresh() => bridge.request!void(id, HTTP.Method.post, "/refresh");
 
+    /// The element that currently has focus.
     Element activeElement() 
         => new Element(this, Bridge.parseElementId(bridge.request(id, HTTP.Method.get, "/element/active")));
 
+    /**
+     * Finds the first element matching the locator.
+     *
+     * Params:
+     *  by = The location strategy and selector.
+     *
+     * Returns:
+     *  A handle to the matched element.
+     *
+     * Throws:
+     *  NoSuchElementException if no element matches.
+     */
     Element find(By by)
     {
         bridge.ensureTimeoutsSynced(id, browser);
@@ -89,6 +159,15 @@ class Driver
         return new Element(this, Bridge.parseElementId(resp));
     }
 
+    /**
+     * Finds every element matching the locator.
+     *
+     * Params:
+     *  by = The location strategy and selector.
+     *
+     * Returns:
+     *  Handles to all matched elements, or an empty array if none match.
+     */
     Element[] findAll(By by)
     {
         bridge.ensureTimeoutsSynced(id, browser);
@@ -100,6 +179,19 @@ class Driver
         return ret;
     }
 
+    /**
+     * Runs a synchronous script in the page and returns its typed result.
+     *
+     * When T is Element or Element[] the returned references are wrapped into
+     * handles, otherwise the result is deserialized into T.
+     *
+     * Params:
+     *  script = The script body, which may return a value.
+     *  args = The arguments exposed to the script as `arguments`.
+     *
+     * Returns:
+     *  The script result as T.
+     */
     T execute(T = string)(string script, JSONValue args = JSONValue.emptyArray)
     {
         bridge.ensureTimeoutsSynced(id, browser);
@@ -127,29 +219,47 @@ class Driver
     // Templates are used for grouping. Adding an alias is required to allow for functionality like `driver.window.handles`.
     // This is NOT used for some capabilities (ie: Cookies) which may be desirable to decouple from the driver itself.
 
+    /// Window and tab commands, accessed through the `window` alias.
     template Window()
     {
+        /// The handle of the current window.
         string handle() => bridge.request!string(id, HTTP.Method.get, "/window");
+        /// Handles of all open windows.
         string[] handles() => bridge.request!(string[])(id, HTTP.Method.get, "/window/handles");
+        /// The size of the current window.
         Size size() => bridge.request!Size(id, HTTP.Method.get, "/window/rect");
+        /// Closes the current window.
         void close() => bridge.request!void(id, HTTP.Method.del, "/window");
+        /// Maximizes the current window.
         void maximize() => bridge.request!void(id, HTTP.Method.post, "/window/maximize");
+        /// Makes the current window fullscreen.
         void fullscreen() => bridge.request!void(id, HTTP.Method.post, "/window/fullscreen");
+        /// Minimizes the current window.
         void minimize() => bridge.request!void(id, HTTP.Method.post, "/window/minimize");
+        /// Resizes the current window.
         void resize(Size value) => bridge.request!void(id, HTTP.Method.post, "/window/rect", value);
+        /// Switches focus to the window with the given handle.
         void switchTo(string handle) => bridge.request!void(id, HTTP.Method.post, "/window", ["handle": handle]);
+        /// Opens a new window or tab and returns its handle.
         string open(string type = "tab")
             => bridge.request(id, HTTP.Method.post, "/window/new", ["type": type])["value"]["handle"].str;
     }
+    /// Window command group, e.g. `driver.window.handles`.
     alias window = Window!();
 
+    /// Frame switching commands, accessed through the `frame` alias.
     template Frame()
     {
+        /// Switches focus to the top-level browsing context.
         void switchTo() => bridge.request!void(this.id, HTTP.Method.post, "/frame", ["id": JSONValue(null)]);
+        /// Switches focus to the frame at the given index.
         void switchTo(long id) => bridge.request!void(this.id, HTTP.Method.post, "/frame", ["id": id]);
+        /// Switches focus to the frame identified by the given element.
         void switchTo(Element element)
             => bridge.request!void(this.id, HTTP.Method.post, "/frame", ["id": element.toJSON()]);
+        /// Switches focus to the parent of the current frame.
         void switchToParent() => bridge.request!void(this.id, HTTP.Method.post, "/frame/parent");
     }
+    /// Frame command group, e.g. `driver.frame.switchTo(0)`.
     alias frame = Frame!();
 }

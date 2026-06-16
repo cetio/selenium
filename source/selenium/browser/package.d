@@ -1,7 +1,8 @@
+/// The generic browser capabilities base and its capability serialization.
 module selenium.browser;
 
 import selenium.exception : InvalidArgumentException, WebDriverConnectionException;
-import selenium.logger : Logger;
+import selenium.driver.logger : Logger;
 
 import std.json : JSONValue, JSONType;
 import std.typecons : Tuple;
@@ -9,31 +10,48 @@ import std.string : strip;
 static import std.process;
 import core.time : Duration, dur;
 
+/// How far a navigation must progress before it is considered complete.
 enum PageLoadStrategy : string
 {
+    /// Wait for the full document load event.
     Normal = "normal",
+    /// Wait only until the DOM is interactive.
     Eager = "eager",
+    /// Return as soon as navigation begins.
     None = "none"
 }
 
+/// How the driver should treat user prompts that no command handles.
 enum UnhandledPromptBehavior : string
 {
+    /// Dismiss the prompt silently.
     Dismiss = "dismiss",
+    /// Accept the prompt silently.
     Accept = "accept",
+    /// Dismiss the prompt and raise an error.
     DismissAndNotify = "dismiss and notify",
+    /// Accept the prompt and raise an error.
     AcceptAndNotify = "accept and notify",
+    /// Leave the prompt open.
     Ignore = "ignore"
 }
 
+/// The requested host platform, mapped to the `platformName` capability.
 enum Platform : string
 {
+    /// No platform constraint.
     Any = "",
+    /// Windows.
     Windows = "Windows",
+    /// Linux.
     Linux = "Linux",
+    /// macOS.
     Mac = "Mac",
+    /// Android.
     Android = "Android"
 }
 
+/// Per-session wait limits for commands that may block.
 struct Timeouts
 {
     /// Time to wait for an element to exist when locating.
@@ -44,6 +62,10 @@ struct Timeouts
     Duration script;
 }
 
+/// The generic browser capabilities common to every browser.
+///
+/// This base mirrors the W3C standard capabilities and serializes 1:1 to them.
+/// The concrete subclasses add vendor capability objects that are not part of W3C.
 class Browser
 {
     /// Platform to request from the driver.
@@ -61,23 +83,51 @@ class Browser
     /// Session timeout configuration.
     Timeouts timeouts;
 
+    /// The `browserName` capability, empty for a generic browser.
     string name() const
         => "";
 
+    /// Whether this is the generic base rather than a named browser.
     bool generic() const
         => name.length == 0;
 
-    /// Driver service arguments to pass when launching the WebDriver process.
-    /// Browsers override this to wire features (ie: log output) into the bridge.
+    /// Extra service arguments to pass when launching the WebDriver process.
+    ///
+    /// A hook for subclasses to wire process-level features into the bridge.
+    /// The base returns none.
     string[] driverArgs() const
         => null;
 
-    /// Fuses browser-specific logging settings into the generic `Logger`.
-    void merge(Logger logger) { }
+    /**
+     * Folds this browser's logging preferences upward into the session logger.
+     *
+     * The base is a no-op. Subclasses with logging capabilities override it so
+     * their `levels` accumulate on the shared `Logger`.
+     *
+     * Params:
+     *  logger = The session logger to normalize into.
+     */
+    void normalizeLogger(Logger logger) { }
 
+    /// Whether a matching WebDriver binary can be found on PATH.
     bool isInstalled()
         => resolveBinary(false) != null;
 
+    /**
+     * Resolves the WebDriver binary for this browser on PATH.
+     *
+     * A named browser resolves its specific driver, while a generic browser scans
+     * the known drivers and returns the first one present.
+     *
+     * Params:
+     *  throwOnNotFound = Whether to throw when no binary is found.
+     *
+     * Returns:
+     *  The resolved binary path, or null when none is found and throwing is disabled.
+     *
+     * Throws:
+     *  WebDriverConnectionException if no binary is found and throwOnNotFound is true.
+     */
     string resolveBinary(bool throwOnNotFound = true)
     {
         string findBinary(string candidate)
@@ -126,6 +176,7 @@ class Browser
         return null;
     }
 
+    /// Serializes the standard W3C capabilities, omitting fields left at default.
     JSONValue toJSON() const
     {
         JSONValue ret = JSONValue.emptyObject;
@@ -157,6 +208,20 @@ class Browser
         return ret;
     }
 
+    /**
+     * Builds the most specific browser subclass from a capabilities object.
+     *
+     * Chrome and Edge are detected by the presence of their vendor options keys
+     * rather than `browserName`, so a browser configured with only standard
+     * capabilities or logging prefs will round-trip as the generic base instead of
+     * the concrete subclass.
+     *
+     * Params:
+     *  json = The capabilities object to parse.
+     *
+     * Returns:
+     *  A browser instance of the detected concrete type.
+     */
     static Browser fromJSONValue(JSONValue json)
     {
         import selenium.browser.chrome : Chrome;
@@ -191,6 +256,7 @@ class Browser
     }
 
 protected:
+    /// Populates the standard W3C capability fields from a capabilities object.
     void parseFrom(JSONValue json)
     {
         import selenium.browser.chrome : Chrome;

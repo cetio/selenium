@@ -1,3 +1,4 @@
+/// Selenium WebDriver library for driver management and browser automation.
 module selenium;
 
 public import selenium.browser;
@@ -6,8 +7,8 @@ public import selenium.browser.firefox;
 
 public import selenium.driver;
 public import selenium.driver.cookies;
+public import selenium.driver.logger;
 
 public import selenium.bridge;
 public import selenium.element;
 public import selenium.exception;
-public import selenium.logger;

@@ -1,3 +1,4 @@
+/// The WebDriver server connection that owns one or more sessions.
 module selenium.bridge;
 
 import selenium.browser : Browser;
@@ -14,15 +15,37 @@ import std.socket;
 import core.thread : Thread;
 import core.time : MonoTime, msecs, Duration;
 
+/// A connection to a single WebDriver server, whether spawned locally or remote.
+///
+/// W3C describes commands per session, which makes a driver and a session look
+/// like a 1:1 pairing. A Bridge does not follow that assumption. It models the
+/// server process itself and can host many concurrent sessions through `sessions`,
+/// bounded only by the optional `capacity`. Each `Driver` is a handle to one of
+/// those sessions, so several drivers may share a single Bridge.
 class Bridge
 {
 package(selenium):
+    /// The capability key identifying a W3C element reference in payloads.
     enum string W3C_KEY = "element-6066-11e4-a52e-4f735466cecf";
 
+    /// Last implicit wait pushed to the server, in milliseconds.
     int syncImplicit;
+    /// Last page load timeout pushed to the server, in milliseconds.
     int syncPage;
+    /// Last script timeout pushed to the server, in milliseconds.
     int syncScript;
 
+    /**
+     * Pushes the browser timeout configuration to the session if it has changed.
+     *
+     * Timeouts are synced lazily so that unchanged values do not incur an extra
+     * request before each command. Failures are swallowed so a rejected sync does
+     * not abort the caller's command.
+     *
+     * Params:
+     *  id = The target session id.
+     *  browser = The browser whose timeout configuration to apply.
+     */
     void ensureTimeoutsSynced(string id, Browser browser)
     {
         int implicitTimeout = cast(int)browser.timeouts.implicit.total!"msecs";
@@ -50,16 +73,35 @@ package(selenium):
     }
 
 public:
+    /// Base URL of the WebDriver server, e.g. "http://127.0.0.1:9515".
     string address;
+    /// Process id of a locally spawned driver.
     Pid pid;
+    /// Maximum number of concurrent sessions, or 0 for unlimited.
     int capacity;
+    /// Active sessions keyed by session id, mapped to their negotiated browser.
     Browser[string] sessions;
 
+    /// Stops the server and tears down all sessions on collection.
     ~this()
     {
         stop();
     }
     
+    /**
+     * Spawns a WebDriver binary on a free port and waits for it to accept requests.
+     *
+     * Params:
+     *  binary = Path to the driver executable.
+     *  args = Extra command-line arguments forwarded to the executable.
+     *
+     * Returns:
+     *  A Bridge owning the spawned process.
+     *
+     * Throws:
+     *  InvalidArgumentException if binary is null.
+     *  WebDriverConnectionException if the server does not become ready in time.
+     */
     static Bridge start(string binary, string[] args = null)
     {
         if (binary == null)
@@ -73,6 +115,18 @@ public:
         return ret;
     }
 
+    /**
+     * Connects to an already running WebDriver server.
+     *
+     * The returned Bridge does not own a process, so `stop` will not kill the
+     * remote server. This is the entry point for remote endpoints and grids.
+     *
+     * Params:
+     *  address = Base URL of the running server.
+     *
+     * Returns:
+     *  A Bridge attached to the remote server.
+     */
     static Bridge connect(string address)
     {
         Bridge ret = new Bridge();
@@ -80,6 +134,18 @@ public:
         return ret;
     }
 
+    /**
+     * Creates a new session and records its negotiated browser capabilities.
+     *
+     * Params:
+     *  payload = The new-session capabilities request body.
+     *
+     * Returns:
+     *  The id of the created session.
+     *
+     * Throws:
+     *  WebDriverConnectionException if `capacity` is reached.
+     */
     string createSession(JSONValue payload)
     {
         if (capacity > 0 && sessions.length >= capacity)
@@ -103,6 +169,15 @@ public:
         return id;
     }
 
+    /**
+     * Ends a single session and removes it from `sessions`.
+     *
+     * Errors from the delete request are ignored so that a dead session is still
+     * dropped locally.
+     *
+     * Params:
+     *  id = The session id to close.
+     */
     void closeSession(string id)
     {
         try
@@ -111,6 +186,7 @@ public:
         sessions.remove(id);
     }
 
+    /// Kills a locally spawned process and clears all session state.
     void stop()
     {
         if (pid !is Pid.init)
@@ -121,6 +197,21 @@ public:
         sessions = null;
     }
 
+    /**
+     * Issues a parameterless command against a session and parses the result.
+     *
+     * A POST without a body is redirected to send an empty JSON object. W3C
+     * requires a JSON body on POST, and modern drivers reject a missing body with
+     * "missing command parameters", so this keeps parameterless POSTs compliant.
+     *
+     * Params:
+     *  id = The target session id.
+     *  method = The HTTP method.
+     *  path = The session-relative endpoint path.
+     *
+     * Returns:
+     *  The parsed result as T, or the raw JSONValue when T is JSONValue.
+     */
     T request(T = JSONValue)(string id, HTTP.Method method, string path)
     {
         if (method == HTTP.Method.post)
@@ -136,6 +227,18 @@ public:
             return parse!T(json);
     }
 
+    /**
+     * Issues a command with a request body against a session and parses the result.
+     *
+     * Params:
+     *  id = The target session id.
+     *  method = The HTTP method.
+     *  path = The session-relative endpoint path.
+     *  data = The request body, serialized to JSON.
+     *
+     * Returns:
+     *  The parsed result as T, or the raw JSONValue when T is JSONValue.
+     */
     T request(T = JSONValue, D)(string id, HTTP.Method method, string path, D data)
     {
         HTTP http = HTTP();
@@ -148,6 +251,18 @@ public:
             return parse!T(json);
     }
 
+    /**
+     * Extracts a single element reference from a response.
+     *
+     * Accepts both the W3C key and the legacy "ELEMENT" key so responses from
+     * older drivers still resolve.
+     *
+     * Params:
+     *  json = The response value or envelope.
+     *
+     * Returns:
+     *  The element reference, or null if none is present.
+     */
     static string parseElementId(JSONValue json)
     {
         JSONValue value = (json.type == JSONType.object && "value" in json) ? json["value"] : json;
@@ -163,6 +278,15 @@ public:
         return null;
     }
 
+    /**
+     * Extracts every element reference from an array response.
+     *
+     * Params:
+     *  json = The response value or envelope wrapping an array.
+     *
+     * Returns:
+     *  The element references in order, or an empty array if none are present.
+     */
     static string[] parseElementIds(JSONValue json)
     {
         JSONValue value = (json.type == JSONType.object && "value" in json) ? json["value"] : json;
@@ -177,6 +301,7 @@ public:
         return ret;
     }
 
+    /// Deserializes T from a response, unwrapping the W3C `value` envelope if present.
     static T parse(T)(JSONValue json)
     {
         if ("value" in json)
@@ -186,6 +311,7 @@ public:
     }
 
 private:
+    /// Parses a response body and converts an HTTP error status into an exception.
     static JSONValue checkAndParse(Response response)
     {
         if (response.content.length == 0)
@@ -208,6 +334,7 @@ private:
         return ret;
     }
 
+    /// Binds an ephemeral port on the loopback interface and returns it.
     static ushort findFreePort()
     {
         Socket socket = new Socket(AddressFamily.INET, SocketType.STREAM);
@@ -218,6 +345,7 @@ private:
         return ret;
     }
 
+    /// Polls the server status endpoint until it responds or the timeout elapses.
     void waitForServer(long timeoutMs)
     {
         MonoTime startTime = MonoTime.currTime;
@@ -239,6 +367,7 @@ private:
         );
     }
 
+    /// Kills a process, ignoring failures from an already dead process.
     static void tryKill(Pid process)
     {
         try

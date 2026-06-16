@@ -1,14 +1,19 @@
+/// Chrome capabilities and the `goog:chromeOptions` vendor object.
 module selenium.browser.chrome;
 
 import selenium.browser : Browser;
 import selenium.exception : InvalidArgumentException;
-import selenium.logger;
+import selenium.driver.logger;
 
 import std.json : JSONValue, JSONType;
 import std.base64 : Base64;
 import std.file : read, isFile;
 import std.regex : match, ctRegex;
 
+/// A Chrome browser with its `goog:chromeOptions` capabilities.
+///
+/// The options object and `goog:loggingPrefs` are Chromium vendor extensions, not
+/// part of W3C. The standard capabilities still come from `Browser`.
 class Chrome : Browser
 {
     /// Wrapper struct for preferences. Chrome supports both browser (local state) and user preferences.
@@ -45,10 +50,11 @@ class Chrome : Browser
     /// Remote log level preferences per log type, serialized as `goog:loggingPrefs`.
     LogLevel[string] logging;
     
-    // TODO: Support for setting custom names.
+    /// The `browserName` capability.
     override string name() const
         => "chrome";
 
+    /// Serializes the standard capabilities plus `goog:chromeOptions` and logging prefs.
     override JSONValue toJSON() const
     {
         JSONValue ret = super.toJSON();
@@ -107,13 +113,15 @@ class Chrome : Browser
         return ret;
     }
 
-    override void merge(Logger logger)
+    /// Folds the per-type logging preferences upward into the session logger.
+    override void normalizeLogger(Logger logger)
     {
         foreach (type, level; logging)
             logger.levels[type] = level;
     }
 
 protected:
+    /// Populates the standard capabilities and `goog:chromeOptions` fields.
     override void parseFrom(JSONValue value)
     {
         super.parseFrom(value);

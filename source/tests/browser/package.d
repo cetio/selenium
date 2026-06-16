@@ -5,7 +5,7 @@ import selenium.browser.chrome : Chrome;
 import selenium.browser.edge : Edge;
 import selenium.browser.firefox : Firefox;
 import selenium.browser.safari : Safari;
-import selenium.logger : LogLevel, LogType, Logger;
+import selenium.driver.logger : LogLevel, LogType, Logger;
 
 import unit_threaded;
 
@@ -240,7 +240,7 @@ unittest
     chrome.logging["performance"] = LogLevel.all;
 
     Logger logger = new Logger();
-    chrome.merge(logger);
+    chrome.normalizeLogger(logger);
     logger.levels["performance"].should == LogLevel.all;
 
     JSONValue json = chrome.toJSON();
@@ -259,7 +259,7 @@ unittest
     edge.logging["browser"] = LogLevel.error;
 
     Logger logger = new Logger();
-    edge.merge(logger);
+    edge.normalizeLogger(logger);
     logger.levels["browser"].should == LogLevel.error;
 
     JSONValue json = edge.toJSON();

@@ -1,3 +1,4 @@
+/// Firefox capabilities and the `moz:firefoxOptions` vendor object.
 module selenium.browser.firefox;
 
 import selenium.browser : Browser;
@@ -7,6 +8,10 @@ import std.json : JSONValue, JSONType;
 import std.file : exists, isDir;
 import std.regex : match, ctRegex;
 
+/// A Firefox browser with its `moz:firefoxOptions` capabilities.
+///
+/// The options object is a Mozilla vendor extension, not part of W3C. The standard
+/// capabilities still come from `Browser`.
 class Firefox : Browser
 {
     /// Wrapper struct for preferences. Firefox only supports user preferences.
@@ -31,9 +36,11 @@ class Firefox : Browser
     /// Must be either a directory path or base-64 archive.
     string profile;
 
+    /// The `browserName` capability.
     override string name() const
         => "firefox";
 
+    /// Serializes the standard capabilities plus `moz:firefoxOptions`.
     override JSONValue toJSON() const
     {
         JSONValue ret = super.toJSON();
@@ -68,6 +75,7 @@ class Firefox : Browser
     }
 
 protected:
+    /// Populates the standard capabilities and `moz:firefoxOptions` fields.
     override void parseFrom(JSONValue json)
     {
         super.parseFrom(json);

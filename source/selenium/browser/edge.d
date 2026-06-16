@@ -1,14 +1,20 @@
+/// Edge capabilities and the `ms:edgeOptions` vendor object.
 module selenium.browser.edge;
 
 import selenium.browser : Browser;
 import selenium.exception : InvalidArgumentException;
-import selenium.logger;
+import selenium.driver.logger;
 
 import std.json : JSONValue, JSONType;
 import std.base64 : Base64;
 import std.file : read, isFile;
 import std.regex : match, ctRegex;
 
+/// A Microsoft Edge browser with its `ms:edgeOptions` capabilities.
+///
+/// The options object is an Edge vendor extension. Logging still uses the Chromium
+/// `goog:loggingPrefs` capability rather than an Edge-specific key, since Edge is
+/// Chromium based. None of these are part of W3C.
 class Edge : Browser
 {
     /// Wrapper struct for preferences. Edge supports both browser (local state) and user preferences.
@@ -60,9 +66,11 @@ class Edge : Browser
     LogLevel[string] logging;
     
     // TODO: Support for setting custom names.
+    /// The `browserName` capability, "webview2" when driving WebView2.
     override string name() const
         => useWebView ? "webview2" : "MicrosoftEdge";
 
+    /// Serializes the standard capabilities plus `ms:edgeOptions` and logging prefs.
     override JSONValue toJSON() const
     {
         JSONValue ret = super.toJSON();
@@ -139,13 +147,15 @@ class Edge : Browser
         return ret;
     }
 
-    override void merge(Logger logger)
+    /// Folds the per-type logging preferences upward into the session logger.
+    override void normalizeLogger(Logger logger)
     {
         foreach (type, level; logging)
             logger.levels[type] = level;
     }
 
 protected:
+    /// Populates the standard capabilities and `ms:edgeOptions` fields.
     override void parseFrom(JSONValue value)
     {
         super.parseFrom(value);

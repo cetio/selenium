@@ -1,103 +1,124 @@
+/// WebDriver error hierarchy and mapping from server error responses.
 module selenium.exception;
 
 import std.exception : basicExceptionCtors;
 import std.json : JSONValue, JSONType;
 
+/// Base type for every error raised by the library.
 class WebDriverException : Exception
 {
     mixin basicExceptionCtors;
 }
 
+/// No element matched the requested locator.
 class NoSuchElementException : WebDriverException
 {
     mixin basicExceptionCtors;
 }
 
+/// The referenced element is no longer attached to the DOM.
 class StaleElementReferenceException : WebDriverException
 {
     mixin basicExceptionCtors;
 }
 
+/// The element is in a state that does not permit the command.
 class InvalidElementStateException : WebDriverException
 {
     mixin basicExceptionCtors;
 }
 
+/// A command did not complete within its configured timeout.
 class WebDriverTimeoutException : WebDriverException
 {
     mixin basicExceptionCtors;
 }
 
+/// The driver process could not be reached or a session could not be created.
 class WebDriverConnectionException : WebDriverException
 {
     mixin basicExceptionCtors;
 }
 
+/// A command argument was missing or malformed.
 class InvalidArgumentException : WebDriverException
 {
     mixin basicExceptionCtors;
 }
 
+/// The selector expression was not valid for its strategy.
 class InvalidSelectorException : WebDriverException
 {
     mixin basicExceptionCtors;
 }
 
+/// The session id is unknown, which usually means the session has ended.
 class InvalidSessionIdException : WebDriverException
 {
     mixin basicExceptionCtors;
 }
 
+/// Injected JavaScript threw an error during evaluation.
 class JavaScriptException : WebDriverException
 {
     mixin basicExceptionCtors;
 }
 
+/// The element cannot receive the attempted interaction.
 class ElementNotInteractableException : WebDriverException
 {
     mixin basicExceptionCtors;
 }
 
+/// Another element intercepted the click on the target element.
 class ElementClickInterceptedException : WebDriverException
 {
     mixin basicExceptionCtors;
 }
 
+/// The targeted window or tab no longer exists.
 class NoSuchWindowException : WebDriverException
 {
     mixin basicExceptionCtors;
 }
 
+/// The targeted frame could not be found.
 class NoSuchFrameException : WebDriverException
 {
     mixin basicExceptionCtors;
 }
 
+/// An asynchronous script did not complete within the script timeout.
 class ScriptTimeoutException : WebDriverException
 {
     mixin basicExceptionCtors;
 }
 
+/// The driver does not recognize the requested command.
 class UnknownCommandException : WebDriverException
 {
     mixin basicExceptionCtors;
 }
 
+/// The driver recognizes the command but does not support it.
 class UnsupportedOperationException : WebDriverException
 {
     mixin basicExceptionCtors;
 }
 
+/// A user prompt is open and blocking the command.
 class UnexpectedAlertOpenException : WebDriverException
 {
     mixin basicExceptionCtors;
 }
 
+/// No user prompt is currently open.
 class NoSuchAlertException : WebDriverException
 {
     mixin basicExceptionCtors;
 }
 
+/// The cookie could not be set, often due to a domain mismatch.
 class UnableToSetCookieException : WebDriverException
 {
     mixin basicExceptionCtors;
@@ -105,6 +126,18 @@ class UnableToSetCookieException : WebDriverException
 
 package:
 
+/**
+ * Maps a server error response to the most specific exception type.
+ *
+ * Prefers the W3C `value.error` string and falls back to the legacy numeric
+ * `status` code when no error string is present.
+ *
+ * Params:
+ *  json = The parsed error response body.
+ *
+ * Returns:
+ *  The matching exception, or a base WebDriverException when unrecognized.
+ */
 static WebDriverException mapException(JSONValue json)
 {
     string message = extractMessage(json);
