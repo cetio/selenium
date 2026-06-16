@@ -1,6 +1,6 @@
 # Contributing to Selenium-SDK
 
-Thanks for your interest in contributing to **Selenium SDK**. This documentation covers how contributions should be formatted, the testing system, and guidelines.
+Thanks for your interest in contributing. This documentation covers how contributions should be formatted, the testing system, and guidelines.
 
 ## Reporting Issues
 
