@@ -1,104 +1,45 @@
-# Selenium-SDK
+# Selenium SDK
 
 [![License](https://img.shields.io/badge/License-AGPL%20v3-blue)](LICENSE.txt)
+[![DUB Package](https://img.shields.io/badge/dub-package-red?link=https%3A%2F%2Fcode.dlang.org%2Fpackages%2Fselenium-sdk)](https://code.dlang.org/packages/selenium-sdk)
 
-Selenium-SDK is a D library for browser automation via the WebDriver protocol. It manages driver lifecycle, element interaction, JavaScript execution, and browser options without requiring external language bindings.
+Selenium SDK is a D SDK for browser automation over the WebDriver protocol. It manages the driver lifecycle, sessions, element interaction, script execution, and browser capabilities natively, without external language bindings. The API mirrors the Selenium Ruby bindings so it stays familiar to anyone who has used Selenium before.
 
 ## Features
 
-- **Driver Lifecycle**: Start, stop, and auto-detect WebDriver executables on `PATH` for Chrome, Firefox, Edge, and Safari.
-- **Navigation**: Navigate, go back/forward, refresh, and read page title and URL.
-- **Element Search**: Find single or multiple elements by CSS selector, XPath, tag name, or name. Search globally or within an existing element.
-- **Element Interaction**: Click, send keys, clear, submit, read text and attributes, and check enabled or displayed state.
-- **JavaScript Execution**: Execute arbitrary scripts with typed return values.
-- **Browser Options**: Configure all browsers using their `Browser` classes, (ie: `Chrome`).
-- **Window Management**: Maximize, resize, enumerate handles, and close windows.
+- **Driver lifecycle** for Chrome, Firefox, Edge, and Safari, with automatic WebDriver detection on `PATH`.
+- **Navigation and inspection** of page URL, title, source, and screenshots.
+- **Element search and interaction** by CSS, XPath, tag name, and link text, globally or scoped to an element.
+- **Script execution** with typed return values.
+- **Window, tab, and frame management.**
+- **Browser capabilities** configured through dedicated classes per browser.
+- **Sessions and connections** managed by a low-level bridge, including remote endpoints and multiple sessions per process.
 
-## Usage
+## Documentation
 
-`dub add selenium-sdk`
+| Document | Contents |
+| --- | --- |
+| [Quick Start](docs/QUICK_START.md) | Install, configure a browser, and drive a session. |
+| [Tests](TESTS.md) | Offline and integration testing workflow and conventions. |
+| [Contributing](CONTRIBUTING.md) | How to report issues and submit changes. |
 
-Install a WebDriver server and ensure it is on your `PATH` (e.g. `chromedriver`, `geckodriver`, `msedgedriver`, or `safaridriver`).
+## Getting Started
 
-### Driver Lifecycle
+Add the package to your project with `dub add selenium-sdk`, then install a WebDriver server (`chromedriver`, `geckodriver`, `msedgedriver`, or `safaridriver`) and make sure it is on your `PATH`. The [Quick Start](docs/QUICK_START.md) walks through a complete first session.
 
-`Driver.start` auto-detects the executable on `PATH` if you do not provide one.
+## Supported Browsers
 
-```d
-import selenium.driver;
+| Browser | WebDriver binary |
+| --- | --- |
+| Chrome | `chromedriver` |
+| Firefox | `geckodriver` |
+| Edge | `msedgedriver` |
+| Safari | `safaridriver` |
 
-Driver driver = Driver.start();
-scope (exit) driver.stop();
-```
+## Contributing
 
-Pin to a specific browser:
-
-```d
-import selenium.driver;
-import selenium.browser.chrome : Chrome;
-
-Driver driver = Driver.start(new Chrome());
-```
-
-### Navigation
-
-```d
-driver.go("https://example.com");
-writeln(driver.title);
-writeln(driver.url);
-
-driver.back();
-driver.forward();
-driver.refresh();
-```
-
-### Finding Elements
-
-```d
-import selenium.driver;
-import selenium.element : By;
-
-Element button = driver.find(By.css("#submit"));
-Element[] items = driver.findAll(By.xpath("//div[@class='item']"));
-
-// Search inside an element
-Element form = driver.find(By.tagName("form"));
-Element input = form.find(By.css("input[name='username']"));
-```
-
-### Interacting With Elements
-
-```d
-input.click();
-input.sendKeys("hello");
-input.clear();
-input.submit();
-
-writeln(input.text);
-writeln(input.attribute("placeholder"));
-writeln(input.enabled);
-writeln(input.displayed);
-```
-
-### JavaScript Execution
-
-```d
-int result = driver.execute!int("return arguments[0] + arguments[1];");
-```
-
-### Window Management
-
-```d
-import selenium.element : Size;
-
-driver.maximize();
-driver.windowSize = Size(1920, 1080);
-
-string[] handles = driver.windowHandles();
-driver.close();
-```
+Contributions are welcome. Please read [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines, and note that any new feature or bug fix is expected to ship with tests as described in [TESTS.md](TESTS.md).
 
 ## License
 
-Selenium-SDK is licensed under [AGPL-3.0](LICENSE.txt).
-
+Selenium SDK is licensed under [AGPL-3.0](LICENSE.txt).
