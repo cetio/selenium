@@ -30,7 +30,7 @@ version(integration)
         {
             configs ~= TestConfig(
                 chrome, 
-                Bridge.start(chrome.resolveBinary(false), ["--log-level=OFF"])
+                Bridge.start(chrome.resolveBinary(), ["--log-level=OFF"])
             );
         }
 
@@ -39,7 +39,7 @@ version(integration)
         {
             configs ~= TestConfig(
                 firefox, 
-                Bridge.start(firefox.resolveBinary(false), ["--log", "fatal"])
+                Bridge.start(firefox.resolveBinary(), ["--log", "fatal"])
             );
         }
 

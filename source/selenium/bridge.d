@@ -224,7 +224,7 @@ public:
         static if (is(T == JSONValue))
             return json;
         else static if (!is(T == void))
-            return parse!T(json);
+            return unwrapAndParse!T(json);
     }
 
     /**
@@ -248,7 +248,7 @@ public:
         static if (is(T == JSONValue))
             return json;
         else static if (!is(T == void))
-            return parse!T(json);
+            return unwrapAndParse!T(json);
     }
 
     /**
@@ -302,7 +302,7 @@ public:
     }
 
     /// Deserializes T from a response, unwrapping the W3C `value` envelope if present.
-    static T parse(T)(JSONValue json)
+    static T unwrapAndParse(T)(JSONValue json)
     {
         if ("value" in json)
             return fromJSON!T(json["value"]);

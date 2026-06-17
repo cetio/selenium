@@ -210,7 +210,7 @@ class Driver
             return ret;
         }
         else
-            return bridge.parse!T(resp);
+            return bridge.unwrapAndParse!T(resp);
     }
 
     // TODO: executeAsync
