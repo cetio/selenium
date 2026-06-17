@@ -4,7 +4,7 @@
 	],
 	"copyright": "Copyright © 2026, cet",
 	"dependencies": {
-		"conductor": "~>2.0.0"
+		"conductor": "~>2.1.1"
 	},
 	"description": "Browser automation with WebDriver lifecycle, element interaction, JavaScript execution, and multi-browser support.",
 	"license": "AGPL-3.0",
@@ -13,7 +13,8 @@
 	"configurations": [
 		{
 			"name": "library",
-			"targetType": "library"
+			"targetType": "library",
+			"excludedSourceFiles": ["source/tests/*"]
 		},
 		{
 			"name": "unittest",
