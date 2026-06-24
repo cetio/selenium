@@ -49,7 +49,7 @@ version(integration)
     @Name("frame switch by index") @Serial
     unittest
     {
-        testWithBrowsers((driver) {
+        testAll((driver) {
             string inner = "<p id='inner'>inside</p>";
             string html = "<html><body>"~
                 "<p id='top'>top</p>"~
@@ -65,7 +65,7 @@ version(integration)
     @Name("frame switch by element") @Serial
     unittest
     {
-        testWithBrowsers((driver) {
+        testAll((driver) {
             string iframeHtml = "<p id='nested'>nested</p>";
             string html = "<html><body><iframe id='frame1' srcdoc=\""~iframeHtml~"\"></iframe></body></html>";
 
@@ -79,7 +79,7 @@ version(integration)
     @Name("frame switch to parent") @Serial
     unittest
     {
-        testWithBrowsers((driver) {
+        testAll((driver) {
             string iframeHtml = "<p id='child'>child</p>";
             string html = "<html><body><p id='parent'>parent</p>"~
                 "<iframe srcdoc=\""~iframeHtml~"\"></iframe></body></html>";
@@ -95,7 +95,7 @@ version(integration)
     @Name("frame switch to top") @Serial
     unittest
     {
-        testWithBrowsers((driver) {
+        testAll((driver) {
             string iframeHtml = "<p id='deep'>deep</p>";
             string html = "<html><body><p id='surface'>surface</p>"~
                 "<iframe srcdoc=\""~iframeHtml~"\"></iframe></body></html>";

@@ -13,7 +13,7 @@ version(integration)
     @Name("click updates button text") @Serial
     unittest
     {
-        testWithBrowsers((driver) {
+        testAll((driver) {
             driver.go(dataUri(
                 "<html><body><button id='btn' onclick='this.textContent=\"clicked\"'>click</button></body></html>"
             ));
@@ -25,7 +25,7 @@ version(integration)
     @Name("sendKeys sets input value") @Serial
     unittest
     {
-        testWithBrowsers((driver) {
+        testAll((driver) {
             driver.go(dataUri(
                 "<html><body><input id='field' value='initial'></body></html>"
             ));
@@ -38,7 +38,7 @@ version(integration)
     @Name("clear empties input field") @Serial
     unittest
     {
-        testWithBrowsers((driver) {
+        testAll((driver) {
             driver.go(dataUri(
                 "<html><body><input id='field' value='prefilled'></body></html>"
             ));
@@ -50,7 +50,7 @@ version(integration)
     @Name("nested element find") @Serial
     unittest
     {
-        testWithBrowsers((driver) {
+        testAll((driver) {
             driver.go(dataUri(
                 "<html><body><div id='outer'><span id='inner'>nested</span></div></body></html>"
             ));
@@ -62,7 +62,7 @@ version(integration)
     @Name("cssValue returns style value") @Serial
     unittest
     {
-        testWithBrowsers((driver) {
+        testAll((driver) {
             driver.go(dataUri(
                 "<html><body><p id='t' style='color:red;'>styled</p></body></html>"
             ));
@@ -73,7 +73,7 @@ version(integration)
     @Name("stale element access throws") @Serial
     unittest
     {
-        testWithBrowsers((driver) {
+        testAll((driver) {
             driver.go(dataUri(
                 "<html><body><input id='stale' value='old'></body></html>"
             ));
@@ -87,7 +87,7 @@ version(integration)
     @Name("selected reflects checkbox state") @Serial
     unittest
     {
-        testWithBrowsers((driver) {
+        testAll((driver) {
             driver.go(dataUri(
                 "<html><body><input id='checky' type='checkbox' checked>"
                 ~"<input id='unchecky' type='checkbox'></body></html>"
@@ -100,7 +100,7 @@ version(integration)
     @Name("enabled reflects element state") @Serial
     unittest
     {
-        testWithBrowsers((driver) {
+        testAll((driver) {
             driver.go(dataUri(
                 "<html><body><input id='dis' disabled><input id='en'></body></html>"
             ));

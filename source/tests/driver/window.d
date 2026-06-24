@@ -54,7 +54,7 @@ version(integration)
     @Name("title returns page title") @Serial
     unittest
     {
-        testWithBrowsers((driver) {
+        testAll((driver) {
             driver.go(dataUri("<html><title>WindowTest</title><body></body></html>"));
             driver.title.should == "WindowTest";
         });
@@ -63,7 +63,7 @@ version(integration)
     @Name("handle returns window handle") @Serial
     unittest
     {
-        testWithBrowsers((driver) {
+        testAll((driver) {
             driver.go(dataUri("<html><body></body></html>"));
             driver.window.handle.length.shouldBeGreaterThan(0);
         });
@@ -72,7 +72,7 @@ version(integration)
     @Name("resize changes window size") @Serial
     unittest
     {
-        testWithBrowsers((driver) {
+        testAll((driver) {
             driver.go(dataUri("<html><body></body></html>"));
             Size original = driver.window.size;
             driver.window.resize(Size(original.width - 50, original.height - 50));
@@ -85,7 +85,7 @@ version(integration)
     @Name("maximize enlarges window") @Serial
     unittest
     {
-        testWithBrowsers((driver) {
+        testAll((driver) {
             driver.go(dataUri("<html><body></body></html>"));
             driver.window.resize(Size(400, 400));
             driver.window.maximize();
@@ -98,7 +98,7 @@ version(integration)
     @Name("minimize hides document") @Serial
     unittest
     {
-        testWithBrowsers((driver) {
+        testAll((driver) {
             driver.go(dataUri("<html><body></body></html>"));
             driver.window.minimize();
             driver.execute!bool("return document.hidden;").should == true;
@@ -108,7 +108,7 @@ version(integration)
     @Name("handles returns window list") @Serial
     unittest
     {
-        testWithBrowsers((driver) {
+        testAll((driver) {
             driver.go(dataUri("<html><body></body></html>"));
             driver.window.handles.length.shouldBeGreaterThan(0);
         });

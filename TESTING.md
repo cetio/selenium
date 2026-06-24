@@ -21,7 +21,7 @@ Browsers that cannot be found are skipped with a console message.
 | `tests.driver.frame` | `By` strategy serialization, frame switching by index/element/parent/top. |
 | `tests.driver.script` | JavaScript execution, argument passing, return type coercion, script error handling. |
 | `tests.driver.window` | Element ID parsing, window title, handles, resize, maximize, minimize. |
-| `tests.common` | Shared helpers: `dataUri`, `testWithBrowsers`, and the integration-test `configs` initializer. |
+| `tests.common` | Shared helpers: `dataUri`, `testAll`, and the integration-test `configs` initializer. |
 
 ## Running Tests
 
@@ -80,7 +80,7 @@ version(integration)
     import tests.common;
 
     @Name("click updates button text") @Serial
-    unittest { testWithBrowsers((driver) { ... }); }
+    unittest { testAll((driver) { ... }); }
 }
 ```
 

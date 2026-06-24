@@ -35,7 +35,7 @@ version(integration)
     @Name("execute returns document title") @Serial
     unittest
     {
-        testWithBrowsers((driver) {
+        testAll((driver) {
             driver.go(dataUri("<html><title>ScriptTest</title><body></body></html>"));
             driver.execute!string("return document.title;").should == "ScriptTest";
         });
@@ -44,7 +44,7 @@ version(integration)
     @Name("execute returns element count") @Serial
     unittest
     {
-        testWithBrowsers((driver) {
+        testAll((driver) {
             driver.go(dataUri("<html><body><p id='count'>3</p></body></html>"));
             driver.execute!long("return document.getElementsByTagName('p').length;").should == 1;
         });
@@ -53,7 +53,7 @@ version(integration)
     @Name("execute returns boolean") @Serial
     unittest
     {
-        testWithBrowsers((driver) {
+        testAll((driver) {
             driver.go(dataUri("<html><body></body></html>"));
             driver.execute!bool("return true;").should == true;
         });
@@ -62,7 +62,7 @@ version(integration)
     @Name("execute returns element") @Serial
     unittest
     {
-        testWithBrowsers((driver) {
+        testAll((driver) {
             driver.go(dataUri("<html><body><a id='link'>test</a></body></html>"));
             driver.execute!Element("return document.getElementById('link');").tagName.should == "a";
         });
@@ -71,7 +71,7 @@ version(integration)
     @Name("execute passes arguments") @Serial
     unittest
     {
-        testWithBrowsers((driver) {
+        testAll((driver) {
             driver.go(dataUri("<html><body></body></html>"));
             driver.execute!string(
                 "return arguments[0] + arguments[1];",
@@ -83,7 +83,7 @@ version(integration)
     @Name("execute throws on script error") @Serial
     unittest
     {
-        testWithBrowsers((driver) {
+        testAll((driver) {
             driver.go(dataUri("<html><body></body></html>"));
             driver.execute("return nonExistentFunction();").shouldThrow!JavaScriptException;
         });
@@ -92,7 +92,7 @@ version(integration)
     @Name("execute returns string array") @Serial
     unittest
     {
-        testWithBrowsers((driver) {
+        testAll((driver) {
             driver.go(dataUri("<html><body></body></html>"));
             string[] arr = driver.execute!(string[])("return ['zero', 'one', 'two'];");
             arr.length.should == 3;

@@ -57,7 +57,25 @@ version(integration)
         }
     }
 
-    void testWithBrowsers(void delegate(Driver driver) dg)
+    void testOnce(string browserName, void delegate(Driver driver) dg, bool fallback = true)
+    {
+        foreach (config; configs)
+        {
+            if (config.browser.name != browserName)
+                continue;
+                
+            Driver driver;
+            driver = Driver.start(config.bridge, config.browser, null);
+            scope (exit) driver.stop();
+            dg(driver);
+            return;
+        }
+
+        if (fallback)
+            testOnce(configs[0].browser.name, dg, false);
+    }
+
+    void testAll(void delegate(Driver driver) dg)
     {
         foreach (config; configs)
         {
