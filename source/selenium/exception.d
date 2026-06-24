@@ -88,6 +88,18 @@ class NoSuchFrameException : WebDriverException
     mixin basicExceptionCtors;
 }
 
+/// The element does not have a shadow root.
+class NoSuchShadowRootException : WebDriverException
+{
+    mixin basicExceptionCtors;
+}
+
+/// The referenced shadow root is no longer attached to the DOM.
+class DetachedShadowRootException : WebDriverException
+{
+    mixin basicExceptionCtors;
+}
+
 /// An asynchronous script did not complete within the script timeout.
 class ScriptTimeoutException : WebDriverException
 {
@@ -175,6 +187,10 @@ static WebDriverException mapException(JSONValue json)
                     return new NoSuchWindowException(message);
                 case "no such frame":
                     return new NoSuchFrameException(message);
+                case "no such shadow root":
+                    return new NoSuchShadowRootException(message);
+                case "detached shadow root":
+                    return new DetachedShadowRootException(message);
                 case "script timeout":
                     return new ScriptTimeoutException(message);
                 case "unknown command":

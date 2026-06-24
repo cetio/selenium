@@ -27,6 +27,8 @@ class Bridge
 package(selenium):
     /// The capability key identifying a W3C element reference in payloads.
     enum string W3C_KEY = "element-6066-11e4-a52e-4f735466cecf";
+    /// The capability key identifying a W3C shadow root reference in payloads.
+    enum string SHADOW_KEY = "shadow-6066-11e4-a52e-4f735466cecf";
 
     /// Last implicit wait pushed to the server, in milliseconds.
     int syncImplicit;
@@ -296,6 +298,48 @@ public:
         {
             foreach (item; value.array)
                 ret ~= parseElementId(item);
+        }
+
+        return ret;
+    }
+
+    /**
+     * Extracts a single shadow root reference from a response.
+     *
+     * Params:
+     *  json = The response value or envelope.
+     *
+     * Returns:
+     *  The shadow root reference, or null if none is present.
+     */
+    static string parseShadowId(JSONValue json)
+    {
+        JSONValue value = (json.type == JSONType.object && "value" in json) ? json["value"] : json;
+
+        if (value.type == JSONType.object && SHADOW_KEY in value && value[SHADOW_KEY].type == JSONType.string)
+            return value[SHADOW_KEY].str;
+
+        return null;
+    }
+
+    /**
+     * Extracts every shadow root reference from an array response.
+     *
+     * Params:
+     *  json = The response value or envelope wrapping an array.
+     *
+     * Returns:
+     *  The shadow root references in order, or an empty array if none are present.
+     */
+    static string[] parseShadowIds(JSONValue json)
+    {
+        JSONValue value = (json.type == JSONType.object && "value" in json) ? json["value"] : json;
+        string[] ret;
+
+        if (value.type == JSONType.array)
+        {
+            foreach (item; value.array)
+                ret ~= parseShadowId(item);
         }
 
         return ret;

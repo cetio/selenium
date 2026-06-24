@@ -12,3 +12,4 @@ public import selenium.driver.logger;
 public import selenium.bridge;
 public import selenium.element;
 public import selenium.exception;
+public import selenium.root;

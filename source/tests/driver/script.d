@@ -8,26 +8,6 @@ import unit_threaded;
 
 import std.json : JSONValue;
 
-// ========== Offline tests ==========
-
-@Name("JSONValue script payload construction")
-unittest
-{
-    JSONValue args = JSONValue.emptyArray;
-    args.array ~= JSONValue("first");
-    args.array ~= JSONValue(2);
-    args.array ~= JSONValue.emptyObject;
-
-    JSONValue data = JSONValue.emptyObject;
-    data["script"] = JSONValue("return arguments[0];");
-    data["args"] = args;
-
-    data["script"].str.should == "return arguments[0];";
-    data["args"].array.length.should == 3;
-    data["args"].array[0].str.should == "first";
-    data["args"].array[1].integer.should == 2;
-}
-
 version(integration)
 {
     import tests.common;

@@ -4,6 +4,7 @@ module selenium.driver;
 import selenium.bridge : Bridge;
 import selenium.browser : Browser;
 import selenium.element : By, Element, Size;
+import selenium.root : Root, RootState, RootType;
 import selenium.driver.logger : Logger;
 import std.json : JSONValue;
 import std.net.curl : HTTP;
@@ -136,8 +137,90 @@ class Driver
     void refresh() => bridge.request!void(id, HTTP.Method.post, "/refresh");
 
     /// The element that currently has focus.
-    Element activeElement() 
+    Element activeElement()
         => new Element(this, Bridge.parseElementId(bridge.request(id, HTTP.Method.get, "/element/active")));
+
+    /// The primary document root.
+    Root root()
+        => new Root(this, null, RootType.Primary, RootState.Complete);
+
+    /**
+     * All searchable roots in the current browsing context.
+     *
+     * Requires JavaScript execution. The primary document is always first.
+     * Shadow roots and iframes are discovered by traversing the DOM.
+     */
+    Root[] roots()
+    {
+        bridge.ensureTimeoutsSynced(id, browser);
+
+        JSONValue result = execute!JSONValue(`
+            var UNINITIALIZED = 1, LOADING = 2, LOADED = 4, INTERACTIVE = 8, COMPLETE = 16, OPEN = 32, CLOSED = 64;
+            function stateFromDoc(doc) {
+                switch (doc.readyState) {
+                    case "uninitialized": return UNINITIALIZED;
+                    case "loading": return LOADING;
+                    case "interactive": return INTERACTIVE;
+                    case "complete": return COMPLETE;
+                    default: return UNINITIALIZED;
+                }
+            }
+            var roots = [];
+            roots.push({type: 0, state: stateFromDoc(document)});
+            var iframes = document.querySelectorAll("iframe");
+            for (var i = 0; i < iframes.length; i++) {
+                var fs = UNINITIALIZED;
+                try { fs = iframes[i].contentDocument ? stateFromDoc(iframes[i].contentDocument) : UNINITIALIZED; }
+                catch (e) { fs = UNINITIALIZED; }
+                roots.push({type: 1, state: fs, ref: iframes[i]});
+            }
+            function walk(node) {
+                if (node.shadowRoot) {
+                    var sr = node.shadowRoot;
+                    var ss = (sr.mode === "open" ? OPEN : CLOSED) | stateFromDoc(sr.ownerDocument);
+                    roots.push({type: 2, state: ss, ref: sr});
+                    walk(sr);
+                }
+                if (node.children) {
+                    for (var i = 0; i < node.children.length; i++) walk(node.children[i]);
+                }
+            }
+            walk(document.documentElement);
+            return roots;
+        `);
+
+        Root[] ret;
+        foreach (item; result.array)
+        {
+            int typeInt = cast(int)item["type"].integer;
+            uint stateInt = cast(uint)item["state"].integer;
+
+            RootType rootType;
+            string rootId;
+
+            switch (typeInt)
+            {
+                case 0:
+                    rootType = RootType.Primary;
+                    break;
+                case 1:
+                    rootType = RootType.Embedded;
+                    JSONValue refValue = item["ref"];
+                    rootId = Bridge.parseElementId(refValue);
+                    break;
+                case 2:
+                    rootType = RootType.Shadow;
+                    JSONValue refValue = item["ref"];
+                    rootId = Bridge.parseShadowId(refValue);
+                    break;
+                default:
+                    continue;
+            }
+
+            ret ~= new Root(this, rootId, rootType, cast(RootState)stateInt);
+        }
+        return ret;
+    }
 
     /**
      * Finds the first element matching the locator.

@@ -3,6 +3,7 @@ module selenium.element;
 
 import selenium.bridge : Bridge;
 import selenium.driver : Driver;
+import selenium.root : Root, RootState, RootType;
 
 import std.array : join;
 import std.conv : to;
@@ -182,6 +183,19 @@ public:
         foreach (eid; Bridge.parseElementIds(resp))
             ret ~= new Element(driver, eid);
         return ret;
+    }
+
+    /**
+     * Returns the shadow root attached to this element, if any.
+     *
+     * Throws:
+     *  NoSuchShadowRootException if the element does not have a shadow root.
+     */
+    Root shadowRoot()
+    {
+        JSONValue resp = driver.bridge.request(driver.id, HTTP.Method.get, path("/shadow"));
+        string shadowId = Bridge.parseShadowId(resp);
+        return new Root(driver, shadowId, RootType.Shadow, RootState.Open | RootState.Complete);
     }
 
     /// Serializes the element into the W3C element reference object.
