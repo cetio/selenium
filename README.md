@@ -1,6 +1,6 @@
 # Selenium
 
-[![License](https://img.shields.io/badge/License-AGPL%20v3-blue)](LICENSE.txt)
+[![License](https://img.shields.io/badge/License-Apache%202.0-blue)](LICENSE.txt)
 [![DUB Package](https://img.shields.io/badge/dub-package-red)](https://code.dlang.org/packages/selenium)
 
 > [!CAUTION]
@@ -53,4 +53,4 @@ Contributions are welcome. Please read [CONTRIBUTING.md](CONTRIBUTING.md) for gu
 
 ## License
 
-Selenium is licensed under [AGPL-3.0](LICENSE.txt).
+Selenium is licensed under [Apache-2.0](LICENSE.txt).

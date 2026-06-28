@@ -60,4 +60,4 @@ See [TESTING.md](TESTING.md) for browser configuration, naming, filtering, and d
 
 ## License
 
-By contributing, you agree that your contributions are licensed under the same license as Selenium ([AGPL-3.0](LICENSE.txt)).
+By contributing, you agree that your contributions are licensed under the same license as Selenium ([Apache-2.0](LICENSE.txt)).
