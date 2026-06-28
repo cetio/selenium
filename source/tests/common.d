@@ -40,8 +40,10 @@ version(integration)
         Firefox firefox = new Firefox();
         if (firefox.isInstalled)
         {
+            firefox.args = ["--headless"];
+
             configs ~= TestConfig(
-                firefox, 
+                firefox,
                 Bridge.start(firefox.resolveBinary(), ["--log", "fatal"])
             );
         }
