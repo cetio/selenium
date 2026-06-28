@@ -1,31 +1,33 @@
-# Selenium SDK
+# Selenium
 
 [![License](https://img.shields.io/badge/License-AGPL%20v3-blue)](LICENSE.txt)
-[![DUB Package](https://img.shields.io/badge/dub-package-red?link=https%3A%2F%2Fcode.dlang.org%2Fpackages%2Fselenium-sdk)](https://code.dlang.org/packages/selenium-sdk)
+[![DUB Package](https://img.shields.io/badge/dub-package-red)](https://code.dlang.org/packages/selenium)
 
-Selenium SDK is a D SDK for browser automation over the WebDriver protocol. It manages the driver lifecycle, sessions, element interaction, script execution, and browser capabilities natively, without external language bindings. The API mirrors the Selenium Ruby bindings so it stays familiar to anyone who has used Selenium before.
+> [!CAUTION]
+>
+> At the time of writing this, some documentation and information (ie: about subpackages and availability) reflect changes that are not yet fully live!
+>
+> Subpackages are not live in source code, Dub still reflects prior Selenium-SDK naming, and many changes are only visible here.
 
-## Features
+Selenium is a native D implementation of the W3C WebDriver protocol. It drives Chrome, Firefox, Edge, and Safari directly over HTTP, with no external language bindings or C wrappers. The API often mirrors the Selenium Ruby bindings, so anyone who has used Selenium before will find it familiar.
 
-- **Driver lifecycle** for Chrome, Firefox, Edge, and Safari, with automatic WebDriver detection on `PATH`.
-- **Navigation and inspection** of page URL, title, source, and screenshots.
-- **Element search and interaction** by CSS, XPath, tag name, and link text, globally or scoped to an element.
-- **Script execution** with typed return values.
-- **Window, tab, and frame management.**
-- **Browser capabilities** configured through dedicated classes per browser.
-- **Sessions and connections** managed by a low-level bridge, including remote endpoints and multiple sessions per process.
+A `Driver` is a handle to one session, and a `Bridge` is the connection that owns the WebDriver process. Unlike most clients, a bridge can host several sessions at once, and each driver is a handle to one of them.
 
-## Documentation
+## Packages
 
-| Document | Contents |
+| Package | Contents |
 | --- | --- |
-| [Quick Start](docs/QUICK_START.md) | Install, configure a browser, and drive a session. |
-| [Testing](TESTING.md) | Offline and integration testing workflow and conventions. |
-| [Contributing](CONTRIBUTING.md) | How to report issues and submit changes. |
+| `selenium:webdriver` | Bridge, driver, browser capabilities, elements, roots, cookies, logging. |
+| `selenium:grid` | Hub, node, slot and session models, HTTP routing. |
 
-## Getting Started
+Add either or both with DUB:
 
-Add the package to your project with `dub add selenium-sdk`, then install a WebDriver server (`chromedriver`, `geckodriver`, `msedgedriver`, or `safaridriver`) and make sure it is on your `PATH`. The [Quick Start](docs/QUICK_START.md) walks through a complete first session.
+```sh
+dub add selenium:webdriver
+dub add selenium:grid
+```
+
+Both subpackages are included when you depend on the root `selenium` package.
 
 ## Supported Browsers
 
@@ -36,10 +38,19 @@ Add the package to your project with `dub add selenium-sdk`, then install a WebD
 | Edge | `msedgedriver` |
 | Safari | `safaridriver` |
 
+The library auto-detects the right driver for the browser you request, or picks the first one on `PATH` when you do not specify.
+
+## Documentation
+
+- [WebDriver](docs/webdriver/README.md) — Getting started, bridge, driver, elements.
+- [Grid](docs/grid/README.md) — Getting started with hub and node.
+- [Testing](TESTING.md) — Offline and integration test workflow.
+- [Contributing](CONTRIBUTING.md) — How to report issues and submit changes.
+
 ## Contributing
 
 Contributions are welcome. Please read [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines, and note that any new feature or bug fix is expected to ship with tests as described in [TESTING.md](TESTING.md).
 
 ## License
 
-Selenium SDK is licensed under [AGPL-3.0](LICENSE.txt).
+Selenium is licensed under [AGPL-3.0](LICENSE.txt).

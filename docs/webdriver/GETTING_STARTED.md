@@ -1,22 +1,16 @@
-# Quick Start
+# Getting Started (WebDriver)
 
-This guide gets you from an empty project to driving a real browser with general documentation and examples. This assumes to some extent that you are familiar with WebDriver and automation.
+This guide gets you from an empty project to driving a real browser with general documentation and examples.
 
 For the official Selenium WebDriver documentation and guides, see https://www.selenium.dev/documentation/webdriver/.
-
-For comparisons to Ruby's Selenium WebDriver, which this library takes significant inspiration from, see the [RUBY.md](./RUBY.md) comparison guide.
-
-For guides on
 
 ## Installation
 
 Add the package with DUB:
 
 ```sh
-dub add selenium-sdk
+dub add selenium
 ```
-
-You also need a WebDriver server on your `PATH`. The library auto-detects the right one for the browser you ask for.
 
 | Browser | WebDriver binary |
 | --- | --- |
@@ -24,6 +18,8 @@ You also need a WebDriver server on your `PATH`. The library auto-detects the ri
 | Firefox | `geckodriver` |
 | Edge | `msedgedriver` |
 | Safari | `safaridriver` |
+
+This package does not automatically install drivers if you do not have them, so ensure you have a WebDriver server on your `PATH`. The library auto-detects the right one for the browser you ask for. 
 
 The fastest possible start, letting the library pick the first installed driver on `PATH`:
 
@@ -36,6 +32,72 @@ scope (exit) driver.stop();
 driver.go("https://example.com");
 writeln(driver.title);
 ```
+
+## First script
+
+The official Selenium documentation breaks a script into eight basic components. Here is the same script in D and Ruby, side by side, so you can see how the API maps over.
+
+| Step | D | Ruby |
+| --- | --- | --- |
+| 1. Start the session | `Driver driver = Driver.start(new Chrome());` | `driver = Selenium::WebDriver.for :chrome` |
+| 2. Take action on browser | `driver.go("https://www.selenium.dev/selenium/web/web-form.html");` | `driver.get('https://www.selenium.dev/selenium/web/web-form.html')` |
+| 3. Request browser information | `string title = driver.title;` | `title = driver.title` |
+| 4. Establish waiting strategy | `chrome.timeouts.implicit = 500.msecs;` | `driver.manage.timeouts.implicit_wait = 500` |
+| 5. Find an element | `Element textBox = driver.find(By.tagName("my-text"));` | `text_box = driver.find_element(tag_name: 'my-text')` |
+| 6. Take action on element | `textBox.sendKeys("Selenium");` | `text_box.send_keys('Selenium')` |
+| 7. Request element information | `string text = message.text;` | `text = message.text` |
+| 8. End the session | `driver.stop();` | `driver.quit` |
+
+The complete script in D:
+
+```d
+import selenium;
+import selenium.browser.chrome : Chrome;
+import core.time : msecs;
+import std.stdio : writeln;
+
+Chrome chrome = new Chrome();
+chrome.timeouts.implicit = 500.msecs;
+
+Driver driver = Driver.start(chrome);
+scope (exit) driver.stop();
+
+driver.go("https://www.selenium.dev/selenium/web/web-form.html");
+writeln(driver.title);
+
+Element textBox = driver.find(By.tagName("my-text"));
+Element submitButton = driver.find(By.css("button"));
+
+textBox.sendKeys("Selenium");
+submitButton.click();
+
+Element message = driver.find(By.css("#message"));
+writeln(message.text);
+```
+
+The same script in Ruby:
+
+```ruby
+require 'selenium-webdriver'
+
+driver = Selenium::WebDriver.for :chrome
+driver.get('https://www.selenium.dev/selenium/web/web-form.html')
+puts driver.title
+
+driver.manage.timeouts.implicit_wait = 500
+text_box = driver.find_element(tag_name: 'my-text')
+submit_button = driver.find_element(css: 'button')
+
+text_box.send_keys('Selenium')
+submit_button.click
+
+message = driver.find_element(id: 'message')
+puts message.text
+
+driver.quit
+```
+
+The naming is deliberately close. `Driver.start` replaces `Selenium::WebDriver.for`, `driver.go` replaces `driver.get`, and `driver.find(By.css(...))` replaces `driver.find_element(css: ...)`. The main difference is that timeouts are set on the `Browser` before the session starts, not on the driver afterwards.
 
 ## Browsers
 
@@ -71,6 +133,20 @@ chrome.timeouts.implicit = 5.seconds;
 Driver driver = Driver.start(chrome);
 scope (exit) driver.stop();
 ```
+
+In Ruby the same configuration looks like:
+
+```ruby
+options = Selenium::WebDriver::Options.chrome
+options.binary = '/usr/bin/google-chrome'
+options.add_argument('--headless=new')
+options.add_argument('--disable-gpu')
+options.timeouts.implicit_wait = 500
+
+driver = Selenium::WebDriver.for :chrome, options: options
+```
+
+The D version sets fields directly on the `Chrome` object rather than chaining `add_argument` calls, but the capability names and values are the same.
 
 You can pass alternatives as a `firstMatch` list, and the server picks the first it can satisfy:
 
@@ -124,7 +200,9 @@ scope (exit) driver.stop();
 driver.go("https://example.com");
 ```
 
-To inspect the server status, call `bridge.status()` on the driver's bridge. The raw JSON can be parsed into `grid.server.model.GridStatus` when connecting to a grid hub.
+In Ruby, the equivalent is `Selenium::WebDriver.for :remote, url: 'http://grid.example.com:4444', capabilities: options`. The D version collapses the remote and local cases into `Driver.connect` and `Driver.start` respectively, both returning a `Driver`.
+
+To inspect the server status, call `bridge.status()` on the driver's bridge. The raw JSON can be parsed into `selenium.grid.server.model.GridStatus` when connecting to a grid hub.
 
 ### Navigation
 
@@ -154,6 +232,8 @@ Use a `By` locator with `find` for a single element or `findAll` for every match
 Element button = driver.find(By.css("#submit"));
 Element[] items = driver.findAll(By.xpath("//li[@class='item']"));
 ```
+
+In Ruby these are `driver.find_element(css: '#submit')` and `driver.find_elements(xpath: "//li[@class='item']")`. The `By` struct in D serves the same role as the keyword arguments in Ruby, but is explicit about the strategy.
 
 ### Scripts and windows
 
