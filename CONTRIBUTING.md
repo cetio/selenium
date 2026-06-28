@@ -45,6 +45,13 @@ Run integration tests locally when your change touches live behavior:
 dub test -c integration
 ```
 
+To test a specific subpackage only:
+
+```sh
+dub test :webdriver -c unittest
+dub test :grid -c integration
+```
+
 See [TESTING.md](TESTING.md) for browser configuration, naming, filtering, and debugging.
 
 ## Code Style

@@ -1,4 +1,4 @@
-module tests.driver.frame;
+module tests.webdriver.driver.frame;
 
 import selenium.driver : Driver;
 import selenium.element : By, Element;

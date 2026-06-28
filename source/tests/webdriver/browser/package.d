@@ -1,4 +1,4 @@
-module tests.browser;
+module tests.webdriver.browser;
 
 import selenium.browser : Browser, PageLoadStrategy, Platform, UnhandledPromptBehavior;
 import selenium.browser.chrome : Chrome;

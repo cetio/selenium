@@ -1,4 +1,4 @@
-module tests.driver.script;
+module tests.webdriver.driver.script;
 
 import selenium.driver : Driver;
 import selenium.element : Element;

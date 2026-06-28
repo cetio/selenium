@@ -1,4 +1,4 @@
-module tests.selenium.grid.server;
+module tests.grid.server;
 
 import selenium.grid.server.http;
 import selenium.grid.server.hub;

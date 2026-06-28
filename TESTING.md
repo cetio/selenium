@@ -16,12 +16,12 @@ Browsers that cannot be found are skipped with a console message.
 
 | Module | What it covers |
 | --- | --- |
-| `tests.browser` | Browser capability serialization, `fromJSONValue`/`toJSON` roundtrips, logging prefs, and driver argument generation. |
-| `tests.driver.element` | Element interaction: click, sendKeys, clear, find, nested find, cssValue, selected/enabled state, stale element handling. |
-| `tests.driver.frame` | `By` strategy serialization, frame switching by index/element/parent/top. |
-| `tests.driver.script` | JavaScript execution, argument passing, return type coercion, script error handling. |
-| `tests.driver.window` | Element ID parsing, window title, handles, resize, maximize, minimize. |
-| `tests.selenium.grid.server` | Grid model roundtrips, router path-parameter extraction, and hub/node endpoint dispatch. |
+| `tests.webdriver.browser` | Browser capability serialization, `fromJSONValue`/`toJSON` roundtrips, logging prefs, and driver argument generation. |
+| `tests.webdriver.driver.element` | Element interaction: click, sendKeys, clear, find, nested find, cssValue, selected/enabled state, stale element handling. |
+| `tests.webdriver.driver.frame` | `By` strategy serialization, frame switching by index/element/parent/top. |
+| `tests.webdriver.driver.script` | JavaScript execution, argument passing, return type coercion, script error handling. |
+| `tests.webdriver.driver.window` | Element ID parsing, window title, handles, resize, maximize, minimize. |
+| `tests.grid.server` | Grid model roundtrips, router path-parameter extraction, and hub/node endpoint dispatch. |
 | `tests.common` | Shared helpers: `dataUri`, `testAll`, and the integration-test `configs` initializer. |
 
 ## Running Tests
@@ -36,6 +36,15 @@ Run all tests including integration tests:
 
 ```sh
 dub test -c integration
+```
+
+Run tests for a specific subpackage:
+
+```sh
+dub test :webdriver -c unittest
+dub test :webdriver -c integration
+dub test :grid -c unittest
+dub test :grid -c integration
 ```
 
 Pass a name pattern after `--` to limit which tests execute:

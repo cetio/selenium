@@ -1,4 +1,4 @@
-module tests.driver.window;
+module tests.webdriver.driver.window;
 
 import selenium.bridge : Bridge;
 import selenium.driver : Driver;

@@ -20,7 +20,46 @@
 			"description": "WebDriver client: bridge, driver, browser capabilities, elements, and roots.",
 			"sourcePaths": ["source/selenium"],
 			"excludedSourceFiles": ["source/selenium/grid/**"],
-			"targetType": "library"
+			"targetType": "library",
+			"configurations": [
+				{
+					"name": "library",
+					"targetType": "library"
+				},
+				{
+					"name": "unittest",
+					"targetPath": "bin",
+					"targetType": "executable",
+					"sourcePaths": ["source/"],
+					"excludedSourceFiles": ["source/selenium/grid/**", "source/tests/grid/**"],
+					"preBuildCommands": [
+						"$DUB run --compiler=$$DC unit-threaded -c gen_ut_main -- -f bin/ut.d source/tests/webdriver"
+					],
+					"mainSourceFile": "bin/ut.d",
+					"buildOptions": ["unittests"],
+					"dependencies": {
+						"conductor": "~>2.1.2",
+						"unit-threaded": "~>2.2.0"
+					}
+				},
+				{
+					"name": "integration",
+					"targetPath": "bin",
+					"targetType": "executable",
+					"sourcePaths": ["source/"],
+					"excludedSourceFiles": ["source/selenium/grid/**", "source/tests/grid/**"],
+					"preBuildCommands": [
+						"$DUB run --compiler=$$DC unit-threaded -c gen_ut_main -- -f bin/ut.d source/tests/webdriver"
+					],
+					"mainSourceFile": "bin/ut.d",
+					"buildOptions": ["unittests"],
+					"versions": ["integration"],
+					"dependencies": {
+						"conductor": "~>2.1.2",
+						"unit-threaded": "~>2.2.0"
+					}
+				}
+			]
 		},
 		{
 			"name": "grid",
@@ -29,7 +68,46 @@
 			},
 			"description": "Selenium Grid server scaffolding: hub, node, models, and routing.",
 			"sourcePaths": ["source/selenium/grid"],
-			"targetType": "library"
+			"targetType": "library",
+			"configurations": [
+				{
+					"name": "library",
+					"targetType": "library"
+				},
+				{
+					"name": "unittest",
+					"targetPath": "bin",
+					"targetType": "executable",
+					"sourcePaths": ["source/"],
+					"excludedSourceFiles": ["source/tests/webdriver/**"],
+					"preBuildCommands": [
+						"$DUB run --compiler=$$DC unit-threaded -c gen_ut_main -- -f bin/ut.d source/tests/grid"
+					],
+					"mainSourceFile": "bin/ut.d",
+					"buildOptions": ["unittests"],
+					"dependencies": {
+						"conductor": "~>2.1.2",
+						"unit-threaded": "~>2.2.0"
+					}
+				},
+				{
+					"name": "integration",
+					"targetPath": "bin",
+					"targetType": "executable",
+					"sourcePaths": ["source/"],
+					"excludedSourceFiles": ["source/tests/webdriver/**"],
+					"preBuildCommands": [
+						"$DUB run --compiler=$$DC unit-threaded -c gen_ut_main -- -f bin/ut.d source/tests/grid"
+					],
+					"mainSourceFile": "bin/ut.d",
+					"buildOptions": ["unittests"],
+					"versions": ["integration"],
+					"dependencies": {
+						"conductor": "~>2.1.2",
+						"unit-threaded": "~>2.2.0"
+					}
+				}
+			]
 		}
 	],
 	"configurations": [
@@ -42,7 +120,7 @@
 			"name": "unittest",
 			"targetType": "executable",
 			"preBuildCommands": [
-				"$DUB run --compiler=$$DC unit-threaded -c gen_ut_main -- -f bin/ut.d"
+				"$DUB run --compiler=$$DC unit-threaded -c gen_ut_main -- -f bin/ut.d source/tests"
 			],
 			"mainSourceFile": "bin/ut.d",
 			"buildOptions": ["unittests"],
@@ -54,7 +132,7 @@
 			"name": "integration",
 			"targetType": "executable",
 			"preBuildCommands": [
-				"$DUB run --compiler=$$DC unit-threaded -c gen_ut_main -- -f bin/ut.d"
+				"$DUB run --compiler=$$DC unit-threaded -c gen_ut_main -- -f bin/ut.d source/tests"
 			],
 			"mainSourceFile": "bin/ut.d",
 			"buildOptions": ["unittests"],
