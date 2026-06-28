@@ -79,10 +79,25 @@ public:
     string address;
     /// Process id of a locally spawned driver.
     Pid pid;
-    /// Maximum number of concurrent sessions, or 0 for unlimited.
-    int capacity;
+    /// Maximum concurrent sessions, fixed at construction, or 0 for unlimited.
+    const int capacity;
     /// Active sessions keyed by session id, mapped to their negotiated browser.
     Browser[string] sessions;
+
+    /**
+     * Creates a bridge with the given session capacity.
+     *
+     * `capacity` is fixed at construction and cannot be changed afterwards. A
+     * remote bridge created through `Driver.connect` uses a capacity of 1 so
+     * that only the connecting session may use it.
+     *
+     * Params:
+     *  capacity = Maximum concurrent sessions, or 0 for unlimited.
+     */
+    this(int capacity = 0)
+    {
+        this.capacity = capacity;
+    }
 
     /// Stops the server and tears down all sessions on collection.
     ~this()
@@ -96,6 +111,7 @@ public:
      * Params:
      *  binary = Path to the driver executable.
      *  args = Extra command-line arguments forwarded to the executable.
+     *  capacity = Maximum concurrent sessions, or 0 for unlimited.
      *
      * Returns:
      *  A Bridge owning the spawned process.
@@ -104,35 +120,16 @@ public:
      *  InvalidArgumentException if binary is null.
      *  WebDriverConnectionException if the server does not become ready in time.
      */
-    static Bridge start(string binary, string[] args = null)
+    static Bridge start(string binary, string[] args = null, int capacity = 0)
     {
         if (binary == null)
             throw new InvalidArgumentException("Valid binary path must be provided.");
 
-        Bridge ret = new Bridge();
+        Bridge ret = new Bridge(capacity);
         ushort port = findFreePort();
         ret.pid = spawnProcess([binary, "--port="~port.to!string]~args);
         ret.address = "http://127.0.0.1:"~port.to!string;
         ret.waitForServer(5000);
-        return ret;
-    }
-
-    /**
-     * Connects to an already running WebDriver server.
-     *
-     * The returned Bridge does not own a process, so `stop` will not kill the
-     * remote server. This is the entry point for remote endpoints and grids.
-     *
-     * Params:
-     *  address = Base URL of the running server.
-     *
-     * Returns:
-     *  A Bridge attached to the remote server.
-     */
-    static Bridge connect(string address)
-    {
-        Bridge ret = new Bridge();
-        ret.address = address;
         return ret;
     }
 
@@ -197,6 +194,20 @@ public:
             pid = Pid.init;
         }
         sessions = null;
+    }
+
+    /// The server status from `GET /status`, as the raw parsed JSON.
+    ///
+    /// Any WebDriver server answers `/status` with a `{"value": ...}` envelope.
+    /// For a grid hub the value contains node and slot information; for a standalone
+    /// driver it contains readiness and a message. The raw JSON is returned so the
+    /// caller can parse it into `grid.server.model.GridStatus` or inspect it
+    /// directly, keeping `Bridge` decoupled from grid types.
+    JSONValue status()
+    {
+        HTTP http = HTTP();
+        Response response = send(http, HTTP.Method.get, address~"/status");
+        return checkAndParse(response);
     }
 
     /**

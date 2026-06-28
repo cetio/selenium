@@ -1,4 +1,4 @@
-/// A handle to a single WebDriver session and its navigation commands.
+/// A handle to a WebDriver session and its navigation commands.
 module selenium.driver;
 
 import selenium.bridge : Bridge;
@@ -9,7 +9,7 @@ import selenium.driver.logger : Logger;
 import std.json : JSONValue;
 import std.net.curl : HTTP;
 
-/// A handle to one WebDriver session living on a `Bridge`.
+/// A handle to a single WebDriver session.
 ///
 /// W3C and most clients treat a driver as 1:1 with a session, but that is not the
 /// shape here. A `Bridge` can own several sessions at once, and each Driver is a
@@ -101,6 +101,30 @@ class Driver
     /// Starts a session with a generic browser, letting the first driver on PATH win.
     static Driver start()
         => start(new Browser());
+
+    /**
+     * Connects to a remote WebDriver server or grid and starts a session on it.
+     *
+     * The created `Bridge` has a capacity of 1, so only this driver's session may
+     * use it. The bridge does not own a process, so `stop` will not kill the remote
+     * server. This is the entry point for remote endpoints and grids, mirroring
+     * Ruby's `RemoteWebDriver`.
+     *
+     * Params:
+     *  address = Base URL of the running server.
+     *  alwaysMatch = The required browser capabilities.
+     *  firstMatch = Alternative capability sets the server may pick from.
+     *  logger = The logger to attach, or null to create a default one.
+     *
+     * Returns:
+     *  A driver bound to a session on the remote server.
+     */
+    static Driver connect(string address, Browser alwaysMatch, Browser[] firstMatch = null, Logger logger = null)
+    {
+        Bridge bridge = new Bridge(1);
+        bridge.address = address;
+        return start(bridge, alwaysMatch, firstMatch, logger);
+    }
 
     /// Ends this session, leaving the bridge and its other sessions intact.
     void stop()

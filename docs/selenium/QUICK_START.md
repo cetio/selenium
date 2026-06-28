@@ -76,36 +76,51 @@ Driver driver = Driver.start(new Chrome(), [new Firefox()]);
 
 ## Bridge
 
-A `Bridge` is the low-level host that owns a WebDriver process or remote connection and manages every session on it. You usually do not touch it directly: `Driver.start` spawns one for you. Reach for a `Bridge` when you want to run multiple sessions over one process, cap concurrency, or attach to a remote endpoint.
+A `Bridge` is the low-level host that owns a WebDriver process or remote connection and manages every session on it. You usually do not touch it directly: `Driver.start` spawns one for you. Reach for a `Bridge` when you want to run multiple sessions over one process or cap concurrency. To attach to a remote server or grid, use `Driver.connect`.
 
 Unlike most clients, a driver and a session are not strictly 1:1 here. A single `Bridge` can host many sessions, and each `Driver` is a handle to one of them.
 
 | Member | Purpose |
 | --- | --- |
-| `Bridge.start(binary, args)` | Spawn a local driver process on a free port. |
-| `Bridge.connect(address)` | Attach to an already running server (remote or grid). |
-| `capacity` | Maximum concurrent sessions, or `0` for unlimited. |
+| `Bridge.start(binary, args, capacity)` | Spawn a local driver process on a free port. |
+| `capacity` | Maximum concurrent sessions, fixed at construction, or `0` for unlimited. |
 | `sessions` | Active sessions keyed by id. |
+| `status()` | Server status from `GET /status`, as raw JSON. |
 | `stop()` | Kill a spawned process and drop all sessions. |
 
 ```d
 import selenium;
 
 // Share one driver process across two sessions.
-Bridge bridge = Bridge.start(new Chrome().resolveBinary());
-bridge.capacity = 2;
+Bridge bridge = Bridge.start(new Chrome().resolveBinary(), null, 2);
 
 Driver first = Driver.start(bridge, new Chrome(), null);
 Driver second = Driver.start(bridge, new Chrome(), null);
 ```
 
-A `Bridge` created by `Bridge.start` owns its process and tears it down on collection. One created by `Bridge.connect` does not, so `stop` will not kill a remote server.
+A `Bridge` created by `Bridge.start` owns its process and tears it down on collection. A remote bridge created through `Driver.connect` does not, so `stop` will not kill the remote server.
 
 ## Driver
 
 The `Driver` is the primary way you use Selenium SDK. It wraps a single session and exposes a convenient API over the browser. Calls aim for high parity with the W3C specification and the Selenium Ruby bindings.
 
 Stopping a driver ends only its own session and leaves the bridge alive for any others.
+
+### Remote connections
+
+`Driver.connect` attaches to an already running WebDriver server or grid hub and starts a session on it. The backing `Bridge` has a capacity of 1, so only this driver's session may use it. The bridge does not own a process, so `stop` will not kill the remote server.
+
+```d
+import selenium;
+import selenium.browser.chrome : Chrome;
+
+Driver driver = Driver.connect("http://grid.example.com:4444", new Chrome());
+scope (exit) driver.stop();
+
+driver.go("https://example.com");
+```
+
+To inspect the server status, call `bridge.status()` on the driver's bridge. The raw JSON can be parsed into `grid.server.model.GridStatus` when connecting to a grid hub.
 
 ### Navigation
 

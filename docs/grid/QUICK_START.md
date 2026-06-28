@@ -1,6 +1,6 @@
 # Grid Quick Start
 
-The `grid` package is the Selenium Grid server side of the SDK. It is a standalone top-level package (`import grid;`) separate from the `selenium` WebDriver client, so the two can evolve independently. A grid client surface is intentionally absent for now and will eventually grow inside `selenium.bridge` rather than here.
+The `grid` package is the Selenium Grid server side of the SDK. It is a standalone top-level package (`import grid;`) separate from the `selenium` WebDriver client, so the two can evolve independently. A grid client surface is growing inside `selenium.driver` and `selenium.bridge`: `Driver.connect` attaches to a remote server or grid hub and starts a session, and `Bridge.status` fetches the `/status` payload as raw JSON, which can be parsed into `GridStatus` without coupling `Bridge` to grid types.
 
 The grid server is a scaffold. The data models, hub and node structure, and routing are in place, but a live HTTP server loop is not yet wired. This guide covers what is available today. For the WebDriver client see [../selenium/QUICK_START.md](../selenium/QUICK_START.md), for the testing workflow see [../../TESTING.md](../../TESTING.md), and for contribution guidelines see [../../CONTRIBUTING.md](../../CONTRIBUTING.md).
 
