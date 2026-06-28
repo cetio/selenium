@@ -74,7 +74,7 @@ public:
      * Registers or refreshes a node in the registry.
      *
      * Forward-thinking seam for the node registration endpoint. The live heartbeat
-     * that calls this from a node is not yet wired.
+     * that calls this from a node is not yet wired. (TODO)
      *
      * Params:
      *  node = The node status to record, keyed by its `id`.

@@ -118,6 +118,7 @@
 		},
 		{
 			"name": "unittest",
+			"targetPath": "bin",
 			"targetType": "executable",
 			"preBuildCommands": [
 				"$DUB run --compiler=$$DC unit-threaded -c gen_ut_main -- -f bin/ut.d source/tests"
@@ -130,6 +131,7 @@
 		},
 		{
 			"name": "integration",
+			"targetPath": "bin",
 			"targetType": "executable",
 			"preBuildCommands": [
 				"$DUB run --compiler=$$DC unit-threaded -c gen_ut_main -- -f bin/ut.d source/tests"

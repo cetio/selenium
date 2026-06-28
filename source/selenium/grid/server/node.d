@@ -119,7 +119,7 @@ package:
             return Response.error(403, "Forbidden", "unknown command", "Invalid registration secret.");
 
         // Forward-thinking: mark availability draining and reject new sessions
-        // once the live server loop is attached.
+        // once the live server loop is attached. (TODO)
         return Response.okValue(JSONValue.emptyObject);
     }
 
