@@ -1,5 +1,5 @@
 /// Grid status, node, slot, and session data models for the wire envelope.
-module grid.server.model;
+module selenium.grid.server.model;
 
 import std.json : JSONValue, JSONType;
 

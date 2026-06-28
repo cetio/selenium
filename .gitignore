@@ -4,6 +4,6 @@ __dummy.html
 *.o
 *.obj
 *.a
-selenium-sdk*
 plans/*
-bin/
+bin/*
+!bin/.gitkeep

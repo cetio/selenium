@@ -1,8 +1,8 @@
 /// The grid hub: request router, node registry, and session ownership map.
-module grid.server.hub;
+module selenium.grid.server.hub;
 
-import grid.server.http;
-import grid.server.model;
+import selenium.grid.server.http;
+import selenium.grid.server.model;
 
 import std.conv : to;
 import std.json : JSONValue;

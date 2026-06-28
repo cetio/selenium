@@ -1,5 +1,5 @@
 /// Server-side HTTP request and response primitives and the route dispatch seam.
-module grid.server.http;
+module selenium.grid.server.http;
 
 import std.json : JSONValue;
 import std.string : split;

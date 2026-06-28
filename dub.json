@@ -8,8 +8,30 @@
 	},
 	"description": "Browser automation with WebDriver lifecycle, element interaction, JavaScript execution, and multi-browser support.",
 	"license": "AGPL-3.0",
-	"name": "selenium-sdk",
+	"name": "selenium",
+	"targetPath": "bin",
 	"targetType": "library",
+	"subPackages": [
+		{
+			"name": "webdriver",
+			"dependencies": {
+				"conductor": "~>2.1.2"
+			},
+			"description": "WebDriver client: bridge, driver, browser capabilities, elements, and roots.",
+			"sourcePaths": ["source/selenium"],
+			"excludedSourceFiles": ["source/selenium/grid/**"],
+			"targetType": "library"
+		},
+		{
+			"name": "grid",
+			"dependencies": {
+				"selenium:webdriver": "~>1.1"
+			},
+			"description": "Selenium Grid server scaffolding: hub, node, models, and routing.",
+			"sourcePaths": ["source/selenium/grid"],
+			"targetType": "library"
+		}
+	],
 	"configurations": [
 		{
 			"name": "library",

@@ -1,9 +1,9 @@
-module tests.grid.server;
+module tests.selenium.grid.server;
 
-import grid.server.http;
-import grid.server.hub;
-import grid.server.model;
-import grid.server.node;
+import selenium.grid.server.http;
+import selenium.grid.server.hub;
+import selenium.grid.server.model;
+import selenium.grid.server.node;
 
 import selenium.browser : Browser;
 import selenium.browser.chrome : Chrome;

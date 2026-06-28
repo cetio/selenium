@@ -1,4 +1,4 @@
 /// Selenium Grid library for server support and remote session management.
-module grid;
+module selenium.grid;
 
-public import grid.server;
+public import selenium.grid.server;

@@ -1,8 +1,8 @@
 /// The grid node: slot host composing WebDriver bridges and node endpoints.
-module grid.server.node;
+module selenium.grid.server.node;
 
-import grid.server.http;
-import grid.server.model;
+import selenium.grid.server.http;
+import selenium.grid.server.model;
 
 import selenium.browser : Browser;
 import selenium.bridge : Bridge;
