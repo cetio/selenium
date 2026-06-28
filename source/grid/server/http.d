@@ -1,10 +1,4 @@
 /// Server-side HTTP request and response primitives and the route dispatch seam.
-///
-/// The Router is the forward-thinking seam between endpoint logic and transport:
-/// a future socket accept loop parses incoming bytes into a `Request`, hands it
-/// to `Router.dispatch`, and writes the returned `Response`. Every grid endpoint
-/// is registered as a handler on the router, so the endpoint surface can be
-/// exercised and tested without any live sockets.
 module grid.server.http;
 
 import std.json : JSONValue;

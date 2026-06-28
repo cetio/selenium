@@ -1,4 +1,4 @@
-/// Selenium Grid server support: hub and node scaffolding with status models.
+/// Selenium Grid library for server support and remote session management.
 module grid;
 
 public import grid.server;
