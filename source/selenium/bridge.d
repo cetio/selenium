@@ -4,12 +4,12 @@ module selenium.bridge;
 import selenium.browser : Browser;
 import selenium.exception;
 
-import conductor.http : Response, send;
 import conductor.serialize.json : fromJSON;
+
+import requests;
 
 import std.json : JSONType, JSONValue, parseJSON;
 import std.conv : to;
-import std.net.curl : HTTP;
 import std.process : kill, Pid, spawnProcess;
 import std.socket;
 import core.thread : Thread;
@@ -66,7 +66,7 @@ package (selenium):
             data["script"] = JSONValue(scriptTimeout);
         try
         {
-            request(id, HTTP.Method.post, "/timeouts", data);
+            post(id, "/timeouts", data);
             syncImplicit = implicitTimeout;
             syncPage = pageTimeout;
             syncScript = scriptTimeout;
@@ -150,8 +150,9 @@ public:
         if (capacity > 0 && sessions.length >= capacity)
             throw new WebDriverConnectionException("Bridge capacity exceeded.");
 
-        HTTP http = HTTP();
-        Response response = send(http, HTTP.Method.post, address~"/session", payload);
+        Request req = Request();
+        req.addHeaders(["Content-Type": "application/json"]);
+        Response response = req.post(address~"/session", payload.toString());
         JSONValue json = checkAndParse(response);
 
         string id;
@@ -180,7 +181,7 @@ public:
     void closeSession(string id)
     {
         try
-            request(id, HTTP.Method.del, "");
+            del(id, "");
         catch (Exception) { }
         sessions.remove(id);
     }
@@ -205,63 +206,60 @@ public:
     /// directly, keeping `Bridge` decoupled from grid types.
     JSONValue status()
     {
-        HTTP http = HTTP();
-        Response response = send(http, HTTP.Method.get, address~"/status");
+        Request req = Request();
+        Response response = req.get(address~"/status");
         return checkAndParse(response);
     }
 
-    /**
-     * Issues a parameterless command against a session and parses the result.
-     *
-     * A POST without a body is redirected to send an empty JSON object. W3C
-     * requires a JSON body on POST, and modern drivers reject a missing body with
-     * "missing command parameters", so this keeps parameterless POSTs compliant.
-     *
-     * Params:
-     *  id = The target session id.
-     *  method = The HTTP method.
-     *  path = The session-relative endpoint path.
-     *
-     * Returns:
-     *  The parsed result as T, or the raw JSONValue when T is JSONValue.
-     */
-    T request(T = JSONValue)(string id, HTTP.Method method, string path)
+    /// Issues a GET against a session and parses the result.
+    T get(T = JSONValue)(string id, string path)
     {
-        if (method == HTTP.Method.post)
-            return request!T(id, method, path, JSONValue.emptyObject);
-
-        HTTP http = HTTP();
-        Response response = send(http, method, address~"/session/"~id~path);
-        JSONValue json = checkAndParse(response);
-
-        static if (is(T == JSONValue))
-            return json;
-        else static if (!is(T == void))
-            return unwrapAndParse!T(json);
+        Request req = Request();
+        return parseResponse!T(req.get(address~"/session/"~id~path));
     }
 
-    /**
-     * Issues a command with a request body against a session and parses the result.
-     *
-     * Params:
-     *  id = The target session id.
-     *  method = The HTTP method.
-     *  path = The session-relative endpoint path.
-     *  data = The request body, serialized to JSON.
-     *
-     * Returns:
-     *  The parsed result as T, or the raw JSONValue when T is JSONValue.
-     */
-    T request(T = JSONValue, D)(string id, HTTP.Method method, string path, D data)
+    /// Issues a parameterless POST against a session, sending an empty JSON object.
+    T post(T = JSONValue)(string id, string path)
     {
-        HTTP http = HTTP();
-        Response response = send(http, method, address~"/session/"~id~path, data);
-        JSONValue json = checkAndParse(response);
+        return post!T(id, path, JSONValue.emptyObject);
+    }
 
-        static if (is(T == JSONValue))
-            return json;
-        else static if (!is(T == void))
-            return unwrapAndParse!T(json);
+    /// Issues a POST with a JSONValue body against a session and parses the result.
+    T post(T = JSONValue)(string id, string path, JSONValue data)
+    {
+        Request req = Request();
+        req.addHeaders(["Content-Type": "application/json"]);
+        return parseResponse!T(req.post(address~"/session/"~id~path, data.toString()));
+    }
+
+    /// Issues a POST with a raw string body against a session, without forcing a content type.
+    T post(T = JSONValue)(string id, string path, string data)
+    {
+        Request req = Request();
+        return parseResponse!T(req.post(address~"/session/"~id~path, data));
+    }
+
+    /// Issues a PUT with a JSONValue body against a session and parses the result.
+    T put(T = JSONValue)(string id, string path, JSONValue data)
+    {
+        Request req = Request();
+        req.addHeaders(["Content-Type": "application/json"]);
+        return parseResponse!T(req.put(address~"/session/"~id~path, data.toString()));
+    }
+
+    /// Issues a PATCH with a JSONValue body against a session and parses the result.
+    T patch(T = JSONValue)(string id, string path, JSONValue data)
+    {
+        Request req = Request();
+        req.addHeaders(["Content-Type": "application/json"]);
+        return parseResponse!T(req.patch(address~"/session/"~id~path, data.toString()));
+    }
+
+    /// Issues a DELETE against a session and parses the result.
+    T del(T = JSONValue)(string id, string path)
+    {
+        Request req = Request();
+        return parseResponse!T(req.deleteRequest(address~"/session/"~id~path));
     }
 
     /**
@@ -366,24 +364,34 @@ public:
     }
 
 private:
+    /// Parses a response into T, unwrapping the W3C value envelope when T is not JSONValue.
+    static T parseResponse(T)(Response response)
+    {
+        JSONValue json = checkAndParse(response);
+        static if (is(T == JSONValue))
+            return json;
+        else static if (!is(T == void))
+            return unwrapAndParse!T(json);
+    }
+
     /// Parses a response body and converts an HTTP error status into an exception.
     static JSONValue checkAndParse(Response response)
     {
-        if (response.content.length == 0)
+        if (response.toString().length == 0)
             return JSONValue.emptyObject;
 
         JSONValue ret;
         try
-            ret = parseJSON(cast(string)response.content);
+            ret = parseJSON(response.toString());
         catch (Exception)
         {
-            if (response.status >= 200 && response.status < 300)
+            if (response.code >= 200 && response.code < 300)
                 return JSONValue.emptyObject;
 
-            throw new WebDriverConnectionException("Invalid response from server:"~cast(string)response.content);
+            throw new WebDriverConnectionException("Invalid response from server:"~response.toString());
         }
 
-        if (response.status >= 400)
+        if (response.code >= 400)
             throw mapException(ret);
 
         return ret;
@@ -408,9 +416,9 @@ private:
         {
             try
             {
-                HTTP http = HTTP();
-                Response response = send(http, HTTP.Method.get, address~"/status");
-                if (response.status == 200)
+                Request req = Request();
+                Response response = req.get(address~"/status");
+                if (response.code == 200)
                     return;
             }
             catch (Exception) { }

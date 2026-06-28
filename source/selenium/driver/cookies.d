@@ -2,9 +2,8 @@
 module selenium.driver.cookies;
 
 import selenium.driver : Driver;
-
+import conductor.serialize.json : toJSON;
 import std.json : JSONValue;
-import std.net.curl : HTTP;
 
 /// A single WebDriver cookie.
 struct Cookie
@@ -67,7 +66,7 @@ package:
 public:
     /// Every cookie visible to the current document.
     Cookie[] all()
-        => driver.bridge.request!(Cookie[])(driver.id, HTTP.Method.get, "/cookie");
+        => driver.bridge.get!(Cookie[])(driver.id, "/cookie");
 
     /**
      * Reads a single cookie by name.
@@ -79,7 +78,7 @@ public:
      *  The matching cookie.
      */
     Cookie find(string name)
-        => driver.bridge.request!Cookie(driver.id, HTTP.Method.get, "/cookie/"~name);
+        => driver.bridge.get!Cookie(driver.id, "/cookie/"~name);
 
     /**
      * Adds or updates a cookie on the current document.
@@ -90,11 +89,10 @@ public:
     void add(Cookie cookie)
     {
         // TODO: Must set cookie domain to current URL??
-        driver.bridge.request(
+        driver.bridge.post(
             driver.id,
-            HTTP.Method.post,
             "/cookie",
-            ["cookie": cookie.toJSON()]
+            toJSON(["cookie": cookie.toJSON()])
         );
     }
 
@@ -105,11 +103,11 @@ public:
      *  name = The cookie name.
      */
     void remove(string name)
-        => driver.bridge.request!void(driver.id, HTTP.Method.del, "/cookie/"~name);
+        => driver.bridge.del!void(driver.id, "/cookie/"~name);
 
     /// Deletes every cookie for the current document.
     void clear()
-        => driver.bridge.request!void(driver.id, HTTP.Method.del, "/cookie");
+        => driver.bridge.del!void(driver.id, "/cookie");
 }
 
 /// Opens the cookie store for a session, used as `driver.cookies`.

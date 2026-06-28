@@ -4,11 +4,11 @@ module selenium.element;
 import selenium.bridge : Bridge;
 import selenium.driver : Driver;
 import selenium.root : Root, RootState, RootType;
+import cjson = conductor.serialize.json;
 
 import std.array : join;
 import std.conv : to;
 import std.json : JSONValue;
-import std.net.curl : HTTP;
 
 /// A W3C location strategy paired with the selector value to match against.
 struct By
@@ -97,28 +97,28 @@ public:
     }
 
     /// The rendered, visible text of the element.
-    string text() => driver.bridge.request!string(driver.id, HTTP.Method.get, path("/text"));
+    string text() => driver.bridge.get!string(driver.id, path("/text"));
     /// The lowercased tag name of the element.
-    string tagName() => driver.bridge.request!string(driver.id, HTTP.Method.get, path("/name"));
+    string tagName() => driver.bridge.get!string(driver.id, path("/name"));
     /// The value of the named HTML attribute as it appears in markup.
-    string attribute(string name) => driver.bridge.request!string(driver.id, HTTP.Method.get, path("/attribute/"~name));
+    string attribute(string name) => driver.bridge.get!string(driver.id, path("/attribute/"~name));
     /// The value of the named live DOM property, which may differ from the markup attribute.
-    string property(string name) => driver.bridge.request!string(driver.id, HTTP.Method.get, path("/property/"~name));
+    string property(string name) => driver.bridge.get!string(driver.id, path("/property/"~name));
     /// The computed value of the named CSS property.
     string cssValue(string property)
-        => driver.bridge.request!string(driver.id, HTTP.Method.get, path("/css/"~property));
+        => driver.bridge.get!string(driver.id, path("/css/"~property));
 
     /// The element bounding rectangle as a width and height pair.
-    Size size() => driver.bridge.request!Size(driver.id, HTTP.Method.get, path("/rect"));
+    Size size() => driver.bridge.get!Size(driver.id, path("/rect"));
     /// The element bounding rectangle as a top-left coordinate pair.
-    Position position() => driver.bridge.request!Position(driver.id, HTTP.Method.get, path("/rect"));
+    Position position() => driver.bridge.get!Position(driver.id, path("/rect"));
     /// Whether the element is currently selected, applicable to options and checkable inputs.
-    bool selected() => driver.bridge.request!bool(driver.id, HTTP.Method.get, path("/selected"));
+    bool selected() => driver.bridge.get!bool(driver.id, path("/selected"));
     /// Whether the element is enabled rather than disabled.
-    bool enabled() => driver.bridge.request!bool(driver.id, HTTP.Method.get, path("/enabled"));
+    bool enabled() => driver.bridge.get!bool(driver.id, path("/enabled"));
 
     /// Clicks the element.
-    void click() => driver.bridge.request!void(driver.id, HTTP.Method.post, path("/click"));
+    void click() => driver.bridge.post!void(driver.id, path("/click"));
     /**
      * Types the given key sequences into the element.
      *
@@ -135,15 +135,15 @@ public:
             foreach (dchar ch; key)
                 value ~= JSONValue(ch.to!string);
 
-        driver.bridge.request!void(driver.id, HTTP.Method.post, path("/value"), [
+        driver.bridge.post!void(driver.id, path("/value"), cjson.toJSON([
             "text": JSONValue(keys.join()),
             "value": JSONValue(value),
-        ]);
+        ]));
     }
     /// Clears the value of an editable element.
-    void clear() => driver.bridge.request!void(driver.id, HTTP.Method.post, path("/clear"));
+    void clear() => driver.bridge.post!void(driver.id, path("/clear"));
     /// A base64 PNG screenshot of the element.
-    string screenshot() => driver.bridge.request!string(driver.id, HTTP.Method.get, path("/screenshot"));
+    string screenshot() => driver.bridge.get!string(driver.id, path("/screenshot"));
 
     /**
      * Finds the first descendant matching the locator.
@@ -161,7 +161,7 @@ public:
     {
         driver.bridge.ensureTimeoutsSynced(driver.id, driver.browser);
 
-        JSONValue resp = driver.bridge.request(driver.id, HTTP.Method.post, path("/element"), by.toJSON());
+        JSONValue resp = driver.bridge.post(driver.id, path("/element"), by.toJSON());
         return new Element(driver, Bridge.parseElementId(resp));
     }
 
@@ -178,7 +178,7 @@ public:
     {
         driver.bridge.ensureTimeoutsSynced(driver.id, driver.browser);
 
-        JSONValue resp = driver.bridge.request(driver.id, HTTP.Method.post, path("/elements"), by.toJSON());
+        JSONValue resp = driver.bridge.post(driver.id, path("/elements"), by.toJSON());
         Element[] ret;
         foreach (eid; Bridge.parseElementIds(resp))
             ret ~= new Element(driver, eid);
@@ -193,7 +193,7 @@ public:
      */
     Root shadowRoot()
     {
-        JSONValue resp = driver.bridge.request(driver.id, HTTP.Method.get, path("/shadow"));
+        JSONValue resp = driver.bridge.get(driver.id, path("/shadow"));
         string shadowId = Bridge.parseShadowId(resp);
         return new Root(driver, shadowId, RootType.Shadow, RootState.Open | RootState.Complete);
     }

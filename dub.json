@@ -4,7 +4,8 @@
 	],
 	"copyright": "Copyright © 2026, cet",
 	"dependencies": {
-		"conductor": "~>2.1.2"
+		"conductor": "~>2.1.2",
+		"requests": "~>2.2.1"
 	},
 	"description": "Browser automation with WebDriver lifecycle, element interaction, JavaScript execution, and multi-browser support.",
 	"license": "Apache-2.0",
@@ -15,7 +16,8 @@
 		{
 			"name": "webdriver",
 			"dependencies": {
-				"conductor": "~>2.1.2"
+				"conductor": "~>2.1.2",
+				"requests": "~>2.2.1"
 			},
 			"description": "WebDriver client: bridge, driver, browser capabilities, elements, and roots.",
 			"sourcePaths": ["source/selenium"],
@@ -39,6 +41,7 @@
 					"buildOptions": ["unittests"],
 					"dependencies": {
 						"conductor": "~>2.1.2",
+						"requests": "~>2.2.1",
 						"unit-threaded": "~>2.2.0"
 					}
 				},
@@ -56,6 +59,7 @@
 					"versions": ["integration"],
 					"dependencies": {
 						"conductor": "~>2.1.2",
+						"requests": "~>2.2.1",
 						"unit-threaded": "~>2.2.0"
 					}
 				}

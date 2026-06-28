@@ -4,9 +4,9 @@ module selenium.driver.logger;
 public import std.logger : LogLevel;
 
 import selenium.driver : Driver;
+import conductor.serialize.json : toJSON;
 
 import std.json : JSONValue, JSONType;
-import std.net.curl : HTTP;
 
 /// Maps a std.logger level to its WebDriver level string, defaulting to "SEVERE".
 string toWebDriverLevel(LogLevel level)
@@ -166,7 +166,7 @@ public:
     /// Queries the log types the driver exposes via the legacy `/log/types` command.
     string[] types()
     {
-        JSONValue resp = driver.bridge.request(driver.id, HTTP.Method.get, "/log/types");
+        JSONValue resp = driver.bridge.get(driver.id, "/log/types");
         JSONValue value = ("value" in resp) ? resp["value"] : resp;
         string[] ret;
         if (value.type == JSONType.array)
@@ -193,7 +193,7 @@ public:
      */
     LogEntry[] fetch(string type)
     {
-        JSONValue resp = driver.bridge.request(driver.id, HTTP.Method.post, "/log", ["type": type]);
+        JSONValue resp = driver.bridge.post(driver.id, "/log", toJSON(["type": type]));
         JSONValue value = ("value" in resp) ? resp["value"] : resp;
         LogEntry[] ret;
         if (value.type == JSONType.array)

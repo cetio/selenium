@@ -6,7 +6,6 @@ import selenium.driver : Driver;
 import selenium.element : By, Element;
 
 import std.json : JSONValue;
-import std.net.curl : HTTP;
 
 /// The kind of root represented by a `Root` handle.
 enum RootType : string
@@ -118,9 +117,8 @@ public:
         final switch (_type)
         {
             case RootType.Primary:
-                JSONValue resp = driver.bridge.request(
+                JSONValue resp = driver.bridge.post(
                     driver.id,
-                    HTTP.Method.post,
                     _findPath,
                     by.toJSON()
                 );
@@ -129,18 +127,16 @@ public:
             case RootType.Embedded:
                 Element iframe = new Element(driver, id);
                 driver.frame.switchTo(iframe);
-                JSONValue resp = driver.bridge.request(
+                JSONValue resp = driver.bridge.post(
                     driver.id,
-                    HTTP.Method.post,
                     _findPath,
                     by.toJSON()
                 );
                 return new Element(driver, Bridge.parseElementId(resp));
                 
             case RootType.Shadow:
-                JSONValue resp = driver.bridge.request(
+                JSONValue resp = driver.bridge.post(
                     driver.id,
-                    HTTP.Method.post,
                     _findPath,
                     by.toJSON()
                 );
@@ -168,9 +164,8 @@ public:
         final switch (_type)
         {
             case RootType.Primary:
-                JSONValue resp = driver.bridge.request(
+                JSONValue resp = driver.bridge.post(
                     driver.id,
-                    HTTP.Method.post,
                     _findAllPath,
                     by.toJSON()
                 );
@@ -181,9 +176,8 @@ public:
             case RootType.Embedded:
                 Element iframe = new Element(driver, id);
                 driver.frame.switchTo(iframe);
-                JSONValue resp = driver.bridge.request(
+                JSONValue resp = driver.bridge.post(
                     driver.id,
-                    HTTP.Method.post,
                     _findAllPath,
                     by.toJSON()
                 );
@@ -192,9 +186,8 @@ public:
                     ret ~= new Element(driver, eid);
                 return ret;
             case RootType.Shadow:
-                JSONValue resp = driver.bridge.request(
+                JSONValue resp = driver.bridge.post(
                     driver.id,
-                    HTTP.Method.post,
                     _findAllPath,
                     by.toJSON()
                 );

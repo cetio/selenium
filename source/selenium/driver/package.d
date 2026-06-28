@@ -6,8 +6,8 @@ import selenium.browser : Browser;
 import selenium.element : By, Element, Size;
 import selenium.root : Root, RootState, RootType;
 import selenium.driver.logger : Logger;
+import conductor.serialize.json : toJSON;
 import std.json : JSONValue;
-import std.net.curl : HTTP;
 
 /// A handle to a single WebDriver session.
 ///
@@ -134,13 +134,13 @@ class Driver
     }
 
     /// The current document URL.
-    string url() => bridge.request!string(id, HTTP.Method.get, "/url");
+    string url() => bridge.get!string(id, "/url");
     /// The current document title.
-    string title() => bridge.request!string(id, HTTP.Method.get, "/title");
+    string title() => bridge.get!string(id, "/title");
     /// The serialized source of the current document.
-    string source() => bridge.request!string(id, HTTP.Method.get, "/source");
+    string source() => bridge.get!string(id, "/source");
     /// A base64 PNG screenshot of the current viewport.
-    string screenshot() => bridge.request!string(id, HTTP.Method.get, "/screenshot");
+    string screenshot() => bridge.get!string(id, "/screenshot");
 
     /**
      * Navigates the session to a URL.
@@ -151,18 +151,18 @@ class Driver
     void go(string url)
     {
         bridge.ensureTimeoutsSynced(id, browser);
-        bridge.request(id, HTTP.Method.post, "/url", ["url": url]);
+        bridge.post(id, "/url", toJSON(["url": url]));
     }
     /// Navigates back one entry in history.
-    void back() => bridge.request!void(id, HTTP.Method.post, "/back");
+    void back() => bridge.post!void(id, "/back");
     /// Navigates forward one entry in history.
-    void forward() => bridge.request!void(id, HTTP.Method.post, "/forward");
+    void forward() => bridge.post!void(id, "/forward");
     /// Reloads the current document.
-    void refresh() => bridge.request!void(id, HTTP.Method.post, "/refresh");
+    void refresh() => bridge.post!void(id, "/refresh");
 
     /// The element that currently has focus.
     Element activeElement()
-        => new Element(this, Bridge.parseElementId(bridge.request(id, HTTP.Method.get, "/element/active")));
+        => new Element(this, Bridge.parseElementId(bridge.get(id, "/element/active")));
 
     /// The primary document root.
     Root root()
@@ -262,7 +262,7 @@ class Driver
     {
         bridge.ensureTimeoutsSynced(id, browser);
 
-        JSONValue resp = bridge.request(id, HTTP.Method.post, "/element", by.toJSON());
+        JSONValue resp = bridge.post(id, "/element", by.toJSON());
         return new Element(this, Bridge.parseElementId(resp));
     }
 
@@ -279,7 +279,7 @@ class Driver
     {
         bridge.ensureTimeoutsSynced(id, browser);
 
-        JSONValue resp = bridge.request(id, HTTP.Method.post, "/elements", by.toJSON());
+        JSONValue resp = bridge.post(id, "/elements", by.toJSON());
         Element[] ret;
         foreach (eid; Bridge.parseElementIds(resp))
             ret ~= new Element(this, eid);
@@ -302,10 +302,10 @@ class Driver
     T execute(T = string)(string script, JSONValue args = JSONValue.emptyArray)
     {
         bridge.ensureTimeoutsSynced(id, browser);
-        JSONValue resp = bridge.request(id, HTTP.Method.post, "/execute/sync", [
+        JSONValue resp = bridge.post(id, "/execute/sync", toJSON([
             "script": JSONValue(script),
             "args": args,
-        ]);
+        ]));
 
         static if (is(T == Element))
             return new Element(this, Bridge.parseElementId(resp));
@@ -330,26 +330,26 @@ class Driver
     template Window()
     {
         /// The handle of the current window.
-        string handle() => bridge.request!string(id, HTTP.Method.get, "/window");
+        string handle() => bridge.get!string(id, "/window");
         /// Handles of all open windows.
-        string[] handles() => bridge.request!(string[])(id, HTTP.Method.get, "/window/handles");
+        string[] handles() => bridge.get!(string[])(id, "/window/handles");
         /// The size of the current window.
-        Size size() => bridge.request!Size(id, HTTP.Method.get, "/window/rect");
+        Size size() => bridge.get!Size(id, "/window/rect");
         /// Closes the current window.
-        void close() => bridge.request!void(id, HTTP.Method.del, "/window");
+        void close() => bridge.del!void(id, "/window");
         /// Maximizes the current window.
-        void maximize() => bridge.request!void(id, HTTP.Method.post, "/window/maximize");
+        void maximize() => bridge.post!void(id, "/window/maximize");
         /// Makes the current window fullscreen.
-        void fullscreen() => bridge.request!void(id, HTTP.Method.post, "/window/fullscreen");
+        void fullscreen() => bridge.post!void(id, "/window/fullscreen");
         /// Minimizes the current window.
-        void minimize() => bridge.request!void(id, HTTP.Method.post, "/window/minimize");
+        void minimize() => bridge.post!void(id, "/window/minimize");
         /// Resizes the current window.
-        void resize(Size value) => bridge.request!void(id, HTTP.Method.post, "/window/rect", value);
+        void resize(Size value) => bridge.post!void(id, "/window/rect", toJSON(value));
         /// Switches focus to the window with the given handle.
-        void switchTo(string handle) => bridge.request!void(id, HTTP.Method.post, "/window", ["handle": handle]);
+        void switchTo(string handle) => bridge.post!void(id, "/window", toJSON(["handle": handle]));
         /// Opens a new window or tab and returns its handle.
         string open(string type = "tab")
-            => bridge.request(id, HTTP.Method.post, "/window/new", ["type": type])["value"]["handle"].str;
+            => bridge.post(id, "/window/new", toJSON(["type": type]))["value"]["handle"].str;
     }
     /// Window command group, e.g. `driver.window.handles`.
     alias window = Window!();
@@ -358,14 +358,14 @@ class Driver
     template Frame()
     {
         /// Switches focus to the top-level browsing context.
-        void switchTo() => bridge.request!void(this.id, HTTP.Method.post, "/frame", ["id": JSONValue(null)]);
+        void switchTo() => bridge.post!void(this.id, "/frame", toJSON(["id": JSONValue(null)]));
         /// Switches focus to the frame at the given index.
-        void switchTo(long id) => bridge.request!void(this.id, HTTP.Method.post, "/frame", ["id": id]);
+        void switchTo(long id) => bridge.post!void(this.id, "/frame", toJSON(["id": id]));
         /// Switches focus to the frame identified by the given element.
         void switchTo(Element element)
-            => bridge.request!void(this.id, HTTP.Method.post, "/frame", ["id": element.toJSON()]);
+            => bridge.post!void(this.id, "/frame", toJSON(["id": element.toJSON()]));
         /// Switches focus to the parent of the current frame.
-        void switchToParent() => bridge.request!void(this.id, HTTP.Method.post, "/frame/parent");
+        void switchToParent() => bridge.post!void(this.id, "/frame/parent");
     }
     /// Frame command group, e.g. `driver.frame.switchTo(0)`.
     alias frame = Frame!();
