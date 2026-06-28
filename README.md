@@ -3,12 +3,6 @@
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue)](LICENSE.txt)
 [![DUB Package](https://img.shields.io/badge/dub-package-red)](https://code.dlang.org/packages/selenium)
 
-> [!CAUTION]
->
-> At the time of writing this, some documentation and information (ie: about subpackages and availability) reflect changes that are not yet fully live!
->
-> Subpackages are not live in source code, Dub still reflects prior Selenium-SDK naming, and many changes are only visible here.
-
 Selenium is a native D implementation of the W3C WebDriver protocol. It drives Chrome, Firefox, Edge, and Safari directly over HTTP, with no external language bindings or C wrappers. The API often mirrors the Selenium Ruby bindings, so anyone who has used Selenium before will find it familiar.
 
 A `Driver` is a handle to one session, and a `Bridge` is the connection that owns the WebDriver process. Unlike most clients, a bridge can host several sessions at once, and each driver is a handle to one of them.
