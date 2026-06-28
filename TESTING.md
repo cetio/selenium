@@ -3,7 +3,7 @@
 Tests are split up into offline and integration tests.
 
 - **Offline tests** cover behaviors that do not require real sessions (parsing, serialization, JSON roundtrips) and can be run with `dub test`.
-- **Integration tests** launch real driver sessions against installed browsers and can be run with `dub test -c integration`.
+- **Integration tests** launch real driver sessions against installed browsers and can be run with `dub run -c integration`.
 
 ## Prerequisites
 
@@ -35,24 +35,26 @@ dub test
 Run all tests including integration tests:
 
 ```sh
-dub test -c integration
+dub run -c integration
 ```
 
 Run tests for a specific subpackage:
 
 ```sh
 dub test :webdriver -c unittest
-dub test :webdriver -c integration
+dub run :webdriver -c integration
 dub test :grid -c unittest
-dub test :grid -c integration
+dub run :grid -c integration
 ```
 
 Pass a name pattern after `--` to limit which tests execute:
 
 ```sh
 dub test -- "click updates button text"
-dub test -c integration -- "frame switch"
+dub run -c integration -- "frame switch"
 ```
+
+> **Why `dub run` for integration?** `dub test` only uses the config as-is when it's named `unittest`. For any other config name (like `integration`), DUB generates its own test runner, excludes the `mainSourceFile` (`bin/ut.d`), and uses D's built-in `runModuleUnitTests()` instead of unit-threaded. `dub run` builds and executes the config as-is, preserving the unit-threaded runner.
 
 ## Test Framework
 
@@ -110,4 +112,4 @@ driver.go(dataUri("<html><body><p id='t'>test</p></body></html>"));
 
 ## CI
 
-Integration tests require installed browsers, so they are primarily intended for local development. Offline tests (`dub test`) are safe to run in any CI environment.
+Integration tests require installed browsers. In CI environments (detected via the `CI` environment variable), Chrome is automatically launched with `--no-sandbox` and `--headless`. Offline tests (`dub test`) are safe to run in any CI environment.

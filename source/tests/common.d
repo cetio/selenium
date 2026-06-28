@@ -28,8 +28,11 @@ version(integration)
         Chrome chrome = new Chrome();
         if (chrome.isInstalled)
         {
+            // Useful for CI environments and avoiding a billion windows opening.
+            chrome.includeSwitches = ["--no-sandbox", "--headless"];
+
             configs ~= TestConfig(
-                chrome, 
+                chrome,
                 Bridge.start(chrome.resolveBinary(), ["--log-level=OFF"])
             );
         }
@@ -42,10 +45,6 @@ version(integration)
                 Bridge.start(firefox.resolveBinary(), ["--log", "fatal"])
             );
         }
-
-        writeln("Running integration tests with ", configs.length, " browser(s).");
-        foreach (config; configs)
-            writeln("  - ", config.browser.name);
     }
 
     shared static ~this()
