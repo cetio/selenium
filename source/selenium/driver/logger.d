@@ -104,15 +104,15 @@ struct LogEntry
 /// and the `/log` and `/log/types` endpoints are legacy commands the W3C spec dropped.
 class Logger
 {
-package(selenium):
-    /// The session whose remote logs are fetched.
-    Driver driver;
 
 private:
     /// Drained remote entries retained for later inspection.
     LogEntry[] _entries;
 
-package(selenium):
+package (selenium):
+    /// The session whose remote logs are fetched.
+    Driver driver;
+    
     /// Appends a drained entry to the retained buffer.
     void add(LogEntry entry)
     {

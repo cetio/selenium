@@ -24,7 +24,7 @@ import core.time : MonoTime, msecs, Duration;
 /// those sessions, so several drivers may share a single Bridge.
 class Bridge
 {
-package(selenium):
+package (selenium):
     /// The capability key identifying a W3C element reference in payloads.
     enum string W3C_KEY = "element-6066-11e4-a52e-4f735466cecf";
     /// The capability key identifying a W3C shadow root reference in payloads.
