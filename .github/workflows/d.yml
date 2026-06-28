@@ -26,4 +26,4 @@ jobs:
       run: |
         # Run all tests for submodules with integration.
         # This will run both static unittests and integration tests.
-        dub test -c integration
+        dub run -c integration
