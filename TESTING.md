@@ -21,6 +21,7 @@ Browsers that cannot be found are skipped with a console message.
 | `tests.driver.frame` | `By` strategy serialization, frame switching by index/element/parent/top. |
 | `tests.driver.script` | JavaScript execution, argument passing, return type coercion, script error handling. |
 | `tests.driver.window` | Element ID parsing, window title, handles, resize, maximize, minimize. |
+| `tests.grid.server` | Grid model roundtrips, router path-parameter extraction, and hub/node endpoint dispatch. |
 | `tests.common` | Shared helpers: `dataUri`, `testAll`, and the integration-test `configs` initializer. |
 
 ## Running Tests
