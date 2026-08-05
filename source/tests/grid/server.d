@@ -262,8 +262,8 @@ unittest
 
     Request unknownRequest = Request("GET", "/se/grid/node/owner/sess-99");
     unknownRequest.headers["x-registration-secret"] = "s3cr3t";
-    JSONValue unknownJson = parseJSON(cast(string)node.router.dispatch(unknownRequest).content);
-    (unknownJson["value"].type == JSONType.false_).should == true;
+    JSONValue unknownJSON = parseJSON(cast(string)node.router.dispatch(unknownRequest).content);
+    (unknownJSON["value"].type == JSONType.false_).should == true;
 }
 
 @Name("Node delete session frees an occupied slot")

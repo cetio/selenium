@@ -35,7 +35,7 @@ struct Response
 
     /// A 200 response carrying a JSON value as-is.
     static Response ok(JSONValue json)
-        => withJson(200, "OK", json);
+        => withJSON(200, "OK", json);
 
     /// A 200 response wrapping a value in the W3C `{"value": ...}` envelope.
     static Response okValue(JSONValue value)
@@ -55,7 +55,7 @@ struct Response
     }
 
     /// A response with the given status carrying a JSON value.
-    static Response withJson(ushort status, string reason, JSONValue json)
+    static Response withJSON(ushort status, string reason, JSONValue json)
     {
         Response ret;
         ret.status = status;
@@ -74,7 +74,7 @@ struct Response
 
         JSONValue json = JSONValue.emptyObject;
         json["value"] = value;
-        return withJson(status, reason, json);
+        return withJSON(status, reason, json);
     }
 }
 
