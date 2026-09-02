@@ -44,6 +44,31 @@ struct Cookie
             ret["sameSite"] = JSONValue(sameSite);
         return ret;
     }
+
+    static Cookie fromJSON(JSONValue json)
+    {
+        Cookie ret;
+        ret.name = json["name"].get!string;
+        ret.value = json["value"].get!string;
+        if ("path" in json)
+            ret.path = json["path"].get!string;
+
+        if ("domain" in json)
+            ret.domain = json["domain"].get!string;
+
+        if ("secure" in json)
+            ret.secure = json["secure"].get!bool;
+
+        if ("httpOnly" in json)
+            ret.httpOnly = json["httpOnly"].get!bool;
+
+        if ("expiry" in json)
+            ret.expiry = json["expiry"].get!uint;
+
+        if ("sameSite" in json)
+            ret.sameSite = json["sameSite"].get!string;
+        return ret;
+    }
 }
 
 /// Cookie operations scoped to a single driver session.
@@ -70,30 +95,7 @@ public:
         JSONValue value = driver.bridge.unwrapAndParse!JSONValue(driver.bridge.get(driver.id, "/cookie"));
         Cookie[] ret;
         foreach (json; value.array)
-        {
-            Cookie cookie;
-            cookie.name = json["name"].get!string;
-            cookie.value = json["value"].get!string;
-            if ("path" in json)
-                cookie.path = json["path"].get!string;
-
-            if ("domain" in json)
-                cookie.domain = json["domain"].get!string;
-
-            if ("secure" in json)
-                cookie.secure = json["secure"].get!bool;
-
-            if ("httpOnly" in json)
-                cookie.httpOnly = json["httpOnly"].get!bool;
-
-            if ("expiry" in json)
-                cookie.expiry = json["expiry"].get!uint;
-
-            if ("sameSite" in json)
-                cookie.sameSite = json["sameSite"].get!string;
-
-            ret ~= cookie;
-        }
+            ret ~= Cookie.fromJSON(json);
         return ret;
     }
 
@@ -109,27 +111,7 @@ public:
     Cookie find(string name)
     {
         JSONValue json = driver.bridge.unwrapAndParse!JSONValue(driver.bridge.get(driver.id, "/cookie/"~name));
-        Cookie ret;
-        ret.name = json["name"].get!string;
-        ret.value = json["value"].get!string;
-        if ("path" in json)
-            ret.path = json["path"].get!string;
-
-        if ("domain" in json)
-            ret.domain = json["domain"].get!string;
-
-        if ("secure" in json)
-            ret.secure = json["secure"].get!bool;
-
-        if ("httpOnly" in json)
-            ret.httpOnly = json["httpOnly"].get!bool;
-
-        if ("expiry" in json)
-            ret.expiry = json["expiry"].get!uint;
-
-        if ("sameSite" in json)
-            ret.sameSite = json["sameSite"].get!string;
-        return ret;
+        return Cookie.fromJSON(json);
     }
 
     /**
