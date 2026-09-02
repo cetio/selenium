@@ -149,8 +149,11 @@ public:
             throw new WebDriverConnectionException("Bridge capacity exceeded.");
 
         Request req = Request();
-        req.addHeaders(["Content-Type": "application/json"]);
-        Response response = req.post(address~"/session", payload.toString());
+        Response response = req.post(
+            address~"/session",
+            payload.toString(),
+            "application/json"
+        );
         JSONValue json = checkAndParse(response);
 
         string id;
@@ -226,8 +229,11 @@ public:
     T post(T = JSONValue)(string id, string path, JSONValue data)
     {
         Request req = Request();
-        req.addHeaders(["Content-Type": "application/json"]);
-        return parseResponse!T(req.post(address~"/session/"~id~path, data.toString()));
+        return parseResponse!T(req.post(
+            address~"/session/"~id~path,
+            data.toString(),
+            "application/json"
+        ));
     }
 
     /// Issues a POST with a raw string body against a session, without forcing a content type.
@@ -241,16 +247,22 @@ public:
     T put(T = JSONValue)(string id, string path, JSONValue data)
     {
         Request req = Request();
-        req.addHeaders(["Content-Type": "application/json"]);
-        return parseResponse!T(req.put(address~"/session/"~id~path, data.toString()));
+        return parseResponse!T(req.put(
+            address~"/session/"~id~path,
+            data.toString(),
+            "application/json"
+        ));
     }
 
     /// Issues a PATCH with a JSONValue body against a session and parses the result.
     T patch(T = JSONValue)(string id, string path, JSONValue data)
     {
         Request req = Request();
-        req.addHeaders(["Content-Type": "application/json"]);
-        return parseResponse!T(req.patch(address~"/session/"~id~path, data.toString()));
+        return parseResponse!T(req.patch(
+            address~"/session/"~id~path,
+            data.toString(),
+            "application/json"
+        ));
     }
 
     /// Issues a DELETE against a session and parses the result.
@@ -383,18 +395,19 @@ private:
     /// Parses a response body and converts an HTTP error status into an exception.
     static JSONValue checkAndParse(Response response)
     {
-        if (response.toString().length == 0)
+        string content = cast(string)response.responseBody.data;
+        if (content.length == 0)
             return JSONValue.emptyObject;
 
         JSONValue ret;
         try
-            ret = parseJSON(response.toString());
+            ret = parseJSON(content);
         catch (Exception)
         {
             if (response.code >= 200 && response.code < 300)
                 return JSONValue.emptyObject;
 
-            throw new WebDriverConnectionException("Invalid response from server:"~response.toString());
+            throw new WebDriverConnectionException("Invalid response from server:"~content);
         }
 
         if (response.code >= 400)
