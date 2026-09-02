@@ -4,7 +4,6 @@ module selenium.driver.logger;
 public import std.logger : LogLevel;
 
 import selenium.driver : Driver;
-import conductor.serialize.json : toJSON;
 
 import std.json : JSONValue, JSONType;
 
@@ -193,7 +192,7 @@ public:
      */
     LogEntry[] fetch(string type)
     {
-        JSONValue resp = driver.bridge.post(driver.id, "/log", toJSON(["type": type]));
+        JSONValue resp = driver.bridge.post(driver.id, "/log", JSONValue(["type": type]));
         JSONValue value = ("value" in resp) ? resp["value"] : resp;
         LogEntry[] ret;
         if (value.type == JSONType.array)

@@ -4,8 +4,6 @@ module selenium.bridge;
 import selenium.browser : Browser;
 import selenium.exception;
 
-import conductor.serialize.json : fromJSON;
-
 import requests;
 
 import std.json : JSONType, JSONValue, parseJSON;
@@ -357,10 +355,18 @@ public:
     /// Deserializes T from a response, unwrapping the W3C `value` envelope if present.
     static T unwrapAndParse(T)(JSONValue json)
     {
-        if ("value" in json)
-            return fromJSON!T(json["value"]);
-
-        return fromJSON!T(json);
+        JSONValue value = (json.type == JSONType.object && "value" in json) ? json["value"] : json;
+        static if (is(T == JSONValue))
+            return value;
+        else static if (!is(T == string) && is(T == ElementType[], ElementType))
+        {
+            T ret;
+            foreach (item; value.array)
+                ret ~= unwrapAndParse!ElementType(item);
+            return ret;
+        }
+        else
+            return value.get!T;
     }
 
 private:

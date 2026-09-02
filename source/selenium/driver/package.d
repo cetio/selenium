@@ -6,7 +6,7 @@ import selenium.browser : Browser;
 import selenium.element : By, Element, Size;
 import selenium.root : Root, RootState, RootType;
 import selenium.driver.logger : Logger;
-import conductor.serialize.json : toJSON;
+
 import std.json : JSONValue;
 
 /// A handle to a single WebDriver session.
@@ -151,7 +151,7 @@ class Driver
     void go(string url)
     {
         bridge.ensureTimeoutsSynced(id, browser);
-        bridge.post(id, "/url", toJSON(["url": url]));
+        bridge.post(id, "/url", JSONValue(["url": url]));
     }
     /// Navigates back one entry in history.
     void back() => bridge.post!void(id, "/back");
@@ -302,7 +302,7 @@ class Driver
     T execute(T = string)(string script, JSONValue args = JSONValue.emptyArray)
     {
         bridge.ensureTimeoutsSynced(id, browser);
-        JSONValue resp = bridge.post(id, "/execute/sync", toJSON([
+        JSONValue resp = bridge.post(id, "/execute/sync", JSONValue([
             "script": JSONValue(script),
             "args": args,
         ]));
@@ -334,7 +334,12 @@ class Driver
         /// Handles of all open windows.
         string[] handles() => bridge.get!(string[])(id, "/window/handles");
         /// The size of the current window.
-        Size size() => bridge.get!Size(id, "/window/rect");
+        Size size()
+        {
+            JSONValue value = bridge.unwrapAndParse!JSONValue(bridge.get(id, "/window/rect"));
+            return Size(value["width"].get!long, value["height"].get!long);
+        }
+
         /// Closes the current window.
         void close() => bridge.del!void(id, "/window");
         /// Maximizes the current window.
@@ -344,12 +349,18 @@ class Driver
         /// Minimizes the current window.
         void minimize() => bridge.post!void(id, "/window/minimize");
         /// Resizes the current window.
-        void resize(Size value) => bridge.post!void(id, "/window/rect", toJSON(value));
+        void resize(Size value)
+            => bridge.post!void(
+                id,
+                "/window/rect",
+                JSONValue(["width": value.width, "height": value.height])
+            );
+
         /// Switches focus to the window with the given handle.
-        void switchTo(string handle) => bridge.post!void(id, "/window", toJSON(["handle": handle]));
+        void switchTo(string handle) => bridge.post!void(id, "/window", JSONValue(["handle": handle]));
         /// Opens a new window or tab and returns its handle.
         string open(string type = "tab")
-            => bridge.post(id, "/window/new", toJSON(["type": type]))["value"]["handle"].str;
+            => bridge.post(id, "/window/new", JSONValue(["type": type]))["value"]["handle"].str;
     }
     /// Window command group, e.g. `driver.window.handles`.
     alias window = Window!();
@@ -358,12 +369,12 @@ class Driver
     template Frame()
     {
         /// Switches focus to the top-level browsing context.
-        void switchTo() => bridge.post!void(this.id, "/frame", toJSON(["id": JSONValue(null)]));
+        void switchTo() => bridge.post!void(this.id, "/frame", JSONValue(["id": JSONValue(null)]));
         /// Switches focus to the frame at the given index.
-        void switchTo(long id) => bridge.post!void(this.id, "/frame", toJSON(["id": id]));
+        void switchTo(long id) => bridge.post!void(this.id, "/frame", JSONValue(["id": id]));
         /// Switches focus to the frame identified by the given element.
         void switchTo(Element element)
-            => bridge.post!void(this.id, "/frame", toJSON(["id": element.toJSON()]));
+            => bridge.post!void(this.id, "/frame", JSONValue(["id": element.toJSON()]));
         /// Switches focus to the parent of the current frame.
         void switchToParent() => bridge.post!void(this.id, "/frame/parent");
     }

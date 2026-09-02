@@ -47,6 +47,15 @@ unittest
     ids[1].should == "e2";
 }
 
+@Name("unwrapAndParse converts std.json values")
+unittest
+{
+    JSONValue json = JSONValue(["value": JSONValue(["one", "two"])]);
+    string[] ret = Bridge.unwrapAndParse!(string[])(json);
+    ret.should == ["one", "two"];
+    Bridge.unwrapAndParse!long(JSONValue(["value": JSONValue(2)])).should == 2;
+}
+
 version(integration)
 {
     import tests.common;

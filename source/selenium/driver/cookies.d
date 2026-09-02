@@ -2,7 +2,7 @@
 module selenium.driver.cookies;
 
 import selenium.driver : Driver;
-import conductor.serialize.json : toJSON;
+
 import std.json : JSONValue;
 
 /// A single WebDriver cookie.
@@ -66,7 +66,36 @@ package:
 public:
     /// Every cookie visible to the current document.
     Cookie[] all()
-        => driver.bridge.get!(Cookie[])(driver.id, "/cookie");
+    {
+        JSONValue value = driver.bridge.unwrapAndParse!JSONValue(driver.bridge.get(driver.id, "/cookie"));
+        Cookie[] ret;
+        foreach (json; value.array)
+        {
+            Cookie cookie;
+            cookie.name = json["name"].get!string;
+            cookie.value = json["value"].get!string;
+            if ("path" in json)
+                cookie.path = json["path"].get!string;
+
+            if ("domain" in json)
+                cookie.domain = json["domain"].get!string;
+
+            if ("secure" in json)
+                cookie.secure = json["secure"].get!bool;
+
+            if ("httpOnly" in json)
+                cookie.httpOnly = json["httpOnly"].get!bool;
+
+            if ("expiry" in json)
+                cookie.expiry = json["expiry"].get!uint;
+
+            if ("sameSite" in json)
+                cookie.sameSite = json["sameSite"].get!string;
+
+            ret ~= cookie;
+        }
+        return ret;
+    }
 
     /**
      * Reads a single cookie by name.
@@ -78,7 +107,30 @@ public:
      *  The matching cookie.
      */
     Cookie find(string name)
-        => driver.bridge.get!Cookie(driver.id, "/cookie/"~name);
+    {
+        JSONValue json = driver.bridge.unwrapAndParse!JSONValue(driver.bridge.get(driver.id, "/cookie/"~name));
+        Cookie ret;
+        ret.name = json["name"].get!string;
+        ret.value = json["value"].get!string;
+        if ("path" in json)
+            ret.path = json["path"].get!string;
+
+        if ("domain" in json)
+            ret.domain = json["domain"].get!string;
+
+        if ("secure" in json)
+            ret.secure = json["secure"].get!bool;
+
+        if ("httpOnly" in json)
+            ret.httpOnly = json["httpOnly"].get!bool;
+
+        if ("expiry" in json)
+            ret.expiry = json["expiry"].get!uint;
+
+        if ("sameSite" in json)
+            ret.sameSite = json["sameSite"].get!string;
+        return ret;
+    }
 
     /**
      * Adds or updates a cookie on the current document.
@@ -92,7 +144,7 @@ public:
         driver.bridge.post(
             driver.id,
             "/cookie",
-            toJSON(["cookie": cookie.toJSON()])
+            JSONValue(["cookie": cookie.toJSON()])
         );
     }
 

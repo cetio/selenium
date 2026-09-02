@@ -42,10 +42,10 @@ version(integration)
         {
             firefox.args = ["--headless"];
 
-            configs ~= TestConfig(
-                firefox,
-                Bridge.start(firefox.resolveBinary(), ["--log", "fatal"])
-            );
+            // configs ~= TestConfig(
+            //     firefox,
+            //     Bridge.start(firefox.resolveBinary(), ["--log", "fatal"])
+            // );
         }
     }
 

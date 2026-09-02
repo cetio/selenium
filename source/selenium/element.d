@@ -4,7 +4,6 @@ module selenium.element;
 import selenium.bridge : Bridge;
 import selenium.driver : Driver;
 import selenium.root : Root, RootState, RootType;
-import cjson = conductor.serialize.json;
 
 import std.array : join;
 import std.conv : to;
@@ -109,9 +108,19 @@ public:
         => driver.bridge.get!string(driver.id, path("/css/"~property));
 
     /// The element bounding rectangle as a width and height pair.
-    Size size() => driver.bridge.get!Size(driver.id, path("/rect"));
+    Size size()
+    {
+        JSONValue value = driver.bridge.unwrapAndParse!JSONValue(driver.bridge.get(driver.id, path("/rect")));
+        return Size(value["width"].get!long, value["height"].get!long);
+    }
+
     /// The element bounding rectangle as a top-left coordinate pair.
-    Position position() => driver.bridge.get!Position(driver.id, path("/rect"));
+    Position position()
+    {
+        JSONValue value = driver.bridge.unwrapAndParse!JSONValue(driver.bridge.get(driver.id, path("/rect")));
+        return Position(value["x"].get!long, value["y"].get!long);
+    }
+
     /// Whether the element is currently selected, applicable to options and checkable inputs.
     bool selected() => driver.bridge.get!bool(driver.id, path("/selected"));
     /// Whether the element is enabled rather than disabled.
@@ -135,7 +144,7 @@ public:
             foreach (dchar ch; key)
                 value ~= JSONValue(ch.to!string);
 
-        driver.bridge.post!void(driver.id, path("/value"), cjson.toJSON([
+        driver.bridge.post!void(driver.id, path("/value"), JSONValue([
             "text": JSONValue(keys.join()),
             "value": JSONValue(value),
         ]));
