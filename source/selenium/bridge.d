@@ -148,10 +148,10 @@ public:
         if (capacity > 0 && sessions.length >= capacity)
             throw new WebDriverConnectionException("Bridge capacity exceeded.");
 
-        Request req = Request();
-        Response response = req.post(
+        string str = payload.toString();
+        Response response = request(str).post(
             address~"/session",
-            payload.toString(),
+            str,
             "application/json"
         );
         JSONValue json = checkAndParse(response);
@@ -228,28 +228,28 @@ public:
     /// Issues a POST with a JSONValue body against a session and parses the result.
     T post(T = JSONValue)(string id, string path, JSONValue data)
     {
-        Request req = Request();
-        return parseResponse!T(req.post(
-            address~"/session/"~id~path,
-            data.toString(),
-            "application/json"
-        ));
+        return post!T(id, path, data.toString(), "application/json");
     }
 
     /// Issues a POST with a raw string body against a session, without forcing a content type.
     T post(T = JSONValue)(string id, string path, string data)
     {
-        Request req = Request();
-        return parseResponse!T(req.post(address~"/session/"~id~path, data));
+        return post!T(id, path, data, null);
+    }
+
+    /// Issues a POST with a raw string body and optional content type, using Content-Length.
+    T post(T = JSONValue)(string id, string path, string data, string contentType)
+    {
+        return parseResponse!T(request(data).post(address~"/session/"~id~path, data, contentType));
     }
 
     /// Issues a PUT with a JSONValue body against a session and parses the result.
     T put(T = JSONValue)(string id, string path, JSONValue data)
     {
-        Request req = Request();
-        return parseResponse!T(req.put(
+        string str = data.toString();
+        return parseResponse!T(request(str).put(
             address~"/session/"~id~path,
-            data.toString(),
+            str,
             "application/json"
         ));
     }
@@ -257,10 +257,10 @@ public:
     /// Issues a PATCH with a JSONValue body against a session and parses the result.
     T patch(T = JSONValue)(string id, string path, JSONValue data)
     {
-        Request req = Request();
-        return parseResponse!T(req.patch(
+        string str = data.toString();
+        return parseResponse!T(request(str).patch(
             address~"/session/"~id~path,
-            data.toString(),
+            str,
             "application/json"
         ));
     }
@@ -382,6 +382,14 @@ public:
     }
 
 private:
+    /// Creates a request with a known content length.
+    static Request request(string data)
+    {
+        Request ret = Request();
+        ret.addHeaders(["Content-Length": data.length.to!string]);
+        return ret;
+    }
+
     /// Parses a response into T, unwrapping the W3C value envelope when T is not JSONValue.
     static T parseResponse(T)(Response response)
     {
