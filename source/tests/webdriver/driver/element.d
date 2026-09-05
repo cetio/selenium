@@ -108,4 +108,39 @@ version(integration)
             driver.find(By.css("#en")).enabled.should == true;
         });
     }
+
+    @Name("driver findAll preserves order and returns empty results") @Serial
+    unittest
+    {
+        testAll((driver) {
+            driver.go(dataUri(
+                "<html><body><p class='item'>first</p><p class='item'>second</p></body></html>"
+            ));
+
+            Element[] elements = driver.findAll(By.css(".item"));
+            elements.length.should == 2;
+            elements[0].text.should == "first";
+            elements[1].text.should == "second";
+            driver.findAll(By.css(".missing")).length.should == 0;
+        });
+    }
+
+    @Name("element findAll stays within descendant scope") @Serial
+    unittest
+    {
+        testAll((driver) {
+            driver.go(dataUri(
+                "<html><body>"~
+                "<section id='first'><span class='item'>inside</span></section>"~
+                "<section><span class='item'>outside</span></section>"~
+                "</body></html>"
+            ));
+
+            Element section = driver.find(By.css("#first"));
+            Element[] elements = section.findAll(By.css(".item"));
+            elements.length.should == 1;
+            elements[0].text.should == "inside";
+            section.findAll(By.css(".missing")).length.should == 0;
+        });
+    }
 }

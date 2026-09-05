@@ -1,8 +1,10 @@
 module tests.webdriver.driver.window;
 
 import selenium.bridge : Bridge;
+import selenium.browser : Browser;
 import selenium.driver : Driver;
 import selenium.element : Size;
+import selenium.exception : WebDriverConnectionException;
 
 import unit_threaded;
 
@@ -54,6 +56,15 @@ unittest
     string[] ret = Bridge.unwrapAndParse!(string[])(json);
     ret.should == ["one", "two"];
     Bridge.unwrapAndParse!long(JSONValue(["value": JSONValue(2)])).should == 2;
+}
+
+@Name("bridge capacity rejects excess sessions before sending a request")
+unittest
+{
+    Bridge bridge = new Bridge(1);
+    bridge.sessions["active"] = new Browser();
+    bridge.createSession(JSONValue.emptyObject).shouldThrow!WebDriverConnectionException;
+    bridge.sessions.length.should == 1;
 }
 
 version(integration)
@@ -120,6 +131,25 @@ version(integration)
         testAll((driver) {
             driver.go(dataUri("<html><body></body></html>"));
             driver.window.handles.length.shouldBeGreaterThan(0);
+        });
+    }
+
+    @Name("window can open switch close and restore original handle") @Serial
+    unittest
+    {
+        testAll((driver) {
+            string original = driver.window.handle;
+            string opened = driver.window.open();
+
+            (opened != original).should == true;
+            driver.window.handles.length.should == 2;
+            driver.window.switchTo(opened);
+            driver.go(dataUri("<html><title>OpenedWindow</title><body></body></html>"));
+            driver.title.should == "OpenedWindow";
+            driver.window.close();
+            driver.window.switchTo(original);
+            driver.window.handle.should == original;
+            driver.window.handles.length.should == 1;
         });
     }
 }

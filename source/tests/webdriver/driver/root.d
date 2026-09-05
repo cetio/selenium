@@ -124,4 +124,54 @@ version(integration)
             plain.shadowRoot().shouldThrow!NoSuchShadowRootException;
         });
     }
+
+    @Name("shadow root findAll preserves order and returns empty results") @Serial
+    unittest
+    {
+        testAll((driver) {
+            driver.go(dataUri(
+                `<html><body>`~
+                `<div id="host"></div>`~
+                `<script>`~
+                `document.getElementById("host").attachShadow({mode:"open"});`~
+                `document.getElementById("host").shadowRoot.innerHTML = `~
+                `"<p class='item'>first</p><p class='item'>second</p>";`~
+                `</script>`~
+                `</body></html>`
+            ));
+
+            Root shadow = driver.find(By.css("#host")).shadowRoot();
+            Element[] elements = shadow.findAll(By.css(".item"));
+            elements.length.should == 2;
+            elements[0].text.should == "first";
+            elements[1].text.should == "second";
+            shadow.findAll(By.css(".missing")).length.should == 0;
+        });
+    }
+
+    @Name("embedded root findAll preserves order") @Serial
+    unittest
+    {
+        testAll((driver) {
+            string iframeHtml = "<p class='item'>first</p><p class='item'>second</p>";
+            string html = "<html><body><iframe srcdoc=\""~iframeHtml~"\"></iframe></body></html>";
+            driver.go(dataUri(html));
+
+            Root embedded;
+            foreach (root; driver.roots())
+            {
+                if (root.type == RootType.Embedded)
+                {
+                    embedded = root;
+                    break;
+                }
+            }
+
+            embedded.shouldNotBeNull;
+            Element[] elements = embedded.findAll(By.css(".item"));
+            elements.length.should == 2;
+            elements[0].text.should == "first";
+            elements[1].text.should == "second";
+        });
+    }
 }
