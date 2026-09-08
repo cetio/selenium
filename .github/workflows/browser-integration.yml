@@ -29,4 +29,4 @@ jobs:
           compiler: ${{ matrix.compiler }}
 
       - name: Run ${{ matrix.browser }} integration tests
-        run: dub test --d-version=${{ matrix.browser }} --compiler=${{ matrix.compiler }}
+        run: dub test --d-version=${{ matrix.browser }}
