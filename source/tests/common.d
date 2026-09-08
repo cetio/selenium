@@ -3,6 +3,7 @@ module tests.common;
 import std.uri : encodeComponent;
 import selenium.bridge : Bridge;
 import selenium.browser : Browser;
+import core.stdc.stdio : printf;
 version(chrome)
     import selenium.browser.chrome : Chrome;
 version(firefox)
@@ -55,11 +56,14 @@ static this()
 
 shared static ~this()
 {
-    foreach (config; configs)
+    printf("[common] shared static ~this() entered, configs=%zu\n", configs.length);
+    foreach (i, config; configs)
     {
+        printf("[common] config %zu: bridge null=%d\n", i, config.bridge is null);
         if (config.bridge !is null)
             config.bridge.stop();
     }
+    printf("[common] shared static ~this() done\n");
 }
 
 void testOnce(string browserName, void delegate(Driver driver) dg, bool fallback = true)
