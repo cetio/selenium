@@ -2,15 +2,11 @@ module tests.webdriver.driver.window;
 
 import selenium.bridge : Bridge;
 import selenium.browser : Browser;
-import selenium.driver : Driver;
-import selenium.element : Size;
 import selenium.exception : WebDriverConnectionException;
 
 import unit_threaded;
 
 import std.json : JSONValue;
-
-// ========== Offline tests ==========
 
 @Name("parseElementId W3C key")
 unittest
@@ -65,92 +61,4 @@ unittest
     bridge.sessions["active"] = new Browser();
     bridge.createSession(JSONValue.emptyObject).shouldThrow!WebDriverConnectionException;
     bridge.sessions.length.should == 1;
-}
-
-// TODO: Move into new integration test files.
-version(chrome)
-{
-    import tests.common;
-
-    @Name("title returns page title") @Serial
-    unittest
-    {
-        testAll((driver) {
-            driver.go(dataUri("<html><title>WindowTest</title><body></body></html>"));
-            driver.title.should == "WindowTest";
-        });
-    }
-
-    @Name("handle returns window handle") @Serial
-    unittest
-    {
-        testAll((driver) {
-            driver.go(dataUri("<html><body></body></html>"));
-            driver.window.handle.length.shouldBeGreaterThan(0);
-        });
-    }
-
-    @Name("resize changes window size") @Serial
-    unittest
-    {
-        testAll((driver) {
-            driver.go(dataUri("<html><body></body></html>"));
-            Size original = driver.window.size;
-            driver.window.resize(Size(original.width - 50, original.height - 50));
-            Size changed = driver.window.size;
-            changed.width.should == original.width - 50;
-            changed.height.should == original.height - 50;
-        });
-    }
-
-    @Name("maximize enlarges window") @Serial
-    unittest
-    {
-        testAll((driver) {
-            driver.go(dataUri("<html><body></body></html>"));
-            driver.window.resize(Size(400, 400));
-            driver.window.maximize();
-            Size maximized = driver.window.size;
-            maximized.width.shouldBeGreaterThan(399);
-            maximized.height.shouldBeGreaterThan(399);
-        });
-    }
-
-    @Name("minimize hides document") @Serial
-    unittest
-    {
-        testAll((driver) {
-            driver.go(dataUri("<html><body></body></html>"));
-            driver.window.minimize();
-            driver.execute!bool("return document.hidden;").should == true;
-        });
-    }
-
-    @Name("handles returns window list") @Serial
-    unittest
-    {
-        testAll((driver) {
-            driver.go(dataUri("<html><body></body></html>"));
-            driver.window.handles.length.shouldBeGreaterThan(0);
-        });
-    }
-
-    @Name("window can open switch close and restore original handle") @Serial
-    unittest
-    {
-        testAll((driver) {
-            string original = driver.window.handle;
-            string opened = driver.window.open();
-
-            (opened != original).should == true;
-            driver.window.handles.length.should == 2;
-            driver.window.switchTo(opened);
-            driver.go(dataUri("<html><title>OpenedWindow</title><body></body></html>"));
-            driver.title.should == "OpenedWindow";
-            driver.window.close();
-            driver.window.switchTo(original);
-            driver.window.handle.should == original;
-            driver.window.handles.length.should == 1;
-        });
-    }
 }

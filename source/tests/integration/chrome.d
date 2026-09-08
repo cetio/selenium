@@ -4,3 +4,9 @@
 /// All tests in this module which require use the driver instance must be `@Serial` because they share live browser sessions.
 module tests.integration.chrome;
 
+version(chrome)
+{
+    import tests.common : BrowserIntegration;
+
+    mixin BrowserIntegration!"chrome";
+}

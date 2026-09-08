@@ -12,8 +12,6 @@ import unit_threaded;
 import core.time : msecs;
 import std.json;
 
-// ========== Offline tests ==========
-
 @Name("Chrome toJSON includes browserName and flags")
 unittest
 {
