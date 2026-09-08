@@ -1,39 +1,43 @@
-# Elements (WebDriver)
+# Elements
 
-An `Element` is a handle to a node in the page. It is valid only while that node stays attached to the DOM; stale handles raise `StaleElementReferenceException`.
+An `Element` is a session-scoped handle to a DOM node. Every operation sends a WebDriver command through the owning `Driver`. If the node is detached, commands can throw `StaleElementReferenceException`.
 
-For the official Selenium documentation on elements, see https://www.selenium.dev/documentation/webdriver/elements/.
+For upstream concepts, see the [official Selenium element documentation](https://www.selenium.dev/documentation/webdriver/elements/).
 
 ## Locators
 
-The `By` struct pairs a location strategy with a selector. Pass it to `find` or `findAll` on a driver, element, or root.
+`By` pairs a W3C location strategy with a selector. The current helpers are:
 
-| Locator | Strategy | Ruby equivalent |
-| --- | --- | --- |
-| `By.css(selector)` | CSS selector | `css: selector` |
-| `By.xpath(expr)` | XPath expression | `xpath: expr` |
-| `By.tagName(name)` | Tag name | `tag_name: name` |
-| `By.linkText(text)` | Anchor with exact visible text | `link_text: text` |
-| `By.partialLinkText(text)` | Anchor containing the text | `partial_link_text: text` |
+| Helper | Strategy |
+| --- | --- |
+| `By.css(selector)` | CSS selector. |
+| `By.xpath(expression)` | XPath expression. |
+| `By.tagName(name)` | Tag name. |
+| `By.linkText(text)` | Anchor with exact visible text. |
+| `By.partialLinkText(text)` | Anchor containing the text. |
+
+There is no `By.id` helper. Use a CSS ID selector such as `By.css("#submit")`.
 
 ```d
 Element button = driver.find(By.css("#submit"));
 Element[] links = driver.findAll(By.tagName("a"));
 ```
 
-## Properties
+`find` throws `NoSuchElementException` when no element matches. `findAll` returns an empty array.
+
+## State and Geometry
 
 | Member | Purpose |
 | --- | --- |
 | `text` | Rendered visible text. |
 | `tagName` | Lowercased tag name. |
-| `attribute(name)` | Markup attribute value. |
-| `property(name)` | Live DOM property value, which may differ from the markup attribute. |
+| `attribute(name)` | HTML attribute value. |
+| `property(name)` | Live DOM property value. |
 | `cssValue(name)` | Computed CSS value. |
-| `size` | Bounding rectangle as a `Size` (width, height). |
-| `position` | Bounding rectangle as a `Position` (x, y). |
-| `selected` | Whether the element is selected, applicable to options and checkable inputs. |
-| `enabled` | Whether the element is enabled rather than disabled. |
+| `size` | Width and height as `Size`. |
+| `position` | Top-left coordinates as `Position`. |
+| `selected` | Whether an option or checkable input is selected. |
+| `enabled` | Whether the element is enabled. |
 | `screenshot` | Base64 PNG of the element. |
 
 ```d
@@ -45,46 +49,47 @@ writeln(input.enabled);
 writeln(input.size.width);
 ```
 
-In Ruby: `element.attribute('placeholder')`, `element.property('value')`, `element.enabled?`, `element.size`. The D version uses `property` where Ruby uses `property` and `attribute` where Ruby uses `attribute`, matching the W3C distinction between markup attributes and live DOM properties.
-
 ## Interaction
 
 | Member | Purpose |
 | --- | --- |
 | `click()` | Click the element. |
-| `sendKeys(text...)` | Type one or more strings into the element, character by character. |
-| `clear()` | Clear the value of an editable element. |
+| `sendKeys(text...)` | Concatenate and type one or more strings character by character. |
+| `clear()` | Clear an editable element. |
 
 ```d
 Element form = driver.find(By.tagName("form"));
 Element input = form.find(By.css("input[name='username']"));
 
+input.clear();
 input.sendKeys("alice");
 form.find(By.css("button[type='submit']")).click();
 ```
 
-In Ruby: `element.send_keys('alice')`, `element.click`, `element.clear`. The D `sendKeys` is variadic, so you can pass multiple strings and they are concatenated in order.
+## Descendant Search
 
-## Scoped search
-
-`find` and `findAll` on an element search only within that element's descendants.
+Calling `find` or `findAll` on an element restricts the search to its descendants:
 
 ```d
-Element table = driver.find(By.id("data"));
+Element table = driver.find(By.css("#data"));
 Element[] rows = table.findAll(By.tagName("tr"));
 Element firstCell = table.find(By.tagName("td"));
 ```
 
-In Ruby: `element.find_elements(tag_name: 'tr')` and `element.find_element(tag_name: 'td')`.
+The browser's implicit timeout is synchronized before descendant searches.
 
-## Shadow roots
+## Shadow Roots
 
-`shadowRoot` returns the shadow root attached to an element, if any. The returned `Root` can be searched with `find` and `findAll` using the W3C shadow root endpoints.
+`element.shadowRoot` requests the element's W3C shadow-root reference. It throws `NoSuchShadowRootException` when no shadow root exists. The returned `Root` supports `find` and `findAll` through the W3C shadow endpoints.
 
 ```d
 Element host = driver.find(By.css("my-component"));
 Root shadow = host.shadowRoot;
-Element inner = shadow.find(By.css("button"));
+Element button = shadow.find(By.css("button"));
 ```
 
-In Ruby: `element.shadow_root` and `shadow_root.find_element(css: 'button')`.
+Only open shadow roots can be discovered by `driver.roots`. A directly returned root records open and complete state flags.
+
+## Serialization
+
+`element.toJSON()` returns the W3C element-reference object required when passing the element to commands such as frame switching. Reference IDs are opaque and valid only within the owning session.

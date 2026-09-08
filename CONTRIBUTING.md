@@ -1,71 +1,76 @@
 # Contributing to Selenium
 
-// TODO: Update docs
-Thanks for your interest in contributing. This documentation covers how contributions should be formatted, the testing system, and guidelines.
+Thanks for contributing to Selenium. Keep changes focused, follow the existing design and D style, and include tests for behavioral changes.
 
 ## Reporting Issues
 
-- Search existing issues before opening a new one to avoid duplicates.
-- For bugs, include:
-  - Steps to reproduce.
-  - Expected behavior vs. actual behavior.
-  - Environment details (OS, D compiler and version, WebDriver and browser versions).
-  - Relevant logs or a minimal reproduction where possible.
+Search existing issues before opening a new one. Bug reports should include:
 
-## Suggesting Features
+- Steps to reproduce and a minimal example when possible.
+- Expected and actual behavior.
+- Operating system and D compiler version.
+- Browser and WebDriver executable versions for live-session failures.
+- Relevant client or WebDriver logs without credentials or other sensitive data.
 
-- Open an issue with a clear description of the feature.
-- Explain the use case and how it fits the WebDriver protocol surface the library exposes.
+Feature requests should describe the use case, expected API, and relationship to the W3C WebDriver protocol or existing Grid scaffolding.
+
+## Development Setup
+
+Install [DUB](https://dub.pm), a D compiler, and the dependencies resolved by DUB. Chrome and Firefox integration tests also require the matching browser and WebDriver executable on `PATH`:
+
+| Browser version flag | Required executable |
+| --- | --- |
+| `chrome` | `chromedriver` |
+| `firefox` | `geckodriver` |
+
+The project does not download browsers or WebDriver executables, and a missing executable fails the corresponding integration-test run.
 
 ## Pull Requests
 
-- Fork the repository and work on a branch. A descriptive name like `feature/log-draining` helps but is not required.
-- Write commit messages that make it clear what changed and why.
-- Keep changes focused and consistent with the existing design. All changes should make sense and be easy to intuit for someone who knows the codebase.
-- Every new feature or bug fix must ship with tests. See the next section.
+- Work on a focused branch and explain both what changed and why.
+- Follow the conventions in neighboring modules. Avoid unnecessary dependencies or abstractions.
+- Document public types and functions with the existing Ddoc style.
+- Call out intentional differences from the W3C specification.
+- Update user and contributor documentation when commands, public APIs, or supported behavior change.
+- Add tests for every bug fix and feature.
 
 ## Tests
 
-Tests are required for any new feature or bug fix. The full testing workflow, directory layout, and conventions live in [TESTING.md](TESTING.md), and contributions are expected to comply with it.
-
-At minimum:
-
-- Add an **offline test** when the change involves parsing, serialization, or JSON roundtrips.
-- Add an **integration test** when the change involves live WebDriver behavior.
-- Cover both success and error paths where possible, and gate live tests behind `version (integration)`.
-
-Offline tests must pass before a pull request is considered:
+Run all offline tests before submitting a pull request:
 
 ```sh
 dub test
 ```
 
-Run integration tests locally when your change touches live behavior:
+Run each relevant browser integration suite when changing live WebDriver behavior:
 
 ```sh
-dub run -c integration
+dub test --d-version=chrome
+dub test --d-version=firefox
 ```
 
-To test a specific subpackage only:
+These commands run the offline suite as well as the selected browser-gated tests. Run a subpackage's offline tests with:
 
 ```sh
-dub test :webdriver -c unittest
-dub run :grid -c integration
+dub test :webdriver
+dub test :grid
 ```
 
-See [TESTING.md](TESTING.md) for browser configuration, naming, filtering, and debugging.
+Use the root package for the browser integration suites. See [TESTING.md](TESTING.md) for the test layout, filtering syntax, browser setup, and CI matrix.
 
-## Code Style
+## Review Checklist
 
-- Document public types and functions. Follow the existing ddoc style, and note explicitly where something resembles the W3C specification but deviates from it.
-- Keep code readable and avoid unnecessary dependencies.
-- Do not touch the build system in `dub.json` unless your change must integrate with it.
+Before opening a pull request:
+
+1. Run the relevant offline and browser tests.
+2. Confirm new tests fail without the fix when practical.
+3. Review the diff for generated files, unrelated changes, and sensitive data.
+4. Verify documentation examples and links affected by the change.
 
 ## Communication and Conduct
 
-- Ask questions and discuss ideas in issues or pull request comments.
-- Be respectful and constructive.
+Ask questions in issues or pull request comments, and keep discussions respectful and constructive.
 
 ## License
 
-By contributing, you agree that your contributions are licensed under the same license as Selenium ([Apache-2.0](LICENSE.txt)).
+By contributing, you agree that your contributions are licensed under the same [Apache-2.0 license](LICENSE.txt) as Selenium.

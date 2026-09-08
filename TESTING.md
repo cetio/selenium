@@ -1,116 +1,136 @@
-# Tests
+# Testing
 
-// TODO: Update docs
-Tests are split up into offline and integration tests.
+The repository has offline unit tests and browser integration tests. Both use [unit-threaded](https://github.com/atilaneves/unit-threaded) and the generated runner at `bin/ut.d`.
 
-- **Offline tests** cover behaviors that do not require real sessions (parsing, serialization, JSON roundtrips) and can be run with `dub test`.
-- **Integration tests** launch real driver sessions against installed browsers and can be run with `dub run -c integration`.
+- **Offline tests** cover capability serialization, response parsing, Grid models, and in-process routing without launching a browser.
+- **Browser integration tests** share a live Chrome or Firefox session and exercise navigation, windows, frames, scripts, elements, and roots.
 
 ## Prerequisites
 
-- [DUB](https://dub.pm) and a D compiler (DMD or LDC).
-- For integration tests, Chrome and Firefox are defaults, but this can be configured easily by modifying `tests.common`'s `configs` array to set up your own browser configurations.
+Install [DUB](https://dub.pm) and a D compiler. Browser integration tests additionally require the selected browser and its WebDriver executable on `PATH`:
 
-Browsers that cannot be found are skipped with a console message.
+| Version flag | Browser | WebDriver executable |
+| --- | --- | --- |
+| `chrome` | Chrome | `chromedriver` |
+| `firefox` | Firefox | `geckodriver` |
 
-## Directory Structure
-
-| Module | What it covers |
-| --- | --- |
-| `tests.webdriver.browser` | Browser capability serialization, `fromJSONValue`/`toJSON` roundtrips, logging prefs, and driver argument generation. |
-| `tests.webdriver.driver.element` | Element interaction: click, sendKeys, clear, find, nested find, cssValue, selected/enabled state, stale element handling. |
-| `tests.webdriver.driver.frame` | `By` strategy serialization, frame switching by index/element/parent/top. |
-| `tests.webdriver.driver.script` | JavaScript execution, argument passing, return type coercion, script error handling. |
-| `tests.webdriver.driver.window` | Element ID parsing, window title, handles, resize, maximize, minimize. |
-| `tests.grid.server` | Grid model roundtrips, router path-parameter extraction, and hub/node endpoint dispatch. |
-| `tests.common` | Shared helpers: `dataUri`, `testAll`, and the integration-test `configs` initializer. |
+The integration setup calls `resolveBinary()` and fails if the executable cannot be found. Browsers are not skipped automatically.
 
 ## Running Tests
 
-Run offline tests only:
+| Version | Meaning |
+| --- | --- |
+| `--d-version=chrome` | Includes Chrome integration tests. |
+| `--d-version=firefox` | Includes Firefox integration tests. |
+
+Run the offline suite:
 
 ```sh
 dub test
 ```
 
-Run all tests including integration tests:
+Run the offline suite plus one browser integration suite:
 
 ```sh
-dub run -c integration
+dub test --d-version=chrome
+dub test --d-version=firefox
 ```
 
-Run tests for a specific subpackage:
+Run a subpackage's offline tests:
 
 ```sh
-dub test :webdriver -c unittest
-dub run :webdriver -c integration
-dub test :grid -c unittest
-dub run :grid -c integration
+dub test :webdriver
+dub test :grid
 ```
 
-Pass a name pattern after `--` to limit which tests execute:
+Pass a unit-threaded test name after `--` to filter a run. Include the browser version flag when filtering for a browser integration test:
 
 ```sh
-dub test -- "click updates button text"
-dub run -c integration -- "frame switch"
+dub test -- "Browser roundtrips platform, strategy, and timeouts"
+dub test --d-version=chrome -- "click updates button text"
+dub test --d-version=firefox -- "frame switch by index"
 ```
 
-> **Why `dub run` for integration?** `dub test` only uses the config as-is when it's named `unittest`. For any other config name (like `integration`), DUB generates its own test runner, excludes the `mainSourceFile` (`bin/ut.d`), and uses D's built-in `runModuleUnitTests()` instead of unit-threaded. `dub run` builds and executes the config as-is, preserving the unit-threaded runner.
+## Test Layout
 
-## Test Framework
+| Path | Purpose |
+| --- | --- |
+| `source/tests/webdriver/browser.d` | Browser capability, logging, and JSON roundtrip tests. |
+| `source/tests/webdriver/driver/` | Offline locator, response parsing, and bridge-capacity tests. |
+| `source/tests/grid/server.d` | Grid models, router dispatch, hub behavior, and node behavior. |
+| `source/tests/common.d` | `dataUri` and the shared `BrowserIntegration` mixin. |
+| `source/tests/integration/chrome.d` | Chrome session setup under `version (chrome)`. |
+| `source/tests/integration/firefox.d` | Firefox session setup under `version (firefox)`. |
+| `bin/ut.d` | Generated unit-threaded runner. Do not edit it manually. |
 
-Tests use [unit-threaded](https://github.com/atilaneves/unit-threaded). The runner is auto-generated via `gen_ut_main` during the pre-build step (see `dub.json`). Tests are named with `@Name("...")` so they can be filtered from the command line.
+DUB runs `unit-threaded`'s `gen_ut_main` pre-build command to regenerate `bin/ut.d` from `source/tests`.
 
-Integration tests use `@Serial` because they share live browser sessions and are not safe to run in parallel.
+## Writing Tests
 
-## Configuring Browsers
+Name tests with `@Name` so individual cases can be selected from the command line. Keep offline tests independent of installed browsers and network services.
 
-The integration test matrix is defined in `tests.common` in the `configs` static constructor. By default it attempts Chrome and Firefox with suppressive log levels to keep output clean.
-
-To add a browser, append to `configs` inside the `version(integration)` block:
+Add browser-independent assertions to the appropriate module under `source/tests/webdriver` or `source/tests/grid`. Add live behavior shared by Chrome and Firefox to `BrowserIntegration` in `source/tests/common.d`. Integration tests share one session per browser module and must use `@Serial`.
 
 ```d
-Edge edge = new Edge();
-if (edge.isInstalled)
-    configs ~= TestConfig(edge, Bridge.start(edge.resolveBinary(false), []));
-```
-
-## Writing New Tests
-
-All new tests must test behavior and should not be shallow, meaning they must test behavior that is not fixed.
-
-A good test is minimal and isolated. When adding a new feature, add an offline test if it involves parsing or serialization, and an integration test if it involves WebDriver behavior. Test both success paths and error paths where possible.
-
-If a feature has different live vs offline behavior, the test file should contain both kinds of tests, using `version (integration)` to gate the live ones:
-
-```d
-// Offline: always compiled
 @Name("By.css serializes correctly")
-unittest { ... }
-
-version(integration)
+unittest
 {
-    import tests.common;
-
-    @Name("click updates button text") @Serial
-    unittest { testAll((driver) { ... }); }
+    By.css("#submit").toJSON()["using"].str.should == "css selector";
 }
 ```
 
-### Test Pages
-
-If constructing your own pages for integration tests, you can use the `dataUri` helper in `tests.common` to create HTML pages inline:
+A shared live test in `BrowserIntegration` uses the browser module's `driver` accessor:
 
 ```d
-driver.go(dataUri("<html><body><p id='t'>test</p></body></html>"));
+@Name("click updates button text") @Serial
+unittest
+{
+    driver.go(dataUri(
+        "<html><body><button id='button' "
+        ~"onclick='this.textContent=\"clicked\"'>click</button></body></html>"
+    ));
+    driver.find(By.css("#button")).click();
+    driver.find(By.css("#button")).text.should == "clicked";
+}
 ```
 
-## Debugging
+When adding support for another integration browser, create a module under `source/tests/integration`, gate its setup with a browser-specific `version (...)`, construct the browser and bridge, and mixin `BrowserIntegration`. Add the same version identifier to the CI browser matrix.
 
-- If an integration test fails, the browser binary and bridge logs may contain the real error. The default configs suppress most driver output; temporarily remove `--log-level=OFF` or `--log fatal` in `tests.common` to see verbose output.
-- If a browser is skipped unexpectedly, verify it is on your `PATH` or use the absolute path via the browser's `binary` field.
-- Offline tests should never depend on a browser being installed. If `dub test` fails, it is a code bug, not an environment issue.
+### Test Pages
 
-## CI
+Use `dataUri` from `tests.common` for small, self-contained pages:
 
-Integration tests require installed browsers. In CI environments (detected via the `CI` environment variable), Chrome is automatically launched with `--no-sandbox` and `--headless`. Offline tests (`dub test`) are safe to run in any CI environment.
+```d
+driver.go(dataUri("<html><body><p id='text'>test</p></body></html>"));
+```
+
+This keeps browser integration tests deterministic and avoids external network dependencies.
+
+## Browser Setup and Debugging
+
+Chrome integration tests always launch Chrome with `--no-sandbox` and `--headless`. Firefox tests always launch Firefox with `--headless`.
+
+WebDriver process logs are suppressed with `--log-level=OFF` and `--log fatal`, respectively.
+
+If an integration test fails:
+
+- Confirm the browser and matching WebDriver executable are installed and on `PATH`.
+- Confirm the browser and WebDriver versions are compatible.
+- Temporarily relax the WebDriver log arguments in the corresponding `source/tests/integration` module.
+- Filter to the failing `@Name` while iterating.
+
+## CI/CD
+
+The [Browser Integration workflow](.github/workflows/browser-integration.yml) runs on pushes and pull requests targeting `master`. Its matrix uses:
+
+- `ldc-latest`. (DMD will cause false negatives on MacOS)
+- Ubuntu, Windows, and macOS GitHub-hosted runners.
+- Chrome and Firefox.
+
+Each matrix entry runs:
+
+```sh
+dub test --d-version=<browser>
+```
+
+This executes the offline tests and the selected browser integration suite.

@@ -1,199 +1,179 @@
-# Driver (WebDriver)
+# Driver
 
-A `Driver` is a handle to a single WebDriver session. It wraps the session id and the bridge that hosts it, and exposes the commands you use to drive the browser.
+A `Driver` is a handle to one WebDriver session. It stores the session ID, negotiated browser capabilities, logger, and bridge used for commands.
 
-For the official Selenium documentation on drivers, see https://www.selenium.dev/documentation/webdriver/drivers/.
+Unlike `Bridge`, `Driver` has no destructor. Call `stop()` to end its session. This leaves the bridge and any other sessions on it alive.
 
-## Starting a session
+## Starting and Connecting
 
 | Overload | Purpose |
 | --- | --- |
-| `Driver.start()` | Starts a session with a generic browser, letting the first driver on `PATH` win. |
-| `Driver.start(Browser alwaysMatch, Browser[] firstMatch, Logger logger)` | Resolves the binary, spawns a bridge, and starts a session. |
-| `Driver.start(Bridge bridge, Browser alwaysMatch, Browser[] firstMatch, Logger logger)` | Starts a session on an existing bridge. |
-| `Driver.connect(string address, Browser alwaysMatch, Browser[] firstMatch, Logger logger)` | Connects to a remote server or grid and starts a session. |
+| `Driver.start()` | Starts a generic session using the first known WebDriver executable on `PATH`. |
+| `Driver.start(Browser alwaysMatch, Browser[] firstMatch = null, Logger logger = null)` | Starts a local WebDriver process and creates a session. |
+| `Driver.start(Bridge bridge, Browser alwaysMatch, Browser[] firstMatch, Logger logger = null)` | Creates a session on an existing bridge. |
+| `Driver.connect(string address, Browser alwaysMatch, Browser[] firstMatch = null, Logger logger = null)` | Creates a session on a remote WebDriver endpoint. |
 
 ```d
 import selenium;
-import selenium.browser.chrome : Chrome;
 
 Driver driver = Driver.start(new Chrome());
 scope (exit) driver.stop();
 ```
 
-In Ruby:
-
-```ruby
-driver = Selenium::WebDriver.for :chrome
-```
-
-`Driver.start` combines `Selenium::WebDriver.for` and `Selenium::WebDriver::Service` into one call. The bridge is spawned and the session is created in a single step.
-
-### Remote connections
-
-`Driver.connect` attaches to an already running WebDriver server or grid hub. The backing `Bridge` has a capacity of 1, so only this driver's session may use it. The bridge does not own a process, so `stop` will not kill the remote server.
+`Driver.connect` creates a non-owning bridge with capacity one. It does not stop the remote service:
 
 ```d
 Driver driver = Driver.connect("http://grid.example.com:4444", new Chrome());
 scope (exit) driver.stop();
 ```
 
-In Ruby:
+## Navigation and Document State
 
-```ruby
-driver = Selenium::WebDriver.for :remote, url: 'http://grid.example.com:4444', capabilities: options
-```
-
-## Stopping a session
-
-`stop` ends only this driver's session and leaves the bridge alive for any others. Unlike `Bridge`, a `Driver` does not destruct automatically.
-
-```d
-driver.stop();
-```
-
-In Ruby this is `driver.quit`. The naming differs because `Driver` does not own the bridge, so "stop" refers to the session, not the process.
-
-## Navigation
-
-| Call | Action |
+| Member | Action |
 | --- | --- |
-| `driver.go(url)` | Navigate to a URL. |
-| `driver.back()` | Navigate back one entry in history. |
-| `driver.forward()` | Navigate forward one entry in history. |
-| `driver.refresh()` | Reload the current document. |
-| `driver.url` | Current document URL. |
-| `driver.title` | Current document title. |
-| `driver.source` | Serialized page source. |
-| `driver.screenshot` | Base64 PNG of the viewport. |
+| `go(url)` | Navigate to a URL. |
+| `back()` | Move back one history entry. |
+| `forward()` | Move forward one history entry. |
+| `refresh()` | Reload the current document. |
+| `url` | Current document URL. |
+| `title` | Current document title. |
+| `source` | Serialized page source. |
+| `screenshot` | Base64 PNG of the viewport. |
 
 ```d
 driver.go("https://example.com");
 writeln(driver.title);
-driver.back();
+driver.refresh();
 ```
 
-In Ruby: `driver.get`, `driver.title`, `driver.navigate.back`, `driver.navigate.forward`, `driver.navigate.refresh`. The D version uses `go` instead of `get` to avoid confusion with D's `get` property convention.
+## Finding Elements
 
-## Finding elements
-
-| Call | Action |
-| --- | --- |
-| `driver.find(By by)` | First element matching the locator. Throws `NoSuchElementException` if none match. |
-| `driver.findAll(By by)` | Every element matching the locator, or an empty array. |
+`find` returns the first match and throws `NoSuchElementException` when no element matches. `findAll` returns all matches in document order or an empty array. `activeElement` returns the element that currently has focus.
 
 ```d
 Element button = driver.find(By.css("#submit"));
 Element[] items = driver.findAll(By.xpath("//li[@class='item']"));
+Element focused = driver.activeElement;
 ```
 
-In Ruby: `driver.find_element(css: '#submit')` and `driver.find_elements(xpath: "//li[@class='item']")`.
+See [Elements](ELEMENTS.md) for locators, element state, interaction, descendant search, and shadow roots.
 
-## Script execution
+## Script Execution
 
-`execute` runs a synchronous script in the page and returns its typed result. When `T` is `Element` or `Element[]`, the returned references are wrapped into handles.
+`execute!T` runs a synchronous script. Its optional arguments must be a JSON array. Results are deserialized as `T`. `Element` and `Element[]` results become handles for this driver.
 
 ```d
-int sum = driver.execute!int("return arguments[0] + arguments[1];", JSONValue([2, 3]));
-Element created = driver.execute!Element("return document.querySelector('#foo');");
+import std.json : JSONValue;
+
+int sum = driver.execute!int(
+    "return arguments[0] + arguments[1];",
+    JSONValue([JSONValue(2), JSONValue(3)])
+);
+Element selected = driver.execute!Element("return document.querySelector('#selected');");
 ```
 
-In Ruby: `driver.execute_script('return arguments[0] + arguments[1];', 2, 3)`. The D version requires a JSONValue for arguments and a template parameter for the return type, since D does not have Ruby's dynamic dispatch.
+Asynchronous script execution is not currently implemented.
 
-## Windows and tabs
+## Windows and Tabs
 
-| Call | Action |
+Window commands are grouped under `driver.window`:
+
+| Member | Action |
 | --- | --- |
-| `driver.window.handle` | Handle of the current window. |
-| `driver.window.handles` | Handles of all open windows. |
-| `driver.window.size` | Size of the current window. |
-| `driver.window.close()` | Close the current window. |
-| `driver.window.maximize()` | Maximize the current window. |
-| `driver.window.minimize()` | Minimize the current window. |
-| `driver.window.fullscreen()` | Fullscreen the current window. |
-| `driver.window.resize(Size)` | Resize the current window. |
-| `driver.window.switchTo(handle)` | Switch focus to a window by handle. |
-| `driver.window.open(type)` | Open a new window or tab and return its handle. |
+| `handle` | Current window handle. |
+| `handles` | All window handles. |
+| `size` | Current window width and height. |
+| `open(type = "tab")` | Open a tab or window and return its handle. |
+| `switchTo(handle)` | Focus a window. |
+| `close()` | Close the current window. |
+| `resize(Size)` | Resize the current window. |
+| `maximize()` | Maximize the current window. |
+| `minimize()` | Minimize the current window. |
+| `fullscreen()` | Enter fullscreen mode. |
 
 ```d
-string tab = driver.window.open("tab");
-driver.window.switchTo(tab);
+string original = driver.window.handle;
+string opened = driver.window.open("tab");
+driver.window.switchTo(opened);
+driver.window.close();
+driver.window.switchTo(original);
 ```
-
-In Ruby: `driver.window_handles`, `driver.switch_to.window(handle)`, `driver.manage.window.maximize`. The D version groups these under the `window` alias for discoverability.
 
 ## Frames
 
-| Call | Action |
+Frame commands are grouped under `driver.frame`:
+
+| Member | Action |
 | --- | --- |
-| `driver.frame.switchTo()` | Switch to the top-level browsing context. |
-| `driver.frame.switchTo(long id)` | Switch to the frame at the given index. |
-| `driver.frame.switchTo(Element element)` | Switch to the frame identified by the element. |
-| `driver.frame.switchToParent()` | Switch to the parent of the current frame. |
+| `switchTo()` | Switch to the top-level browsing context. |
+| `switchTo(long index)` | Switch to a frame by index. |
+| `switchTo(Element element)` | Switch to the frame represented by an element. |
+| `switchToParent()` | Switch to the parent browsing context. |
 
 ```d
 driver.frame.switchTo(0);
-// ... interact with frame contents ...
-driver.frame.switchTo();
+// Interact with frame contents.
+driver.frame.switchToParent();
 ```
-
-In Ruby: `driver.switch_to.frame(0)` and `driver.switch_to.default_content`. The D version groups these under the `frame` alias.
 
 ## Roots
 
-A `Root` is a searchable context within the DOM. The primary document, iframes, and shadow roots are all roots. `driver.root` returns the primary document, and `driver.roots` returns all searchable roots in the current browsing context.
+A `Root` is a searchable primary document, iframe, or shadow root. `driver.root` returns the primary root. `driver.roots` executes JavaScript to discover the primary document, top-level iframes, and open shadow roots in the current browsing context.
 
 ```d
-Root doc = driver.root;
-Element[] headings = doc.findAll(By.tagName("h1"));
+Root documentRoot = driver.root;
+Element[] headings = documentRoot.findAll(By.tagName("h1"));
 
-Root[] all = driver.roots;
-foreach (root; all)
+foreach (root; driver.roots)
 {
     if (root.type == RootType.Shadow)
-    {
-        Element[] shadowButtons = root.findAll(By.css("button"));
-    }
+        root.findAll(By.css("button"));
 }
 ```
 
-Shadow root search uses the W3C shadow root endpoints directly, so no frame switching is needed. Embedded root search temporarily switches to the iframe and restores the parent frame afterwards.
+Shadow-root searches use W3C shadow endpoints. Searching an embedded root switches the driver into that iframe and leaves it there. Call `driver.frame.switchToParent()` or `driver.frame.switchTo()` when finished.
+
+`Root.state` is a `RootState` bitmask describing document readiness and whether a shadow root is open or closed.
 
 ## Cookies
 
-Cookies are accessed through the `cookies` UFCS helper, which returns a `CookieStore` scoped to the driver's session.
+The UFCS property `driver.cookies` creates a `CookieStore` scoped to the session:
 
-| Call | Action |
+| Member | Action |
 | --- | --- |
-| `driver.cookies.all()` | Every cookie visible to the current document. |
-| `driver.cookies.find(name)` | A single cookie by name. |
-| `driver.cookies.add(Cookie)` | Add or update a cookie. |
-| `driver.cookies.remove(name)` | Delete a single cookie by name. |
-| `driver.cookies.clear()` | Delete every cookie for the current document. |
+| `all()` | Read every cookie visible to the current document. |
+| `find(name)` | Read one cookie. |
+| `add(cookie)` | Add or update a cookie. |
+| `remove(name)` | Delete one cookie. |
+| `clear()` | Delete all cookies visible to the current document. |
 
 ```d
 driver.cookies.add(Cookie("session", "abc123"));
-Cookie[] all = driver.cookies.all();
-driver.cookies.clear();
+Cookie[] cookies = driver.cookies.all();
+driver.cookies.remove("session");
 ```
 
-In Ruby: `driver.manage.add_cookie(name: 'session', value: 'abc123')`, `driver.manage.all_cookies`, `driver.manage.delete_cookie('session')`, `driver.manage.delete_all_cookies`.
+`Cookie` supports path, domain, secure, HTTP-only, expiry, and SameSite fields in addition to name and value.
 
 ## Logging
 
-The `Logger` on a driver aggregates client-side, driver-process, and remote logging for the session. Per-browser logging preferences are folded upward into one logger when a session starts.
+A driver's `Logger` combines driver-process options, Chromium logging capabilities, and legacy remote log retrieval. Remote `/log` commands are vendor extensions and may not be supported by every browser.
 
-| Call | Action |
+| Member | Purpose |
 | --- | --- |
-| `driver.logger.types()` | Log types the driver exposes via `/log/types`. |
-| `driver.logger.fetch(type)` | Fetch and clear pending remote logs of a type. |
-| `driver.logger.drain(LogType)` | Fetch, retain, and forward entries to the sink. |
-| `driver.logger.entries` | Remote log entries drained so far. |
+| `levels` | Requested remote levels by log type. |
+| `path`, `driverLevel`, `append`, `readableTimestamp`, `silent` | Local WebDriver process logging options. |
+| `types()` | Query remote log types. |
+| `fetch(type)` | Fetch and clear pending remote entries. |
+| `drain(type)` | Fetch entries and retain them in `entries`. |
+| `entries` | Entries retained by previous drains. |
 
 ```d
-import selenium.driver.logger : LogType;
+import selenium.driver.logger : LogEntry, LogType;
 
 LogEntry[] browserLogs = driver.logger.drain(LogType.Browser);
 foreach (entry; browserLogs)
     writeln(entry.level, ": ", entry.message);
 ```
+
+Chrome and Edge serialize their per-type logging preferences as `goog:loggingPrefs` and merge them into the session logger when the session starts.
