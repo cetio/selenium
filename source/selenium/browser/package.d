@@ -4,10 +4,11 @@ module selenium.browser;
 import selenium.exception : InvalidArgumentException, WebDriverConnectionException;
 import selenium.driver.logger : Logger;
 
+import std.file : exists, isFile;
 import std.json : JSONValue, JSONType;
-import std.typecons : Tuple;
-import std.string : strip;
-static import std.process;
+import std.path : buildPath, pathSeparator;
+import std.process : environment;
+import std.string : split;
 import core.time : Duration, dur;
 
 /// How far a navigation must progress before it is considered complete.
@@ -130,12 +131,38 @@ class Browser
      */
     string resolveBinary(bool throwOnNotFound = true)
     {
+        bool isExecutable(string path)
+        {
+            if (!path.exists || !path.isFile)
+                return false;
+            version (Posix)
+            {
+                import std.file : getAttributes;
+                import std.conv : octal;
+                if ((path.getAttributes & octal!111) == 0)
+                    return false;
+            }
+            return true;
+        }
+
         string findBinary(string candidate)
         {
-            Tuple!(int, "status", string, "output") result =
-                std.process.execute(["which", candidate]);
-            if (result.status == 0)
-                return result.output.strip;
+            version (Windows)
+                enum string[] SUFFIXES = [".exe", ".bat", ".cmd"];
+            else
+                enum string[] SUFFIXES = [""];
+
+            foreach (string dir; environment.get("PATH", "").split(pathSeparator))
+            {
+                if (dir.length == 0)
+                    continue;
+                foreach (string suffix; SUFFIXES)
+                {
+                    string path = buildPath(dir, candidate~suffix);
+                    if (isExecutable(path))
+                        return path;
+                }
+            }
             return null;
         }
 
