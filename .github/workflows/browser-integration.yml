@@ -2,9 +2,9 @@ name: Browser Integration Tests (CI)
 
 on:
   push:
-    branches: [main]
+    branches: [ "master" ]
   pull_request:
-    branches: [main]
+    branches: [ "master" ]
 
 permissions:
   contents: read
@@ -16,8 +16,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, windows-latest, macos-latest]
-        browser: [chrome, firefox]
+        os: [ ubuntu-latest, windows-latest, macos-latest ]
+        browser: [ chrome, firefox ]
 
     steps:
       - uses: actions/checkout@v4
