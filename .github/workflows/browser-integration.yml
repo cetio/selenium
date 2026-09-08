@@ -1,4 +1,4 @@
-name: Browser Integration Tests (CI)
+name: Browser Integration
 
 on:
   push:
