@@ -7,7 +7,7 @@ import selenium.exception : NoSuchShadowRootException;
 
 import unit_threaded;
 
-version(integration)
+version(chrome)
 {
     import tests.common;
 

@@ -1,5 +1,6 @@
 # Tests
 
+// TODO: Update docs
 Tests are split up into offline and integration tests.
 
 - **Offline tests** cover behaviors that do not require real sessions (parsing, serialization, JSON roundtrips) and can be run with `dub test`.

@@ -26,5 +26,5 @@ jobs:
         with:
           compiler: dmd-latest
 
-      - name: Run integration tests
-        run: dub run -c integration
+      - name: Run tests with Chrome and Firefox
+        run: dub test --d-version=chrome --d-version=firefox

@@ -5,6 +5,6 @@
 		"cachetools": "0.4.2",
 		"requests": "2.2.1",
 		"test_allocator": "0.3.4",
-		"unit-threaded": "2.2.4"
+		"unit-threaded": "2.2.5"
 	}
 }

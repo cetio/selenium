@@ -67,7 +67,8 @@ unittest
     bridge.sessions.length.should == 1;
 }
 
-version(integration)
+// TODO: Move into new integration test files.
+version(chrome)
 {
     import tests.common;
 

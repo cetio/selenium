@@ -6,7 +6,7 @@ import selenium.exception : StaleElementReferenceException;
 
 import unit_threaded;
 
-version(integration)
+version(chrome)
 {
     import tests.common;
 

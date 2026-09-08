@@ -33,27 +33,10 @@
 					"sourcePaths": ["source/"],
 					"excludedSourceFiles": ["source/selenium/grid/**", "source/tests/grid/**"],
 					"preBuildCommands": [
-						"$DUB run --compiler=$$DC unit-threaded -c gen_ut_main -- -f bin/ut.d source/tests/webdriver"
+						"$DUB run unit-threaded -c gen_ut_main -- -f bin/ut.d source/tests/webdriver"
 					],
 					"mainSourceFile": "bin/ut.d",
 					"buildOptions": ["unittests"],
-					"dependencies": {
-						"requests": "~>2.2.1",
-						"unit-threaded": "~>2.2.0"
-					}
-				},
-				{
-					"name": "integration",
-					"targetPath": "bin",
-					"targetType": "executable",
-					"sourcePaths": ["source/"],
-					"excludedSourceFiles": ["source/selenium/grid/**", "source/tests/grid/**"],
-					"preBuildCommands": [
-						"$DUB run --compiler=$$DC unit-threaded -c gen_ut_main -- -f bin/ut.d source/tests/webdriver"
-					],
-					"mainSourceFile": "bin/ut.d",
-					"buildOptions": ["unittests"],
-					"versions": ["integration"],
 					"dependencies": {
 						"requests": "~>2.2.1",
 						"unit-threaded": "~>2.2.0"
@@ -81,26 +64,10 @@
 					"sourcePaths": ["source/"],
 					"excludedSourceFiles": ["source/tests/webdriver/**"],
 					"preBuildCommands": [
-						"$DUB run --compiler=$$DC unit-threaded -c gen_ut_main -- -f bin/ut.d source/tests/grid"
+						"$DUB run unit-threaded -c gen_ut_main -- -f bin/ut.d source/tests/grid"
 					],
 					"mainSourceFile": "bin/ut.d",
 					"buildOptions": ["unittests"],
-					"dependencies": {
-						"unit-threaded": "~>2.2.0"
-					}
-				},
-				{
-					"name": "integration",
-					"targetPath": "bin",
-					"targetType": "executable",
-					"sourcePaths": ["source/"],
-					"excludedSourceFiles": ["source/tests/webdriver/**"],
-					"preBuildCommands": [
-						"$DUB run --compiler=$$DC unit-threaded -c gen_ut_main -- -f bin/ut.d source/tests/grid"
-					],
-					"mainSourceFile": "bin/ut.d",
-					"buildOptions": ["unittests"],
-					"versions": ["integration"],
 					"dependencies": {
 						"unit-threaded": "~>2.2.0"
 					}
@@ -119,24 +86,10 @@
 			"targetPath": "bin",
 			"targetType": "executable",
 			"preBuildCommands": [
-				"$DUB run --compiler=$$DC unit-threaded -c gen_ut_main -- -f bin/ut.d source/tests"
+				"$DUB run unit-threaded -c gen_ut_main -- -f bin/ut.d source/tests"
 			],
 			"mainSourceFile": "bin/ut.d",
 			"buildOptions": ["unittests"],
-			"dependencies": {
-				"unit-threaded": "~>2.2.0"
-			}
-		},
-		{
-			"name": "integration",
-			"targetPath": "bin",
-			"targetType": "executable",
-			"preBuildCommands": [
-				"$DUB run --compiler=$$DC unit-threaded -c gen_ut_main -- -f bin/ut.d source/tests"
-			],
-			"mainSourceFile": "bin/ut.d",
-			"buildOptions": ["unittests"],
-			"versions": ["integration"],
 			"dependencies": {
 				"unit-threaded": "~>2.2.0"
 			}

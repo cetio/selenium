@@ -1,29 +1,29 @@
 module tests.common;
 
 import std.uri : encodeComponent;
+import selenium.bridge : Bridge;
+import selenium.browser : Browser;
+version(chrome)
+    import selenium.browser.chrome : Chrome;
+version(firefox)
+    import selenium.browser.firefox : Firefox;
+import selenium.driver : Driver;
 
 string dataUri(string html)
     => "data:text/html;charset=utf-8,"~encodeComponent(html);
 
-version(integration)
+
+struct TestConfig
 {
-    import std.stdio : writeln;
-    import selenium.bridge : Bridge;
-    import selenium.browser : Browser;
-    import selenium.browser.chrome : Chrome;
-    import selenium.browser.firefox : Firefox;
-    import selenium.driver : Driver;
-    import selenium.exception : WebDriverConnectionException;
+    Browser browser;
+    Bridge bridge;
+}
 
-    struct TestConfig
-    {
-        Browser browser;
-        Bridge bridge;
-    }
+static TestConfig[] configs;
 
-    static TestConfig[] configs;
-
-    static this()
+static this()
+{
+    version(chrome)
     {
         Chrome chrome = new Chrome();
         if (chrome.isInstalled)
@@ -36,54 +36,57 @@ version(integration)
                 Bridge.start(chrome.resolveBinary(), ["--log-level=OFF"])
             );
         }
+    }
 
+    version(firefox)
+    {
         Firefox firefox = new Firefox();
         if (firefox.isInstalled)
         {
             firefox.args = ["--headless"];
-
-            // configs ~= TestConfig(
-            //     firefox,
-            //     Bridge.start(firefox.resolveBinary(), ["--log", "fatal"])
-            // );
+            
+            configs ~= TestConfig(
+                firefox,
+                Bridge.start(firefox.resolveBinary(), ["--log", "fatal"])
+            );
         }
     }
+}
 
-    shared static ~this()
+shared static ~this()
+{
+    foreach (config; configs)
     {
-        foreach (config; configs)
-        {
-            if (config.bridge !is null)
-                config.bridge.stop();
-        }
+        if (config.bridge !is null)
+            config.bridge.stop();
+    }
+}
+
+void testOnce(string browserName, void delegate(Driver driver) dg, bool fallback = true)
+{
+    foreach (config; configs)
+    {
+        if (config.browser.name != browserName)
+            continue;
+
+        Driver driver;
+        driver = Driver.start(config.bridge, config.browser, null);
+        scope (exit) driver.stop();
+        dg(driver);
+        return;
     }
 
-    void testOnce(string browserName, void delegate(Driver driver) dg, bool fallback = true)
-    {
-        foreach (config; configs)
-        {
-            if (config.browser.name != browserName)
-                continue;
-                
-            Driver driver;
-            driver = Driver.start(config.bridge, config.browser, null);
-            scope (exit) driver.stop();
-            dg(driver);
-            return;
-        }
+    if (fallback)
+        testOnce(configs[0].browser.name, dg, false);
+}
 
-        if (fallback)
-            testOnce(configs[0].browser.name, dg, false);
-    }
-
-    void testAll(void delegate(Driver driver) dg)
+void testAll(void delegate(Driver driver) dg)
+{
+    foreach (config; configs)
     {
-        foreach (config; configs)
-        {
-            Driver driver;
-            driver = Driver.start(config.bridge, config.browser, null);
-            scope (exit) driver.stop();
-            dg(driver);
-        }
+        Driver driver;
+        driver = Driver.start(config.bridge, config.browser, null);
+        scope (exit) driver.stop();
+        dg(driver);
     }
 }

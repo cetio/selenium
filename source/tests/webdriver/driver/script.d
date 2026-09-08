@@ -8,7 +8,7 @@ import unit_threaded;
 
 import std.json : JSONValue;
 
-version(integration)
+version(chrome)
 {
     import tests.common;
 

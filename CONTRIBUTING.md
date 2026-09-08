@@ -1,5 +1,6 @@
 # Contributing to Selenium
 
+// TODO: Update docs
 Thanks for your interest in contributing. This documentation covers how contributions should be formatted, the testing system, and guidelines.
 
 ## Reporting Issues

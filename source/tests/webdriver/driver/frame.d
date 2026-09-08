@@ -42,7 +42,7 @@ unittest
     By.partialLinkText("Click").toJSON()["value"].str.should == "Click";
 }
 
-version(integration)
+version(chrome)
 {
     import tests.common;
 
