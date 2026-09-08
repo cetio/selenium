@@ -17,15 +17,16 @@ jobs:
       fail-fast: false
       matrix:
         os: [ ubuntu-latest, windows-latest, macos-latest ]
+        compiler: [ dmd-latest, ldc-latest ]
         browser: [ chrome, firefox ]
 
     steps:
       - uses: actions/checkout@v4
 
-      - name: Install D compiler (dmd-latest)
+      - name: Install D compiler (${{ matrix.compiler }})
         uses: dlang-community/setup-dlang@v2
         with:
-          compiler: dmd-latest
+          compiler: ${{ matrix.compiler }}
 
       - name: Run ${{ matrix.browser }} integration tests
-        run: dub test --d-version=${{ matrix.browser }}
+        run: dub test --d-version=${{ matrix.browser }} --compiler=${{ matrix.compiler }}
