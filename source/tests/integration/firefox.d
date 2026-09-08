@@ -21,7 +21,9 @@ version(firefox)
     import std.json : JSONValue;
 
 private:
-    shared static Driver driver;
+    shared Driver _driver;
+
+    Driver driver() => cast(Driver)_driver;
 
     shared static this()
     {
@@ -29,7 +31,7 @@ private:
         browser.args = ["--headless"];
         Logger logger = new Logger();
         Bridge bridge = Bridge.start(browser.resolveBinary(), ["--log", "fatal"]);
-        driver = cast(shared)Driver.start(
+        _driver = cast(shared)Driver.start(
             bridge,
             browser,
             null,
@@ -39,7 +41,7 @@ private:
 
     shared static ~this()
     {
-        if (driver is null)
+        if (_driver is null)
             return;
 
         driver.stop();
