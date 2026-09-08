@@ -97,9 +97,8 @@ public:
     /**
      * Finds the first element matching the locator within this root.
      *
-     * For `Embedded` roots the current frame is temporarily switched to the
-     * iframe and restored to its parent afterwards. Callers nested inside a
-     * different frame context may be affected.
+     * For `Embedded` roots the current frame is switched to the iframe before
+     * searching. The driver remains in the iframe context after the call.
      *
      * Params:
      *  by = The location strategy and selector.
@@ -147,9 +146,8 @@ public:
     /**
      * Finds every element matching the locator within this root.
      *
-     * For `Embedded` roots the current frame is temporarily switched to the
-     * iframe and restored to its parent afterwards. Callers nested inside a
-     * different frame context may be affected.
+     * For `Embedded` roots the current frame is switched to the iframe before
+     * searching. The driver remains in the iframe context after the call.
      *
      * Params:
      *  by = The location strategy and selector.

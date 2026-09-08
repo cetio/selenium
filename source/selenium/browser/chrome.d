@@ -17,7 +17,7 @@ import std.regex : match, ctRegex;
 class Chrome : Browser
 {
     /// Wrapper struct for preferences. Chrome supports both browser (local state) and user preferences.
-    /// Preferences are NOT sanitized or validated, and are expected to be JSON arrays.
+    /// Preferences are NOT sanitized or validated, and are expected to be JSON objects.
     struct Preferences
     {
         /// Local state preferences.

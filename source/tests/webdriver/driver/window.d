@@ -1,3 +1,4 @@
+/// Offline bridge tests: element reference parsing, response unwrapping, and capacity checks.
 module tests.webdriver.driver.window;
 
 import selenium.bridge : Bridge;

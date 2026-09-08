@@ -6,6 +6,10 @@ string dataUri(string html)
     => "data:text/html;charset=utf-8,"~encodeComponent(html);
 
 /// Mixin template for browser integration tests.
+///
+/// The mixing-in module must provide a `driver` accessor that returns the shared `Driver` instance,
+/// plus the imports the tests need (`By`, `Element`, `Size`, `Root`, `RootType`, etc.). Every test
+/// is marked `@Serial` because they all share one live browser session.
 mixin template BrowserIntegration()
 {
     @Name("title returns page title") @Serial

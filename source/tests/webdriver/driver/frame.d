@@ -1,3 +1,4 @@
+/// Offline tests for the `By` location strategy serialization.
 module tests.webdriver.driver.frame;
 
 import selenium.element : By;

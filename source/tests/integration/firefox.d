@@ -1,8 +1,9 @@
 /// Firefox integration tests.
-/// This module is only compiled when the `--d-version=firefox` flag is used.
 ///
-/// All tests in this module which require use the driver instance must be `@Serial` because they
-/// share live browser sessions.
+/// This module is only compiled when `dub test --d-version=firefox` is used. It sets up a shared
+/// Firefox session and mixes in `tests.common.BrowserIntegration` to exercise live browser behavior.
+/// All shared tests use the module's `driver` accessor and must be `@Serial` because they share
+/// the same live session.
 module tests.integration.firefox;
 
 version(firefox)
