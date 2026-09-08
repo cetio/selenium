@@ -12,7 +12,7 @@ import std.process : kill, Pid, spawnProcess;
 import std.socket;
 import core.thread : Thread;
 import core.time : MonoTime, msecs, Duration;
-import core.stdc.stdio : printf;
+import core.stdc.stdio : fprintf, stderr;
 
 /// A connection to a single WebDriver server, whether spawned locally or remote.
 ///
@@ -101,9 +101,9 @@ public:
     /// Stops the server and tears down all sessions on collection.
     ~this()
     {
-        printf("[bridge] ~this() entered\n");
+        fprintf(stderr, "[bridge] ~this() entered\n");
         stop();
-        printf("[bridge] ~this() done\n");
+        fprintf(stderr, "[bridge] ~this() done\n");
     }
     
     /**
@@ -193,17 +193,17 @@ public:
     /// Kills a locally spawned process and clears all session state.
     void stop()
     {
-        printf("[bridge] stop() entered, pid set=%d\n", pid !is Pid.init);
+        fprintf(stderr, "[bridge] stop() entered, pid set=%d\n", pid !is Pid.init);
         if (pid !is Pid.init)
         {
-            printf("[bridge] stop() calling tryKill\n");
+            fprintf(stderr, "[bridge] stop() calling tryKill\n");
             tryKill(pid);
-            printf("[bridge] stop() tryKill done, clearing pid\n");
+            fprintf(stderr, "[bridge] stop() tryKill done, clearing pid\n");
             pid = Pid.init;
         }
-        printf("[bridge] stop() clearing sessions (length=%zu)\n", sessions.length);
+        fprintf(stderr, "[bridge] stop() clearing sessions (length=%zu)\n", sessions.length);
         sessions = null;
-        printf("[bridge] stop() done\n");
+        fprintf(stderr, "[bridge] stop() done\n");
     }
 
     /// The server status from `GET /status`, as the raw parsed JSON.
