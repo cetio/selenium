@@ -1,22 +1,23 @@
-name: CI
+name: Browser Integration Tests (CI)
 
 on:
   push:
-    branches: [ "master" ]
+    branches: [main]
   pull_request:
-    branches: [ "master" ]
+    branches: [main]
 
 permissions:
   contents: read
 
 jobs:
   test:
-    name: ${{ matrix.os }}
+    name: ${{ matrix.browser }} (${{ matrix.os }})
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, windows-latest]
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        browser: [chrome, firefox]
 
     steps:
       - uses: actions/checkout@v4
@@ -26,5 +27,5 @@ jobs:
         with:
           compiler: dmd-latest
 
-      - name: Run tests with Chrome and Firefox
-        run: dub test --d-version=chrome --d-version=firefox
+      - name: Run ${{ matrix.browser }} integration tests
+        run: dub test --d-version=${{ matrix.browser }}
