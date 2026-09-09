@@ -1,7 +1,7 @@
 # Selenium
 
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue)](LICENSE.txt)
-[![DUB Package](https://img.shields.io/badge/dub-package-red)](https://code.dlang.org/packages/selenium)
+[![DUB Package](https://img.shields.io/badge/DUB-latest-red)](https://code.dlang.org/packages/selenium)
 [![Browser Integration](https://github.com/cetio/selenium/actions/workflows/browser-integration.yml/badge.svg)](https://github.com/cetio/selenium/actions/workflows/browser-integration.yml)
 
 Selenium is a native D implementation of the W3C WebDriver protocol. It drives Chrome, Firefox, Edge, and Safari directly over HTTP, with no external language bindings or C wrappers. The API often mirrors the Selenium Ruby bindings, so it should be familiar to existing Selenium users.
