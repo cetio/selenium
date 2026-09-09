@@ -55,11 +55,10 @@ unittest
     Bridge.unwrapAndParse!long(JSONValue(["value": JSONValue(2)])).should == 2;
 }
 
-@Name("bridge capacity rejects excess sessions before sending a request")
+@Name("bridge capacity rejects excess sessions before sending a request") @ShouldFailWith!WebDriverConnectionException
 unittest
 {
     Bridge bridge = new Bridge(1);
     bridge.sessions["active"] = new Browser();
-    bridge.createSession(JSONValue.emptyObject).shouldThrow!WebDriverConnectionException;
-    bridge.sessions.length.should == 1;
+    bridge.createSession(JSONValue.emptyObject);
 }

@@ -130,7 +130,7 @@ mixin template BrowserIntegration()
         driver.find(By.css("#text")).cssValue("color").length.shouldBeGreaterThan(0);
     }
 
-    @Name("stale element access throws") @Serial
+    @Name("stale element access throws") @Serial @ShouldFailWith!StaleElementReferenceException
     unittest
     {
         driver.go(dataUri(
@@ -139,7 +139,7 @@ mixin template BrowserIntegration()
         Element element = driver.find(By.css("#stale"));
         driver.refresh();
 
-        element.attribute("value").shouldThrow!StaleElementReferenceException;
+        element.attribute("value");
     }
 
     @Name("selected reflects checkbox state") @Serial
@@ -287,11 +287,11 @@ mixin template BrowserIntegration()
         ).should == "Hello, World!";
     }
 
-    @Name("execute throws on script error") @Serial
+    @Name("execute throws on script error") @Serial @ShouldFailWith!JavaScriptException
     unittest
     {
         driver.go(dataUri("<html><body></body></html>"));
-        driver.execute("return nonExistentFunction();").shouldThrow!JavaScriptException;
+        driver.execute("return nonExistentFunction();");
     }
 
     @Name("execute returns string array") @Serial
@@ -399,12 +399,12 @@ mixin template BrowserIntegration()
         foundShadow.should == true;
     }
 
-    @Name("shadowRoot throws when absent") @Serial
+    @Name("shadowRoot throws when absent") @Serial @ShouldFailWith!NoSuchShadowRootException
     unittest
     {
         driver.go(dataUri("<html><body><div id='plain'>no shadow</div></body></html>"));
         Element plain = driver.find(By.css("#plain"));
-        plain.shadowRoot().shouldThrow!NoSuchShadowRootException;
+        plain.shadowRoot();
     }
 
     @Name("shadow root findAll preserves order and returns empty results") @Serial
