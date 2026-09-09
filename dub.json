@@ -21,6 +21,7 @@
 			"sourcePaths": ["source/selenium"],
 			"excludedSourceFiles": ["source/selenium/grid/**"],
 			"targetType": "library",
+			"targetPath": "bin",
 			"configurations": [
 				{
 					"name": "library",
@@ -52,6 +53,7 @@
 			"description": "Selenium Grid server scaffolding: hub, node, models, and routing.",
 			"sourcePaths": ["source/selenium/grid"],
 			"targetType": "library",
+			"targetPath": "bin",
 			"configurations": [
 				{
 					"name": "library",
@@ -79,6 +81,7 @@
 		{
 			"name": "library",
 			"targetType": "library",
+			"targetPath": "bin",
 			"excludedSourceFiles": ["source/tests/*"]
 		},
 		{
