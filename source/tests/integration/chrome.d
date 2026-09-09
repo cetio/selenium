@@ -14,7 +14,14 @@ version(chrome)
     import selenium.driver : Driver;
     import selenium.driver.logger : Logger;
     import selenium.element : By, Element, Size;
-    import selenium.exception : JavaScriptException, NoSuchShadowRootException, StaleElementReferenceException;
+    import selenium.exception :
+        DetachedShadowRootException,
+        ElementClickInterceptedException,
+        ElementNotInteractableException,
+        JavaScriptException,
+        NoSuchShadowRootException,
+        StaleElementReferenceException,
+        UnexpectedAlertOpenException;
     import selenium.root : Root, RootType;
 
     import unit_threaded;

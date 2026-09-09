@@ -407,6 +407,56 @@ mixin template BrowserIntegration()
         plain.shadowRoot();
     }
 
+    @Name("detached host invalidates retained shadow root") @Serial @ShouldFailWith!DetachedShadowRootException
+    unittest
+    {
+        driver.go(dataUri(
+            `<html><body><div id="host"></div>`~
+            `<script>document.getElementById("host").attachShadow({mode:"open"});</script></body></html>`
+        ));
+        Element host = driver.find(By.css("#host"));
+        Root shadow = host.shadowRoot();
+        driver.execute("arguments[0].remove();", JSONValue([host.toJSON()]));
+        shadow.find(By.css("#missing"));
+    }
+
+    @Name("overlay intercepts target center-point click") @Serial @ShouldFailWith!ElementClickInterceptedException
+    unittest
+    {
+        driver.go(dataUri(
+            `<html><body>`~
+            `<button id="target" style="position:absolute;left:20px;top:20px;width:160px;height:80px">target</button>`~
+            `<div style="position:absolute;left:20px;top:20px;width:160px;height:80px;z-index:2">overlay</div>`~
+            `</body></html>`
+        ));
+        driver.find(By.css("#target")).click();
+    }
+    
+    @Name("clicking hidden element throws") @Serial @ShouldFailWith!ElementNotInteractableException
+    unittest
+    {
+        driver.go(dataUri("<html><body><button id='hidden' hidden>hidden</button></body></html>"));
+        driver.find(By.css("#hidden")).click();
+    }
+    
+    @Name("switching through removed iframe element throws stale reference")
+    @Serial @ShouldFailWith!StaleElementReferenceException
+    unittest
+    {
+        driver.go(dataUri("<html><body><iframe></iframe></body></html>"));
+        Element iframe = driver.find(By.css("iframe"));
+        driver.execute("arguments[0].remove();", JSONValue([iframe.toJSON()]));
+        driver.frame.switchTo(iframe);
+    }
+
+    @Name("unhandled alert blocks unrelated command") @Serial @ShouldFailWith!UnexpectedAlertOpenException
+    unittest
+    {
+        driver.go(dataUri("<html><body></body></html>"));
+        driver.execute("alert('blocking');");
+        driver.title;
+    }
+
     @Name("shadow root findAll preserves order and returns empty results") @Serial
     unittest
     {
