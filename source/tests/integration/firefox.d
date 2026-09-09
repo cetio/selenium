@@ -15,13 +15,12 @@ version(firefox)
     import selenium.driver.logger : Logger;
     import selenium.element : By, Element, Size;
     import selenium.exception :
-        DetachedShadowRootException,
         ElementClickInterceptedException,
         ElementNotInteractableException,
         JavaScriptException,
         NoSuchShadowRootException,
-        StaleElementReferenceException,
-        UnexpectedAlertOpenException;
+        NoSuchWindowException,
+        StaleElementReferenceException;
     import selenium.root : Root, RootType;
 
     import unit_threaded;

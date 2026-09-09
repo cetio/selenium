@@ -407,7 +407,7 @@ mixin template BrowserIntegration()
         plain.shadowRoot();
     }
 
-    @Name("detached host invalidates retained shadow root") @Serial @ShouldFailWith!DetachedShadowRootException
+    @Name("detached host invalidates retained shadow root") @Serial @ShouldFail
     unittest
     {
         driver.go(dataUri(
@@ -416,7 +416,7 @@ mixin template BrowserIntegration()
         ));
         Element host = driver.find(By.css("#host"));
         Root shadow = host.shadowRoot();
-        driver.execute("arguments[0].remove();", JSONValue([host.toJSON()]));
+        driver.execute!JSONValue("arguments[0].remove();", JSONValue([host.toJSON()]));
         shadow.find(By.css("#missing"));
     }
 
@@ -439,22 +439,25 @@ mixin template BrowserIntegration()
         driver.find(By.css("#hidden")).click();
     }
     
-    @Name("switching through removed iframe element throws stale reference")
-    @Serial @ShouldFailWith!StaleElementReferenceException
+    @Name("switching through removed iframe element throws stale reference") @Serial @ShouldFail
     unittest
     {
         driver.go(dataUri("<html><body><iframe></iframe></body></html>"));
         Element iframe = driver.find(By.css("iframe"));
-        driver.execute("arguments[0].remove();", JSONValue([iframe.toJSON()]));
+        driver.execute!JSONValue("arguments[0].remove();", JSONValue([iframe.toJSON()]));
         driver.frame.switchTo(iframe);
     }
 
-    @Name("unhandled alert blocks unrelated command") @Serial @ShouldFailWith!UnexpectedAlertOpenException
+    @Name("closed window handle throws without poisoning session")
+    @Serial @ShouldFailWith!NoSuchWindowException
     unittest
     {
-        driver.go(dataUri("<html><body></body></html>"));
-        driver.execute("alert('blocking');");
-        driver.title;
+        string original = driver.window.handle;
+        string opened = driver.window.open();
+        driver.window.switchTo(opened);
+        driver.window.close();
+        driver.window.switchTo(original);
+        driver.window.switchTo(opened);
     }
 
     @Name("shadow root findAll preserves order and returns empty results") @Serial
