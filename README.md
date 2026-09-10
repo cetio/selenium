@@ -5,7 +5,7 @@
 ![Unit Tests](https://github.com/cetio/selenium/actions/workflows/unit-tests.yml/badge.svg)
 
 | OS | Chrome | Firefox | Safari |
-| --- | --- | --- |
+| --- | --- | --- | --- |
 | Ubuntu | ![Chrome / Ubuntu](https://github.com/cetio/selenium/actions/workflows/chrome-ubuntu.yml/badge.svg) | ![Firefox / Ubuntu](https://github.com/cetio/selenium/actions/workflows/firefox-ubuntu.yml/badge.svg) | |
 | macOS | ![Chrome / macOS](https://github.com/cetio/selenium/actions/workflows/chrome-macos.yml/badge.svg) | ![Firefox / macOS](https://github.com/cetio/selenium/actions/workflows/firefox-macos.yml/badge.svg) | ![Safari / macOS](https://github.com/cetio/selenium/actions/workflows/safari-macos.yml/badge.svg) |
 | Windows | ![Chrome / Windows](https://github.com/cetio/selenium/actions/workflows/chrome-windows.yml/badge.svg) | ![Firefox / Windows](https://github.com/cetio/selenium/actions/workflows/firefox-windows.yml/badge.svg) | |
