@@ -2,8 +2,8 @@
 
 The repository has offline unit tests and browser integration tests. Both use [unit-threaded](https://github.com/atilaneves/unit-threaded) and the generated runner at `bin/ut.d`.
 
-- **Offline tests** cover capability serialization, response parsing, Grid models, and in-process routing without launching a browser.
-- **Browser integration tests** share a live Chrome or Firefox session and exercise navigation, windows, frames, scripts, elements, and roots.
+- **Offline tests** cover response parsing, Grid models, and in-process routing without launching a browser.
+- **Browser integration tests** share a live Chrome or Firefox session and exercise navigation, windows, frames, scripts, elements, and roots. Each browser module also carries its own capability serialization unit tests under the same version flag.
 
 ## Prerequisites
 
@@ -55,12 +55,11 @@ dub test --d-version=firefox -- "frame switch by index"
 
 | Path | Purpose |
 | --- | --- |
-| `source/tests/webdriver/browser.d` | Browser capability, logging, and JSON roundtrip tests. |
 | `source/tests/webdriver/driver/` | Offline locator, response parsing, and bridge-capacity tests. |
 | `source/tests/grid/server.d` | Grid models, router dispatch, hub behavior, and node behavior. |
 | `source/tests/common.d` | `dataUri` and the shared `BrowserIntegration` mixin. |
-| `source/tests/integration/chrome.d` | Chrome session setup under `version (chrome)`. |
-| `source/tests/integration/firefox.d` | Firefox session setup under `version (firefox)`. |
+| `source/tests/integration/chrome.d` | Chrome capability unit tests and session setup under `version (chrome)`. |
+| `source/tests/integration/firefox.d` | Firefox capability unit tests and session setup under `version (firefox)`. |
 | `bin/ut.d` | Generated unit-threaded runner. Do not edit it manually. |
 
 DUB runs `unit-threaded`'s `gen_ut_main` pre-build command to regenerate `bin/ut.d` from `source/tests`.

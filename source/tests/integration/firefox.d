@@ -10,6 +10,7 @@ version(firefox)
 {
     import tests.common : BrowserIntegration, dataUri;
     import selenium.bridge : Bridge;
+    import selenium.browser : Browser;
     import selenium.browser.firefox : Firefox;
     import selenium.driver : Driver;
     import selenium.driver.logger : Logger;
@@ -25,7 +26,7 @@ version(firefox)
 
     import unit_threaded;
 
-    import std.json : JSONValue;
+    import std.json : JSONValue, parseJSON;
 
 private:
     shared Driver _driver;
@@ -56,4 +57,35 @@ private:
     }
 
     mixin BrowserIntegration;
+
+    @Name("Firefox fromJSONValue parses options")
+    unittest
+    {
+        JSONValue json = parseJSON(
+            `{"browserName":"firefox","moz:firefoxOptions":`
+            ~`{"binary":"/usr/bin/firefox","args":["--private"],`
+            ~`"profile":"base64abc"}}`);
+        Firefox firefox = cast(Firefox)Browser.fromJSONValue(json);
+        firefox.shouldNotBeNull;
+        firefox.name.should == "firefox";
+        firefox.binary.should == "/usr/bin/firefox";
+        firefox.args.should == ["--private"];
+        firefox.profile.should == "base64abc";
+    }
+
+    @Name("Firefox roundtrips through toJSON/fromJSONValue")
+    unittest
+    {
+        Firefox firefox = new Firefox();
+        firefox.release = "121";
+        firefox.binary = "/opt/firefox";
+        firefox.args = ["--private"];
+        firefox.profile = "YWJj"; // base64 for "abc"
+
+        Firefox roundTrip = cast(Firefox)Browser.fromJSONValue(firefox.toJSON());
+        roundTrip.release.should == "121";
+        roundTrip.binary.should == "/opt/firefox";
+        roundTrip.args.should == ["--private"];
+        roundTrip.profile.should == "YWJj";
+    }
 }
