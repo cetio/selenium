@@ -11,7 +11,8 @@ import std.regex : match, ctRegex;
 /// A Firefox browser with its `moz:firefoxOptions` capabilities.
 ///
 /// The options object is a Mozilla vendor extension, not part of W3C. The standard
-/// capabilities still come from `Browser`.
+/// capabilities still come from `Browser`. Geckodriver only supports one active session,
+/// so Firefox bridges have a forced capacity of one.
 class Firefox : Browser
 {
     /// Wrapper struct for preferences. Firefox only supports user preferences.
@@ -39,6 +40,10 @@ class Firefox : Browser
     /// The `browserName` capability.
     override string name() const
         => "firefox";
+
+    /// Restricts each geckodriver bridge to its single supported session.
+    override int driverCapacity() const
+        => 1;
 
     /// Serializes the standard capabilities plus `moz:firefoxOptions`.
     override JSONValue toJSON() const

@@ -99,6 +99,10 @@ class Browser
     string[] driverArgs() const
         => null;
 
+    /// Maximum sessions allowed on a locally spawned bridge, or zero for unlimited sessions.
+    int driverCapacity() const
+        => 0;
+
     /**
      * Folds this browser's logging preferences upward into the session logger.
      *

@@ -351,8 +351,12 @@ mixin template BrowserIntegration()
     @Serial @ShouldFailWith!ScriptTimeoutException
     unittest
     {
-        Driver isolated = Driver.start(driver.bridge, browser, null);
-        scope(exit) isolated.stop();
+        Driver isolated = Driver.start(browser);
+        scope(exit)
+        {
+            isolated.stop();
+            isolated.bridge.stop();
+        }
 
         isolated.browser.timeouts.implicit = 1.seconds;
         isolated.browser.timeouts.pageLoad = 1.seconds;
@@ -604,7 +608,8 @@ mixin template BrowserIntegration()
     @Serial @ShouldFailWith!InvalidSessionIdException
     unittest
     {
-        Driver isolated = Driver.start(driver.bridge, browser, null);
+        Driver isolated = Driver.start(browser);
+        scope(exit) isolated.bridge.stop();
         isolated.stop();
         isolated.title;
     }
@@ -613,8 +618,12 @@ mixin template BrowserIntegration()
     @Serial @ShouldFailWith!WebDriverTimeoutException
     unittest
     {
-        Driver isolated = Driver.start(driver.bridge, browser, null);
-        scope(exit) isolated.stop();
+        Driver isolated = Driver.start(browser);
+        scope(exit)
+        {
+            isolated.stop();
+            isolated.bridge.stop();
+        }
 
         isolated.browser.timeouts.pageLoad = 100.msecs;
         isolated.go(dataUri(

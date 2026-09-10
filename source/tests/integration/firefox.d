@@ -34,7 +34,8 @@ private:
         Logger logger = new Logger();
         Bridge bridge = Bridge.start(
             browser.resolveBinary(),
-            ["--log", "fatal"]
+            ["--log", "fatal"],
+            browser.driverCapacity
         );
         _browser = cast(shared)browser;
         _driver = cast(shared)Driver.start(
@@ -87,6 +88,7 @@ private:
         Firefox firefox = cast(Firefox)Browser.fromJSONValue(json);
         firefox.shouldNotBeNull;
         firefox.name.should == "firefox";
+        firefox.driverCapacity.should == 1;
         firefox.binary.should == "/usr/bin/firefox";
         firefox.args.should == ["--private"];
         firefox.profile.should == "base64abc";

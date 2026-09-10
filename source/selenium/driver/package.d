@@ -110,7 +110,11 @@ class Driver
         if (logger is null)
             logger = new Logger();
         return start(
-            Bridge.start(alwaysMatch.resolveBinary(), logger.toDriverArgs()),
+            Bridge.start(
+                alwaysMatch.resolveBinary(),
+                logger.toDriverArgs(),
+                alwaysMatch.driverCapacity
+            ),
             alwaysMatch,
             firstMatch,
             logger,
