@@ -18,22 +18,34 @@ The integration setup calls `resolveBinary()` and fails if the executable cannot
 
 ## Running Tests
 
-| Version | Meaning |
+Integration tests must use browser-specific versions. Without one, the combined configuration runs only the offline tests, and the integration-only configuration has no tests to run.
+
+| Command | Meaning |
 | --- | --- |
-| `--d-version=chrome` | Includes Chrome integration tests. |
-| `--d-version=firefox` | Includes Firefox integration tests. |
+| `dub test` | Runs the unit tests and any integration tests enabled by a browser version. |
+| `dub test -c unit` | Runs only the offline unit tests. |
+| `dub test -c integration` | Runs only integration tests; no browser tests are enabled without a version. |
+| `--d-version=chrome` | Enables Chrome integration tests. |
+| `--d-version=firefox` | Enables Firefox integration tests. |
 
-Run the offline suite:
-
-```sh
-dub test
-```
-
-Run the offline suite plus one browser integration suite:
+Run the combined suite with a browser integration suite:
 
 ```sh
 dub test --d-version=chrome
 dub test --d-version=firefox
+```
+
+Run only the offline suite:
+
+```sh
+dub test -c unit
+```
+
+Run only one browser integration suite:
+
+```sh
+dub test -c integration --d-version=chrome
+dub test -c integration --d-version=firefox
 ```
 
 Run a subpackage's offline tests:
@@ -46,9 +58,9 @@ dub test :grid
 Pass a unit-threaded test name after `--` to filter a run. Include the browser version flag when filtering for a browser integration test:
 
 ```sh
-dub test -- "Browser roundtrips platform, strategy, and timeouts"
-dub test --d-version=chrome -- "click updates button text"
-dub test --d-version=firefox -- "frame switch by index"
+dub test -c unit -- "Browser roundtrips platform, strategy, and timeouts"
+dub test -c integration --d-version=chrome -- "click updates button text"
+dub test -c integration --d-version=firefox -- "frame switch by index"
 ```
 
 ## Test Layout

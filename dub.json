@@ -40,7 +40,7 @@
 					"buildOptions": ["unittests"],
 					"dependencies": {
 						"requests": "~>2.2.1",
-						"unit-threaded": "~>2.2.0"
+						"unit-threaded": "~>2.2.5"
 					}
 				}
 			]
@@ -71,7 +71,8 @@
 					"mainSourceFile": "bin/ut.d",
 					"buildOptions": ["unittests"],
 					"dependencies": {
-						"unit-threaded": "~>2.2.0"
+						"requests": "~>2.2.1",
+						"unit-threaded": "~>2.2.5"
 					}
 				}
 			]
@@ -94,7 +95,39 @@
 			"mainSourceFile": "bin/ut.d",
 			"buildOptions": ["unittests"],
 			"dependencies": {
-				"unit-threaded": "~>2.2.0"
+				"unit-threaded": "~>2.2.5"
+			}
+		},
+		{
+			"name": "unit",
+			"targetPath": "bin",
+			"targetType": "executable",
+			"excludedSourceFiles": ["source/tests/integration/**"],
+			"preBuildCommands": [
+				"$DUB run unit-threaded -c gen_ut_main -- -f bin/ut.d"
+			],
+			"mainSourceFile": "bin/ut.d",
+			"buildOptions": ["unittests"],
+			"dependencies": {
+				"requests": "~>2.2.1",
+				"unit-threaded": "~>2.2.5",
+				"unit-threaded:autorunner": "~>2.2.5"
+			}
+		},
+		{
+			"name": "integration",
+			"targetPath": "bin",
+			"targetType": "executable",
+			"excludedSourceFiles": ["source/tests/grid/**", "source/tests/webdriver/**"],
+			"preBuildCommands": [
+				"$DUB run unit-threaded -c gen_ut_main -- -f bin/ut.d source/tests/integration"
+			],
+			"mainSourceFile": "bin/ut.d",
+			"buildOptions": ["unittests"],
+			"dependencies": {
+				"requests": "~>2.2.1",
+				"unit-threaded": "~>2.2.5",
+				"unit-threaded:autorunner": "~>2.2.5"
 			}
 		}
 	]
