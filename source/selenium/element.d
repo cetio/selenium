@@ -3,11 +3,13 @@ module selenium.element;
 
 import selenium.bridge : Bridge;
 import selenium.driver : Driver;
+import selenium.exception : NoSuchShadowRootException;
 import selenium.root : Root, RootState, RootType;
 
 import std.array : join;
 import std.conv : to;
 import std.json : JSONValue;
+import std.string : toLower;
 
 /// A W3C location strategy paired with the selector value to match against.
 struct By
@@ -98,7 +100,7 @@ public:
     /// The rendered, visible text of the element.
     string text() => driver.bridge.get!string(driver.id, path("/text"));
     /// The lowercased tag name of the element.
-    string tagName() => driver.bridge.get!string(driver.id, path("/name"));
+    string tagName() => driver.bridge.get!string(driver.id, path("/name")).toLower();
     /// The value of the named HTML attribute as it appears in markup.
     string attribute(string name) => driver.bridge.get!string(driver.id, path("/attribute/"~name));
     /// The value of the named live DOM property, which may differ from the markup attribute.
@@ -204,6 +206,9 @@ public:
     {
         JSONValue resp = driver.bridge.get(driver.id, path("/shadow"));
         string shadowId = Bridge.parseShadowId(resp);
+        if (shadowId is null)
+            throw new NoSuchShadowRootException("Element does not have a shadow root.");
+
         return new Root(driver, shadowId, RootType.Shadow, RootState.Open | RootState.Complete);
     }
 
