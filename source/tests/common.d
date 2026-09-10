@@ -12,11 +12,16 @@ string dataUri(string html)
 mixin template BrowserIntegration()
 {
     import tests.common : dataUri;
+    import selenium.driver : Driver;
+    import selenium.driver : Driver;
+    import selenium.driver.cookies : Cookie, cookies;
     import selenium.element : By, Element, Size;
     import selenium.exception;
     import selenium.root : Root, RootType;
     import unit_threaded;
+
     import std.json : JSONValue;
+    import core.time : msecs, seconds;
 
     @Name("title returns page title") @Serial
     unittest
@@ -200,6 +205,48 @@ mixin template BrowserIntegration()
         section.findAll(By.css(".missing")).length.should == 0;
     }
 
+    @Name("finding a missing element reports the locator failure")
+    @Serial @ShouldFailWith!NoSuchElementException
+    unittest
+    {
+        driver.go(dataUri("<html><body><p>present</p></body></html>"));
+        driver.find(By.css("#missing"));
+    }
+
+    @Name("malformed XPath is rejected before an element is returned")
+    @Serial @ShouldFailWith!InvalidSelectorException
+    unittest
+    {
+        driver.go(dataUri("<html><body><p>present</p></body></html>"));
+        driver.find(By.xpath("//*["));
+    }
+
+    @Name("readonly controls reject clear rather than silently mutating")
+    @Serial @ShouldFailWith!InvalidElementStateException
+    unittest
+    {
+        driver.go(dataUri(
+            "<html><body><input id='readonly' readonly value='preserved'></body></html>"
+        ));
+        driver.find(By.css("#readonly")).clear();
+    }
+
+    @Name("frame switch reports a missing browsing context")
+    @Serial @ShouldFailWith!NoSuchFrameException
+    unittest
+    {
+        driver.go(dataUri("<html><body><p>top-level only</p></body></html>"));
+        driver.frame.switchTo(42);
+    }
+
+    @Name("frame switch rejects a negative index")
+    @Serial @ShouldFailWith!InvalidArgumentException
+    unittest
+    {
+        driver.go(dataUri("<html><body><p>top-level only</p></body></html>"));
+        driver.frame.switchTo(-1);
+    }
+
     @Name("frame switch by index") @Serial
     unittest
     {
@@ -298,6 +345,30 @@ mixin template BrowserIntegration()
     {
         driver.go(dataUri("<html><body></body></html>"));
         driver.execute("return nonExistentFunction();");
+    }
+
+    @Name("async script honors the configured script timeout")
+    @Serial @ShouldFailWith!ScriptTimeoutException
+    unittest
+    {
+        Driver isolated = Driver.start(driver.bridge, new Chrome(), null);
+        scope(exit) isolated.stop();
+
+        isolated.browser.timeouts.implicit = 1.seconds;
+        isolated.browser.timeouts.pageLoad = 1.seconds;
+        isolated.browser.timeouts.script = 1.seconds;
+        isolated.go(dataUri("<html><body></body></html>"));
+        isolated.bridge.post!void(
+            isolated.id,
+            "/execute/async",
+            JSONValue([
+                "script": JSONValue(
+                    "var callback = arguments[arguments.length - 1]; "~
+                    "setTimeout(callback, 3000);"
+                ),
+                "args": JSONValue.emptyArray,
+            ])
+        );
     }
 
     @Name("execute returns string array") @Serial
@@ -464,6 +535,91 @@ mixin template BrowserIntegration()
         driver.window.close();
         driver.window.switchTo(original);
         driver.window.switchTo(opened);
+    }
+
+    @Name("unknown command is distinguished from a missing resource")
+    @Serial @ShouldFailWith!UnknownCommandException
+    unittest
+    {
+        driver.go(dataUri("<html><body></body></html>"));
+        driver.bridge.get!JSONValue(driver.id, "/command-that-does-not-exist");
+    }
+
+    @Name("unmapped pointer errors retain the base WebDriver exception")
+    @Serial @ShouldFailWith!WebDriverException
+    unittest
+    {
+        driver.go(dataUri("<html><body></body></html>"));
+        JSONValue pointerMove = JSONValue.emptyObject;
+        pointerMove["type"] = JSONValue("pointerMove");
+        pointerMove["duration"] = JSONValue(0);
+        pointerMove["origin"] = JSONValue("viewport");
+        pointerMove["x"] = JSONValue(100000);
+        pointerMove["y"] = JSONValue(100000);
+
+        JSONValue pointerSource = JSONValue.emptyObject;
+        pointerSource["type"] = JSONValue("pointer");
+        pointerSource["id"] = JSONValue("mouse");
+        pointerSource["parameters"] = JSONValue(["pointerType": JSONValue("mouse")]);
+        pointerSource["actions"] = JSONValue([pointerMove]);
+
+        driver.bridge.post!void(
+            driver.id,
+            "/actions",
+            JSONValue(["actions": JSONValue([pointerSource])])
+        );
+    }
+
+    @Name("an open alert blocks an unrelated command")
+    @Serial @ShouldFailWith!UnexpectedAlertOpenException
+    unittest
+    {
+        driver.go(dataUri("<html><body></body></html>"));
+        driver.execute!JSONValue("alert('blocking');");
+        scope(exit) driver.bridge.post!void(driver.id, "/alert/dismiss");
+        driver.title;
+    }
+
+    @Name("dismissing an absent alert reports the alert state")
+    @Serial @ShouldFailWith!NoSuchAlertException
+    unittest
+    {
+        driver.go(dataUri("<html><body></body></html>"));
+        driver.bridge.post!void(driver.id, "/alert/dismiss");
+    }
+
+    @Name("a domain cookie cannot be installed on an opaque document origin")
+    @Serial @ShouldFailWith!UnableToSetCookieException
+    unittest
+    {
+        driver.go(dataUri("<html><body></body></html>"));
+        Cookie cookie;
+        cookie.name = "blocked";
+        cookie.value = "value";
+        cookie.domain = "localhost";
+        driver.cookies.add(cookie);
+    }
+
+    @Name("a deleted session rejects commands with its original session id")
+    @Serial @ShouldFailWith!InvalidSessionIdException
+    unittest
+    {
+        Driver isolated = Driver.start(driver.bridge, browser, null);
+        isolated.stop();
+        isolated.title;
+    }
+
+    @Name("navigation honors a page-load timeout while the document is executing")
+    @Serial @ShouldFailWith!WebDriverTimeoutException
+    unittest
+    {
+        Driver isolated = Driver.start(driver.bridge, browser, null);
+        scope(exit) isolated.stop();
+
+        isolated.browser.timeouts.pageLoad = 100.msecs;
+        isolated.go(dataUri(
+            "<html><body><script>while (true) {}</script></body></html>"
+        ));
     }
 
     @Name("shadow root findAll preserves order and returns empty results") @Serial

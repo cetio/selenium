@@ -85,7 +85,7 @@ package:
     /// Binds the store to a driver session.
     this(Driver driver)
     {
-        driver = driver;
+        this.driver = driver;
     }
 
 public:

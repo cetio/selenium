@@ -204,6 +204,7 @@ static WebDriverException mapException(JSONValue json)
                 case "no such alert":
                     return new NoSuchAlertException(message);
                 case "unable to set cookie":
+                case "invalid cookie domain":
                     return new UnableToSetCookieException(message);
                 default:
                     return new WebDriverException(message);

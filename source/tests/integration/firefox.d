@@ -8,12 +8,13 @@ module tests.integration.firefox;
 
 version(firefox)
 {
-    import tests.common : BrowserIntegration;
+    import tests.common : BrowserIntegration, dataUri;
     import selenium.bridge : Bridge;
     import selenium.browser : Browser;
     import selenium.browser.firefox : Firefox;
     import selenium.driver : Driver;
     import selenium.driver.logger : Logger;
+    import selenium.exception : UnsupportedOperationException;
 
     import unit_threaded;
 
@@ -48,6 +49,27 @@ private:
     }
 
     mixin BrowserIntegration;
+
+    @Name("Firefox rejects unsupported pointer cancellation")
+    @Serial @ShouldFailWith!UnsupportedOperationException
+    unittest
+    {
+        driver.go(dataUri("<html><body></body></html>"));
+        JSONValue pointerCancel = JSONValue.emptyObject;
+        pointerCancel["type"] = JSONValue("pointerCancel");
+
+        JSONValue pointerSource = JSONValue.emptyObject;
+        pointerSource["type"] = JSONValue("pointer");
+        pointerSource["id"] = JSONValue("mouse");
+        pointerSource["parameters"] = JSONValue(["pointerType": JSONValue("mouse")]);
+        pointerSource["actions"] = JSONValue([pointerCancel]);
+
+        driver.bridge.post!void(
+            driver.id,
+            "/actions",
+            JSONValue(["actions": JSONValue([pointerSource])])
+        );
+    }
 
     @Name("Firefox fromJSONValue parses options")
     unittest
