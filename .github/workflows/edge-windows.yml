@@ -1,0 +1,14 @@
+name: CI (8)
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+    branches: [master]
+
+jobs:
+  test:
+    uses: ./.github/workflows/browser-integration-tests.yml
+    with:
+      os: windows-latest
+      browser: edge
