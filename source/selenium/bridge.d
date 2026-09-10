@@ -2,7 +2,7 @@
 module selenium.bridge;
 
 import selenium.browser : Browser;
-import selenium.exception : InvalidArgumentException, WebDriverConnectionException, mapException;
+import selenium.exception;
 
 import requests : Request, Response;
 
@@ -453,6 +453,9 @@ private:
         {
             if (response.code >= 200 && response.code < 300)
                 return JSONValue.emptyObject;
+
+            if (response.code == 404 || response.code == 405)
+                throw new UnknownCommandException(content);
 
             throw new WebDriverConnectionException("Invalid response from server:"~content);
         }
