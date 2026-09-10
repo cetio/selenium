@@ -65,7 +65,6 @@ class Edge : Browser
     /// Remote log level preferences per log type, serialized as `goog:loggingPrefs`.
     LogLevel[string] logging;
     
-    // TODO: Support for setting custom names.
     /// The `browserName` capability, "webview2" when driving WebView2.
     override string name() const
         => useWebView ? "webview2" : "MicrosoftEdge";

@@ -65,6 +65,39 @@ writeln(driver.title);
 - [Testing](TESTING.md)
 - [Contributing](CONTRIBUTING.md)
 
+## Roadmap
+
+### WebDriver protocol
+
+- [ ] Fix Safari support (see integration tests)
+- [ ] Asynchronous script execution (`POST /execute/async`)
+- [ ] Actions API, including perform and release
+- [ ] Alert text, accept, dismiss, and prompt input commands
+- [ ] Computed accessibility role and label accessors
+- [ ] Page printing (`POST /print`)
+- [ ] First-class timeout retrieval and updates
+- [ ] Full window rectangle support, including window position
+
+### Client API
+
+- [ ] Explicit waits with reusable expected conditions
+- [ ] Special keys such as Enter, Tab, Escape, and arrows for `sendKeys`
+- [ ] Convenience locators such as id, name, and class name
+- [ ] Element display state (`isDisplayed`)
+- [ ] Select-element helper
+
+### Grid
+
+- [ ] Live HTTP transport for hubs and nodes
+- [ ] Node registration, heartbeat, draining, and removal
+- [ ] Capability matching, session allocation, and command forwarding
+
+### Quality
+
+- [ ] Grid server and client (multi-session routing) tests
+- [ ] W3C WebDriver compliance tests
+- [ ] More than 70% code coverage for every source file
+
 ## License
 
 Selenium is licensed under [Apache-2.0](LICENSE.txt).
