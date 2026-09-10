@@ -14,7 +14,7 @@ version(firefox)
     import selenium.browser.firefox : Firefox;
     import selenium.driver : Driver;
     import selenium.driver.logger : Logger;
-    import selenium.exception : UnsupportedOperationException;
+    import selenium.exception : InvalidArgumentException;
 
     import unit_threaded;
 
@@ -57,8 +57,8 @@ private:
 
     mixin BrowserIntegration;
 
-    @Name("Firefox rejects unsupported pointer cancellation")
-    @Serial @ShouldFailWith!UnsupportedOperationException
+    @Name("Firefox rejects pointer cancellation as an invalid action")
+    @Serial @ShouldFailWith!InvalidArgumentException
     unittest
     {
         driver.go(dataUri("<html><body></body></html>"));
