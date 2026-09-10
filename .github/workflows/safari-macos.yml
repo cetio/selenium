@@ -1,0 +1,14 @@
+name: CI (7)
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+    branches: [master]
+
+jobs:
+  test:
+    uses: ./.github/workflows/browser-integration-tests.yml
+    with:
+      os: macos-latest
+      browser: safari

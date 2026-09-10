@@ -42,6 +42,10 @@ jobs:
           restore-keys: |
             ${{ env.DUB_CACHE_KEY }}-
 
+      - name: Enable Safari WebDriver
+        if: ${{ inputs.browser == 'safari' }}
+        run: sudo safaridriver --enable
+
       - name: Run integration tests
         env:
           DUB_HOME: ${{ runner.temp }}/dub
