@@ -574,6 +574,52 @@ mixin template BrowserIntegration()
         );
     }
 
+    @Name("alert text returns the current prompt message") @Serial
+    unittest
+    {
+        driver.go(dataUri("<html><body></body></html>"));
+        driver.execute!JSONValue("alert('message');");
+        driver.alert.text.should == "message";
+        driver.alert.accept();
+    }
+
+    @Name("accepting a confirmation closes the alert") @Serial
+    unittest
+    {
+        driver.go(dataUri(
+            "<html><body><button id='confirm' "
+            ~"onclick='document.body.setAttribute(\"data-result\", confirm(\"Continue?\"));'>confirm</button></body></html>"
+        ));
+        driver.find(By.css("#confirm")).click();
+        driver.alert.accept();
+        driver.execute!string("return document.body.getAttribute('data-result');").should == "true";
+    }
+
+    @Name("dismissing a confirmation closes the alert") @Serial
+    unittest
+    {
+        driver.go(dataUri(
+            "<html><body><button id='confirm' "
+            ~"onclick='document.body.setAttribute(\"data-result\", confirm(\"Continue?\"));'>confirm</button></body></html>"
+        ));
+        driver.find(By.css("#confirm")).click();
+        driver.alert.dismiss();
+        driver.execute!string("return document.body.getAttribute('data-result');").should == "false";
+    }
+
+    @Name("sendKeys enters prompt input") @Serial
+    unittest
+    {
+        driver.go(dataUri(
+            "<html><body><button id='prompt' "
+            ~"onclick='document.body.setAttribute(\"data-result\", prompt(\"Name?\"));'>prompt</button></body></html>"
+        ));
+        driver.find(By.css("#prompt")).click();
+        driver.alert.sendKeys("Selenium");
+        driver.alert.accept();
+        driver.execute!string("return document.body.getAttribute('data-result');").should == "Selenium";
+    }
+
     @Name("an open alert blocks an unrelated command")
     @Serial @ShouldFailWith!UnexpectedAlertOpenException
     unittest

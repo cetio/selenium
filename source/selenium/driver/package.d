@@ -7,6 +7,7 @@ import selenium.element : By, Element, Size;
 import selenium.root : Root, RootState, RootType;
 import selenium.driver.logger : Logger;
 
+import std.array : join;
 import std.json : JSONValue;
 import core.time : seconds, Duration;
 
@@ -190,6 +191,29 @@ class Driver
     void forward() => bridge.post!void(id, "/forward");
     /// Reloads the current document.
     void refresh() => bridge.post!void(id, "/refresh");
+
+    /// Alert commands, accessed through the `alert` alias.
+    template Alert()
+    {
+        /// The text displayed by the current alert or prompt.
+        string text() => bridge.get!string(id, "/alert/text");
+
+        /// Accepts the current alert, confirmation, or prompt.
+        void accept() => bridge.post!void(id, "/alert/accept");
+        /// Dismisses the current alert, confirmation, or prompt.
+        void dismiss() => bridge.post!void(id, "/alert/dismiss");
+
+        /**
+         * Types text into the current prompt.
+         *
+         * Params:
+         *  keys = One or more strings to type in order.
+         */
+        void sendKeys(string[] keys...)
+            => bridge.post!void(id, "/alert/text", JSONValue(["text": JSONValue(keys.join())]));
+    }
+    /// Alert command group, e.g. `driver.alert.text` or `driver.alert.accept()`.
+    alias alert = Alert!();
 
     /// The element that currently has focus.
     Element activeElement()

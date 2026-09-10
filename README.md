@@ -70,7 +70,7 @@ writeln(driver.title);
 - [ ] Fix Safari support (see integration tests)
 - [ ] Asynchronous script execution (`POST /execute/async`)
 - [ ] Actions API, including perform and release
-- [ ] Alert text, accept, dismiss, and prompt input commands
+- [x] Alert text, accept, dismiss, and prompt input commands
 - [ ] Computed accessibility role and label accessors
 - [ ] Page printing (`POST /print`)
 - [ ] First-class timeout retrieval and updates
