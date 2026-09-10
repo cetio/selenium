@@ -1,3 +1,11 @@
+---
+layout: default
+title: Grid
+nav_order: 3
+has_children: true
+permalink: /grid/
+---
+
 # Grid
 
 The `selenium:grid` package provides Grid status models, an in-process router, and hub and node scaffolding. It is intended as a foundation for a D Grid implementation.
@@ -10,7 +18,7 @@ Current limitations are important:
 - New-session distribution and command forwarding are not implemented.
 - Some lifecycle endpoints are placeholders, as described in the guide.
 
-See [Getting Started](GETTING_STARTED.md) for the implemented model and routing surface.
+See [Getting Started](getting-started/) for the implemented model and routing surface.
 
 To drive an already running Selenium Grid as a client, use `Driver.connect` from `selenium:webdriver`. That does not require this Grid subpackage.
 

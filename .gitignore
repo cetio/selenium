@@ -19,3 +19,5 @@ bin/*
 playground/*
 !bin/.gitkeep
 !playground/.gitkeep
+docs/_site/
+docs/.bundle/

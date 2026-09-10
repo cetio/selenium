@@ -1,3 +1,11 @@
+---
+layout: default
+title: Driver
+parent: WebDriver
+nav_order: 3
+permalink: /webdriver/driver/
+---
+
 # Driver
 
 A `Driver` is a handle to one WebDriver session. It stores the session ID, negotiated browser capabilities, logger, and bridge used for commands.
@@ -56,7 +64,7 @@ Element[] items = driver.findAll(By.xpath("//li[@class='item']"));
 Element focused = driver.activeElement;
 ```
 
-See [Elements](ELEMENTS.md) for locators, element state, interaction, descendant search, and shadow roots.
+See [Elements](../elements/) for locators, element state, interaction, descendant search, and shadow roots.
 
 ## Script Execution
 

@@ -1,3 +1,11 @@
+---
+layout: default
+title: Getting Started with WebDriver
+parent: WebDriver
+nav_order: 1
+permalink: /webdriver/getting-started/
+---
+
 # Getting Started with WebDriver
 
 This guide starts a local browser session with the `selenium:webdriver` package. The client implements the W3C WebDriver protocol and communicates directly with a WebDriver server over HTTP.
@@ -163,7 +171,7 @@ A positive bridge capacity limits concurrent sessions. Zero means unlimited.
 
 ## Next Steps
 
-- [Bridge](BRIDGE.md) — process ownership, sessions, status, and low-level requests.
-- [Driver](DRIVER.md) — navigation, scripts, windows, frames, roots, cookies, and logging.
-- [Elements](ELEMENTS.md) — locators, state, interaction, descendant search, and shadow roots.
-- [Testing](../../TESTING.md) — offline and browser integration tests.
+- [Bridge](../bridge/) — process ownership, sessions, status, and low-level requests.
+- [Driver](../driver/) — navigation, scripts, windows, frames, roots, cookies, and logging.
+- [Elements](../elements/) — locators, state, interaction, descendant search, and shadow roots.
+- [Testing](https://github.com/cetio/selenium/blob/master/TESTING.md) — offline and browser integration tests.

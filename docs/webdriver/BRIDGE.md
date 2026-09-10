@@ -1,3 +1,11 @@
+---
+layout: default
+title: Bridge
+parent: WebDriver
+nav_order: 2
+permalink: /webdriver/bridge/
+---
+
 # Bridge
 
 A `Bridge` represents one WebDriver server. It owns the process when started locally or stores the address of a remote server. Multiple `Driver` instances can share a bridge, with each driver bound to a separate session.

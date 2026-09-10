@@ -1,3 +1,11 @@
+---
+layout: default
+title: Getting Started with Grid
+parent: Grid
+nav_order: 1
+permalink: /grid/getting-started/
+---
+
 # Getting Started with Grid
 
 The `selenium:grid` package currently provides data models and in-process routing scaffolding for a future Grid server. It does not provide a live HTTP listener or a complete session distributor.

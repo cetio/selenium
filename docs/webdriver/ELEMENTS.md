@@ -1,3 +1,11 @@
+---
+layout: default
+title: Elements
+parent: WebDriver
+nav_order: 4
+permalink: /webdriver/elements/
+---
+
 # Elements
 
 An `Element` is a session-scoped handle to a DOM node. Every operation sends a WebDriver command through the owning `Driver`. If the node is detached, commands can throw `StaleElementReferenceException`.

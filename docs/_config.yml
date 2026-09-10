@@ -1,0 +1,25 @@
+title: Selenium D
+description: Native D implementation of Selenium.
+theme: just-the-docs
+
+url: https://cetio.github.io
+baseurl: /selenium
+repository: cetio/selenium
+
+color_scheme: light
+search_enabled: true
+heading_anchors: true
+nav_sort: case_insensitive
+back_to_top: true
+back_to_top_text: Back to top
+
+aux_links:
+  "GitHub Repository": https://github.com/cetio/selenium
+  "DUB Package": https://code.dlang.org/packages/selenium
+aux_links_new_tab: true
+
+gh_edit_link: true
+gh_edit_link_text: Edit this page on GitHub.
+gh_edit_repository: https://github.com/cetio/selenium
+gh_edit_branch: master
+gh_edit_source: docs
