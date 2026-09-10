@@ -2,16 +2,16 @@
 module selenium.bridge;
 
 import selenium.browser : Browser;
-import selenium.exception;
+import selenium.exception : InvalidArgumentException, WebDriverConnectionException, mapException;
 
-import requests;
+import requests : Request, Response;
 
 import std.json : JSONType, JSONValue, parseJSON;
 import std.conv : to;
 import std.process : kill, Pid, spawnProcess;
 import std.socket;
 import core.thread : Thread;
-import core.time : MonoTime, msecs, Duration;
+import core.time : MonoTime, msecs, seconds, Duration;
 
 /// A connection to a single WebDriver server, whether spawned locally or remote.
 ///
@@ -136,24 +136,27 @@ public:
      *
      * Params:
      *  payload = The new-session capabilities request body.
+     *  timeout = Maximum time to wait for the session response, defaulting to 60 seconds.
      *
      * Returns:
      *  The id of the created session.
      *
      * Throws:
-     *  WebDriverConnectionException if `capacity` is reached.
+     *  WebDriverConnectionException if `capacity` is reached or the server cannot be reached.
      */
-    string createSession(JSONValue payload)
+    string createSession(JSONValue payload, Duration timeout = 60.seconds)
     {
         if (capacity > 0 && sessions.length >= capacity)
             throw new WebDriverConnectionException("Bridge capacity exceeded.");
 
         string str = payload.toString();
-        Response response = request(str).post(
-            address~"/session",
-            str,
-            "application/json"
-        );
+        Response response = send({
+            return request(str, timeout).post(
+                address~"/session",
+                str,
+                "application/json"
+            );
+        });
         JSONValue json = checkAndParse(response);
 
         string id;
@@ -207,16 +210,20 @@ public:
     /// directly, keeping `Bridge` decoupled from grid types.
     JSONValue status()
     {
-        Request req = Request();
-        Response response = req.get(address~"/status");
+        Request req = request();
+        Response response = send({
+            return req.get(address~"/status");
+        });
         return checkAndParse(response);
     }
 
     /// Issues a GET against a session and parses the result.
     T get(T = JSONValue)(string id, string path)
     {
-        Request req = Request();
-        return parseResponse!T(req.get(address~"/session/"~id~path));
+        Request req = request();
+        return parseResponse!T(send({
+            return req.get(address~"/session/"~id~path);
+        }));
     }
 
     /// Issues a parameterless POST against a session, sending an empty JSON object.
@@ -240,36 +247,44 @@ public:
     /// Issues a POST with a raw string body and optional content type, using Content-Length.
     T post(T = JSONValue)(string id, string path, string data, string contentType)
     {
-        return parseResponse!T(request(data).post(address~"/session/"~id~path, data, contentType));
+        return parseResponse!T(send({
+            return request(data).post(address~"/session/"~id~path, data, contentType);
+        }));
     }
 
     /// Issues a PUT with a JSONValue body against a session and parses the result.
     T put(T = JSONValue)(string id, string path, JSONValue data)
     {
         string str = data.toString();
-        return parseResponse!T(request(str).put(
-            address~"/session/"~id~path,
-            str,
-            "application/json"
-        ));
+        return parseResponse!T(send({
+            return request(str).put(
+                address~"/session/"~id~path,
+                str,
+                "application/json"
+            );
+        }));
     }
 
     /// Issues a PATCH with a JSONValue body against a session and parses the result.
     T patch(T = JSONValue)(string id, string path, JSONValue data)
     {
         string str = data.toString();
-        return parseResponse!T(request(str).patch(
-            address~"/session/"~id~path,
-            str,
-            "application/json"
-        ));
+        return parseResponse!T(send({
+            return request(str).patch(
+                address~"/session/"~id~path,
+                str,
+                "application/json"
+            );
+        }));
     }
 
     /// Issues a DELETE against a session and parses the result.
     T del(T = JSONValue)(string id, string path)
     {
-        Request req = Request();
-        return parseResponse!T(req.deleteRequest(address~"/session/"~id~path));
+        Request req = request();
+        return parseResponse!T(send({
+            return req.deleteRequest(address~"/session/"~id~path);
+        }));
     }
 
     /**
@@ -382,12 +397,36 @@ public:
     }
 
 private:
-    /// Creates a request with a known content length.
-    static Request request(string data)
+    /// Creates a request with the given timeout.
+    static Request request(Duration timeout = 30.seconds)
     {
         Request ret = Request();
+        ret.timeout = timeout;
+        return ret;
+    }
+
+    /// Creates a request with a known content length.
+    static Request request(string data, Duration timeout = 30.seconds)
+    {
+        Request ret = request(timeout);
         ret.addHeaders(["Content-Length": data.length.to!string]);
         return ret;
+    }
+
+    /// Executes an HTTP request and translates request-library failures to WebDriver errors.
+    static Response send(Response delegate() operation)
+    {
+        try
+            return operation();
+        catch (Exception exception)
+        {
+            throw new WebDriverConnectionException(
+                "WebDriver request failed: "~exception.msg,
+                __FILE__,
+                __LINE__,
+                exception
+            );
+        }
     }
 
     /// Parses a response into T, unwrapping the W3C value envelope when T is not JSONValue.
@@ -443,8 +482,9 @@ private:
         {
             try
             {
-                Request req = Request();
-                Response response = req.get(address~"/status");
+                Response response = send({
+                    return request(100.msecs).get(address~"/status");
+                });
                 if (response.code == 200)
                     return;
             }

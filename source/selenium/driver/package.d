@@ -8,6 +8,7 @@ import selenium.root : Root, RootState, RootType;
 import selenium.driver.logger : Logger;
 
 import std.json : JSONValue;
+import core.time : seconds, Duration;
 
 /// A handle to a single WebDriver session.
 ///
@@ -41,11 +42,18 @@ class Driver
      *  alwaysMatch = The required browser capabilities.
      *  firstMatch = Alternative capability sets the server may pick from.
      *  logger = The logger to attach, or null to create a default one.
+     *  timeout = Maximum time to wait for the session response, defaulting to 60 seconds.
      *
      * Returns:
      *  A driver bound to the new session.
      */
-    static Driver start(Bridge bridge, Browser alwaysMatch, Browser[] firstMatch, Logger logger = null)
+    static Driver start(
+        Bridge bridge,
+        Browser alwaysMatch,
+        Browser[] firstMatch,
+        Logger logger = null,
+        Duration timeout = 60.seconds
+    )
     {
         if (logger is null)
             logger = new Logger();
@@ -71,7 +79,7 @@ class Driver
         Driver ret = new Driver();
         ret.bridge = bridge;
         ret.logger = logger;
-        ret.id = bridge.createSession(payload);
+        ret.id = bridge.createSession(payload, timeout);
         ret.browser = bridge.sessions[ret.id];
         ret.logger.driver = ret;
         return ret;
@@ -87,15 +95,27 @@ class Driver
      *  alwaysMatch = The required browser capabilities, also used to resolve the binary.
      *  firstMatch = Alternative capability sets the server may pick from.
      *  logger = The logger to attach, or null to create a default one.
+     *  timeout = Maximum time to wait for the session response, defaulting to 60 seconds.
      *
      * Returns:
      *  A driver bound to a session on a newly spawned bridge.
      */
-    static Driver start(Browser alwaysMatch, Browser[] firstMatch = null, Logger logger = null)
+    static Driver start(
+        Browser alwaysMatch,
+        Browser[] firstMatch = null,
+        Logger logger = null,
+        Duration timeout = 60.seconds
+    )
     {
         if (logger is null)
             logger = new Logger();
-        return start(Bridge.start(alwaysMatch.resolveBinary(), logger.toDriverArgs()), alwaysMatch, firstMatch, logger);
+        return start(
+            Bridge.start(alwaysMatch.resolveBinary(), logger.toDriverArgs()),
+            alwaysMatch,
+            firstMatch,
+            logger,
+            timeout
+        );
     }
 
     /// Starts a session with a generic browser, letting the first driver on PATH win.
@@ -115,15 +135,22 @@ class Driver
      *  alwaysMatch = The required browser capabilities.
      *  firstMatch = Alternative capability sets the server may pick from.
      *  logger = The logger to attach, or null to create a default one.
+     *  timeout = Maximum time to wait for the session response, defaulting to 60 seconds.
      *
      * Returns:
      *  A driver bound to a session on the remote server.
      */
-    static Driver connect(string address, Browser alwaysMatch, Browser[] firstMatch = null, Logger logger = null)
+    static Driver connect(
+        string address,
+        Browser alwaysMatch,
+        Browser[] firstMatch = null,
+        Logger logger = null,
+        Duration timeout = 60.seconds
+    )
     {
         Bridge bridge = new Bridge(1);
         bridge.address = address;
-        return start(bridge, alwaysMatch, firstMatch, logger);
+        return start(bridge, alwaysMatch, firstMatch, logger, timeout);
     }
 
     /// Ends this session, leaving the bridge and its other sessions intact.

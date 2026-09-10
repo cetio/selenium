@@ -9,9 +9,9 @@ Unlike `Bridge`, `Driver` has no destructor. Call `stop()` to end its session. T
 | Overload | Purpose |
 | --- | --- |
 | `Driver.start()` | Starts a generic session using the first known WebDriver executable on `PATH`. |
-| `Driver.start(Browser alwaysMatch, Browser[] firstMatch = null, Logger logger = null)` | Starts a local WebDriver process and creates a session. |
-| `Driver.start(Bridge bridge, Browser alwaysMatch, Browser[] firstMatch, Logger logger = null)` | Creates a session on an existing bridge. |
-| `Driver.connect(string address, Browser alwaysMatch, Browser[] firstMatch = null, Logger logger = null)` | Creates a session on a remote WebDriver endpoint. |
+| `Driver.start(Browser alwaysMatch, Browser[] firstMatch = null, Logger logger = null, Duration timeout = 60.seconds)` | Starts a local WebDriver process and creates a session. |
+| `Driver.start(Bridge bridge, Browser alwaysMatch, Browser[] firstMatch, Logger logger = null, Duration timeout = 60.seconds)` | Creates a session on an existing bridge. |
+| `Driver.connect(string address, Browser alwaysMatch, Browser[] firstMatch = null, Logger logger = null, Duration timeout = 60.seconds)` | Creates a session on a remote WebDriver endpoint. |
 
 ```d
 import selenium;

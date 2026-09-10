@@ -8,6 +8,7 @@ import selenium.exception : WebDriverConnectionException;
 import unit_threaded;
 
 import std.json : JSONValue;
+import core.time : msecs;
 
 @Name("parseElementId W3C key")
 unittest
@@ -61,4 +62,20 @@ unittest
     Bridge bridge = new Bridge(1);
     bridge.sessions["active"] = new Browser();
     bridge.createSession(JSONValue.emptyObject);
+}
+
+@Name("bridge translates request failures to connection errors") @ShouldFailWith!WebDriverConnectionException
+unittest
+{
+    Bridge bridge = new Bridge();
+    bridge.address = "http://127.0.0.1:0";
+    bridge.status();
+}
+
+@Name("session creation accepts a custom timeout") @ShouldFailWith!WebDriverConnectionException
+unittest
+{
+    Bridge bridge = new Bridge();
+    bridge.address = "http://127.0.0.1:0";
+    bridge.createSession(JSONValue.emptyObject, 1.msecs);
 }

@@ -62,14 +62,14 @@ Driver second = Driver.start(bridge, new Chrome(), null);
 scope (exit) second.stop();
 ```
 
-Creating a session beyond a positive capacity throws `WebDriverConnectionException` before a request is sent.
+Creating a session beyond a positive capacity throws `WebDriverConnectionException` before a request is sent. Session creation waits up to 60 seconds by default.
 
 ## Session Management
 
 | Member | Purpose |
 | --- | --- |
-| `createSession(payload)` | Creates a session and returns its ID. |
-| `closeSession(id)` | Requests session deletion and removes local state even if deletion fails. |
+| `createSession(JSONValue payload, Duration timeout = 60.seconds)` | Creates a session and returns its ID. |
+| `closeSession(string id)` | Requests session deletion and removes local state even if deletion fails. |
 | `sessions` | Negotiated `Browser` capabilities keyed by session ID. |
 | `stop()` | Kills an owned process and clears all local sessions. |
 
