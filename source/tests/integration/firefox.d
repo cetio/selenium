@@ -22,15 +22,21 @@ version(firefox)
 
 private:
     shared Driver _driver;
+    shared Firefox _browser;
 
     Driver driver() => cast(Driver)_driver;
+    Firefox browser() => cast(Firefox)_browser;
 
     shared static this()
     {
         Firefox browser = new Firefox();
         browser.args = ["--headless"];
         Logger logger = new Logger();
-        Bridge bridge = Bridge.start(browser.resolveBinary(), ["--log", "fatal"]);
+        Bridge bridge = Bridge.start(
+            browser.resolveBinary(),
+            ["--log", "fatal"]
+        );
+        _browser = cast(shared)browser;
         _driver = cast(shared)Driver.start(
             bridge,
             browser,

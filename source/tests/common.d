@@ -7,12 +7,12 @@ string dataUri(string html)
 
 /// Mixin template for browser integration tests.
 ///
-/// The mixing-in module must provide a `driver` accessor that returns the shared `Driver` instance.
+/// The mixing-in module must provide `driver` and `browser` accessors that return the shared
+/// `Driver` instance and its configured browser capabilities.
 /// Every test is marked `@Serial` because they all share one live browser session.
 mixin template BrowserIntegration()
 {
     import tests.common : dataUri;
-    import selenium.driver : Driver;
     import selenium.driver : Driver;
     import selenium.driver.cookies : Cookie, cookies;
     import selenium.element : By, Element, Size;
@@ -351,7 +351,7 @@ mixin template BrowserIntegration()
     @Serial @ShouldFailWith!ScriptTimeoutException
     unittest
     {
-        Driver isolated = Driver.start(driver.bridge, new Chrome(), null);
+        Driver isolated = Driver.start(driver.bridge, browser, null);
         scope(exit) isolated.stop();
 
         isolated.browser.timeouts.implicit = 1.seconds;

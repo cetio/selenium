@@ -21,15 +21,22 @@ version(chrome)
 
 private:
     shared Driver _driver;
+    shared Chrome _browser;
 
     Driver driver() => cast(Driver)_driver;
+    Chrome browser() => cast(Chrome)_browser;
 
     shared static this()
     {
-        Chrome browser = new Chrome();
-        browser.includeSwitches = ["--no-sandbox", "--headless"];
+        _browser = cast(shared)new Chrome();
+        _browser.includeSwitches = ["--no-sandbox", "--headless"];
+
         Logger logger = new Logger();
-        Bridge bridge = Bridge.start(browser.resolveBinary(), ["--log-level=OFF"]);
+        Bridge bridge = Bridge.start(
+            browser.resolveBinary(),
+            ["--log-level=OFF"]
+        );
+
         _driver = cast(shared)Driver.start(
             bridge,
             browser,
