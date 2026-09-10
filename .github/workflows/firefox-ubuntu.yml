@@ -1,4 +1,4 @@
-name: Firefox / Ubuntu
+name: CI (5)
 
 on:
   push:

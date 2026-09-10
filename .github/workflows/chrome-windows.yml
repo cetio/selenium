@@ -1,4 +1,4 @@
-name: Chrome / Windows
+name: CI (3)
 
 on:
   push:

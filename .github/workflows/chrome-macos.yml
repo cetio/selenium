@@ -1,4 +1,4 @@
-name: Chrome / macOS
+name: CI (1)
 
 on:
   push:
