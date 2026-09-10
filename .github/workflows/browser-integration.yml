@@ -1,32 +1,34 @@
 name: Browser Integration
 
 on:
-  push:
-    branches: [ "master" ]
-  pull_request:
-    branches: [ "master" ]
+  workflow_call:
+    inputs:
+      os:
+        required: true
+        type: string
+      browser:
+        required: true
+        type: string
+      compiler:
+        required: false
+        type: string
+        default: ldc-latest
 
 permissions:
   contents: read
 
 jobs:
   test:
-    name: ${{ matrix.browser }} (${{ matrix.os }})
-    runs-on: ${{ matrix.os }}
-    strategy:
-      fail-fast: false
-      matrix:
-        os: [ ubuntu-latest, windows-latest, macos-latest ]
-        compiler: [ ldc-latest ]
-        browser: [ chrome, firefox ]
+    name: ${{ inputs.browser }} (${{ inputs.os }})
+    runs-on: ${{ inputs.os }}
 
     steps:
       - uses: actions/checkout@v4
 
-      - name: Install D compiler (${{ matrix.compiler }})
+      - name: Install D compiler
         uses: dlang-community/setup-dlang@v2
         with:
-          compiler: ${{ matrix.compiler }}
+          compiler: ${{ inputs.compiler }}
 
-      - name: Run ${{ matrix.browser }} integration tests
-        run: dub test --d-version=${{ matrix.browser }}
+      - name: Run integration tests
+        run: dub test --d-version=${{ inputs.browser }}

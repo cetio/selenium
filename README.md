@@ -2,7 +2,14 @@
 
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue)](LICENSE.txt)
 [![DUB Package](https://img.shields.io/badge/DUB-latest-red)](https://code.dlang.org/packages/selenium)
-[![Browser Integration](https://github.com/cetio/selenium/actions/workflows/browser-integration.yml/badge.svg)](https://github.com/cetio/selenium/actions/workflows/browser-integration.yml)
+
+## Integration
+
+| OS | Chrome | Firefox |
+| --- | --- | --- |
+| Ubuntu | [![Chrome / Ubuntu](https://github.com/cetio/selenium/actions/workflows/chrome-ubuntu.yml/badge.svg)](https://github.com/cetio/selenium/actions/workflows/chrome-ubuntu.yml) | [![Firefox / Ubuntu](https://github.com/cetio/selenium/actions/workflows/firefox-ubuntu.yml/badge.svg)](https://github.com/cetio/selenium/actions/workflows/firefox-ubuntu.yml) |
+| macOS | [![Chrome / macOS](https://github.com/cetio/selenium/actions/workflows/chrome-macos.yml/badge.svg)](https://github.com/cetio/selenium/actions/workflows/chrome-macos.yml) | [![Firefox / macOS](https://github.com/cetio/selenium/actions/workflows/firefox-macos.yml/badge.svg)](https://github.com/cetio/selenium/actions/workflows/firefox-macos.yml) |
+| Windows | [![Chrome / Windows](https://github.com/cetio/selenium/actions/workflows/chrome-windows.yml/badge.svg)](https://github.com/cetio/selenium/actions/workflows/chrome-windows.yml) | [![Firefox / Windows](https://github.com/cetio/selenium/actions/workflows/firefox-windows.yml/badge.svg)](https://github.com/cetio/selenium/actions/workflows/firefox-windows.yml) |
 
 Selenium is a native D implementation of the W3C WebDriver protocol. It drives Chrome, Firefox, Edge, and Safari directly over HTTP, with no external language bindings or C wrappers. The API often mirrors the Selenium Ruby bindings, so it should be familiar to existing Selenium users.
 

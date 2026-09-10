@@ -1,0 +1,14 @@
+name: Chrome / macOS
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+    branches: [master]
+
+jobs:
+  test:
+    uses: ./.github/workflows/browser-integration.yml
+    with:
+      os: macos-latest
+      browser: chrome
