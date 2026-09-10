@@ -40,7 +40,10 @@
 					"buildOptions": ["unittests"],
 					"dependencies": {
 						"requests": "~>2.2.1",
-						"unit-threaded": "~>2.2.5"
+						"unit-threaded": {
+							"repository": "git+https://github.com/cetio/unit-threaded.git",
+							"version": "~master"
+						}
 					}
 				}
 			]
@@ -72,7 +75,10 @@
 					"buildOptions": ["unittests"],
 					"dependencies": {
 						"requests": "~>2.2.1",
-						"unit-threaded": "~>2.2.5"
+						"unit-threaded": {
+							"repository": "git+https://github.com/cetio/unit-threaded.git",
+							"version": "~master"
+						}
 					}
 				}
 			]
@@ -95,7 +101,10 @@
 			"mainSourceFile": "bin/ut.d",
 			"buildOptions": ["unittests"],
 			"dependencies": {
-				"unit-threaded": "~>2.2.5"
+				"unit-threaded": {
+					"repository": "git+https://github.com/cetio/unit-threaded.git",
+					"version": "~master"
+				}
 			}
 		},
 		{
@@ -110,8 +119,14 @@
 			"buildOptions": ["unittests"],
 			"dependencies": {
 				"requests": "~>2.2.1",
-				"unit-threaded": "~>2.2.5",
-				"unit-threaded:autorunner": "~>2.2.5"
+				"unit-threaded": {
+					"repository": "git+https://github.com/cetio/unit-threaded.git",
+					"version": "~master"
+				},
+				"unit-threaded:autorunner": {
+					"repository": "git+https://github.com/cetio/unit-threaded.git",
+					"version": "~master"
+				}
 			}
 		},
 		{
@@ -126,8 +141,14 @@
 			"buildOptions": ["unittests"],
 			"dependencies": {
 				"requests": "~>2.2.1",
-				"unit-threaded": "~>2.2.5",
-				"unit-threaded:autorunner": "~>2.2.5"
+				"unit-threaded": {
+					"repository": "git+https://github.com/cetio/unit-threaded.git",
+					"version": "~master"
+				},
+				"unit-threaded:autorunner": {
+					"repository": "git+https://github.com/cetio/unit-threaded.git",
+					"version": "~master"
+				}
 			}
 		}
 	]

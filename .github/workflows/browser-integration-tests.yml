@@ -30,5 +30,19 @@ jobs:
         with:
           compiler: ${{ inputs.compiler }}
 
+      - name: Cache DUB packages and build cache
+        uses: actions/cache@v4
+        env:
+          DUB_CACHE_KEY: dub-v1-${{ runner.os }}-${{ runner.arch }}-${{ inputs.compiler }}
+        with:
+          path: |
+            ${{ runner.temp }}/dub/packages
+            ${{ runner.temp }}/dub/cache
+          key: ${{ env.DUB_CACHE_KEY }}-${{ hashFiles('dub.json', 'dub.selections.json') }}
+          restore-keys: |
+            ${{ env.DUB_CACHE_KEY }}-
+
       - name: Run integration tests
+        env:
+          DUB_HOME: ${{ runner.temp }}/dub
         run: dub test -c integration --d-version=${{ inputs.browser }}
