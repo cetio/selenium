@@ -8,7 +8,7 @@ on:
 
 jobs:
   test:
-    uses: ./.github/workflows/browser-integration.yml
+    uses: ./.github/workflows/browser-integration-tests.yml
     with:
       os: macos-latest
       browser: chrome
