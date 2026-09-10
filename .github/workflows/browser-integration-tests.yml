@@ -1,4 +1,4 @@
-name: Browser Integration
+name: Browser Integration Tests
 
 on:
   workflow_call:
@@ -31,4 +31,4 @@ jobs:
           compiler: ${{ inputs.compiler }}
 
       - name: Run integration tests
-        run: dub test --d-version=${{ inputs.browser }}
+        run: dub test -c integration --d-version=${{ inputs.browser }}

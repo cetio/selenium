@@ -2,6 +2,7 @@
 
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue)](LICENSE.txt)
 [![DUB Package](https://img.shields.io/badge/DUB-latest-red)](https://code.dlang.org/packages/selenium)
+![Unit Tests](https://github.com/cetio/selenium/actions/workflows/unit-tests.yml/badge.svg)
 
 | OS | Chrome | Firefox |
 | --- | --- | --- |
