@@ -558,8 +558,8 @@ mixin template BrowserIntegration()
         pointerMove["type"] = JSONValue("pointerMove");
         pointerMove["duration"] = JSONValue(0);
         pointerMove["origin"] = JSONValue("viewport");
-        pointerMove["x"] = JSONValue(100000);
-        pointerMove["y"] = JSONValue(100000);
+        pointerMove["x"] = JSONValue(100_000);
+        pointerMove["y"] = JSONValue(100_000);
 
         JSONValue pointerSource = JSONValue.emptyObject;
         pointerSource["type"] = JSONValue("pointer");
