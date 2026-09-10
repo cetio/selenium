@@ -7,9 +7,9 @@
 
 | OS | Chrome | Firefox |
 | --- | --- | --- |
-| Ubuntu | [![Chrome / Ubuntu](https://github.com/cetio/selenium/actions/workflows/chrome-ubuntu.yml/badge.svg)](https://github.com/cetio/selenium/actions/workflows/chrome-ubuntu.yml) | [![Firefox / Ubuntu](https://github.com/cetio/selenium/actions/workflows/firefox-ubuntu.yml/badge.svg)](https://github.com/cetio/selenium/actions/workflows/firefox-ubuntu.yml) |
-| macOS | [![Chrome / macOS](https://github.com/cetio/selenium/actions/workflows/chrome-macos.yml/badge.svg)](https://github.com/cetio/selenium/actions/workflows/chrome-macos.yml) | [![Firefox / macOS](https://github.com/cetio/selenium/actions/workflows/firefox-macos.yml/badge.svg)](https://github.com/cetio/selenium/actions/workflows/firefox-macos.yml) |
-| Windows | [![Chrome / Windows](https://github.com/cetio/selenium/actions/workflows/chrome-windows.yml/badge.svg)](https://github.com/cetio/selenium/actions/workflows/chrome-windows.yml) | [![Firefox / Windows](https://github.com/cetio/selenium/actions/workflows/firefox-windows.yml/badge.svg)](https://github.com/cetio/selenium/actions/workflows/firefox-windows.yml) |
+| Ubuntu | ![Chrome / Ubuntu](https://github.com/cetio/selenium/actions/workflows/chrome-ubuntu.yml/badge.svg) | ![Firefox / Ubuntu](https://github.com/cetio/selenium/actions/workflows/firefox-ubuntu.yml/badge.svg) |
+| macOS | ![Chrome / macOS](https://github.com/cetio/selenium/actions/workflows/chrome-macos.yml/badge.svg) | ![Firefox / macOS](https://github.com/cetio/selenium/actions/workflows/firefox-macos.yml/badge.svg) |
+| Windows | ![Chrome / Windows](https://github.com/cetio/selenium/actions/workflows/chrome-windows.yml/badge.svg) | ![Firefox / Windows](https://github.com/cetio/selenium/actions/workflows/firefox-windows.yml/badge.svg) |
 
 Selenium is a native D implementation of the W3C WebDriver protocol. It drives Chrome, Firefox, Edge, and Safari directly over HTTP, with no external language bindings or C wrappers. The API often mirrors the Selenium Ruby bindings, so it should be familiar to existing Selenium users.
 
