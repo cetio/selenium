@@ -11,7 +11,7 @@ permissions:
 
 jobs:
   test:
-    name: Unit Tests (${{ matrix.os }}, ${{ matrix.compiler }})
+    name: ${{ matrix.os }} (${{ matrix.compiler }})
     runs-on: ${{ matrix.os }}
 
     strategy:
