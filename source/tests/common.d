@@ -7,11 +7,17 @@ string dataUri(string html)
 
 /// Mixin template for browser integration tests.
 ///
-/// The mixing-in module must provide a `driver` accessor that returns the shared `Driver` instance,
-/// plus the imports the tests need (`By`, `Element`, `Size`, `Root`, `RootType`, etc.). Every test
-/// is marked `@Serial` because they all share one live browser session.
+/// The mixing-in module must provide a `driver` accessor that returns the shared `Driver` instance.
+/// Every test is marked `@Serial` because they all share one live browser session.
 mixin template BrowserIntegration()
 {
+    import tests.common : dataUri;
+    import selenium.element : By, Element, Size;
+    import selenium.exception;
+    import selenium.root : Root, RootType;
+    import unit_threaded;
+    import std.json : JSONValue;
+
     @Name("title returns page title") @Serial
     unittest
     {

@@ -8,21 +8,12 @@ module tests.integration.firefox;
 
 version(firefox)
 {
-    import tests.common : BrowserIntegration, dataUri;
+    import tests.common : BrowserIntegration;
     import selenium.bridge : Bridge;
     import selenium.browser : Browser;
     import selenium.browser.firefox : Firefox;
     import selenium.driver : Driver;
     import selenium.driver.logger : Logger;
-    import selenium.element : By, Element, Size;
-    import selenium.exception :
-        ElementClickInterceptedException,
-        ElementNotInteractableException,
-        JavaScriptException,
-        NoSuchShadowRootException,
-        NoSuchWindowException,
-        StaleElementReferenceException;
-    import selenium.root : Root, RootType;
 
     import unit_threaded;
 
