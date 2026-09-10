@@ -55,8 +55,6 @@ writeln(driver.title);
 
 `Driver.start()` can instead select the first known WebDriver executable found on `PATH`. The library does not download browsers or drivers.
 
-`import selenium;` publicly exposes the generic browser, Chrome, and Firefox APIs. Import `selenium.browser.edge` or `selenium.browser.safari` explicitly when using `Edge` or `Safari`.
-
 ## Documentation
 
 - [Documentation index](docs/README.md)

@@ -4,6 +4,8 @@ module selenium;
 public import selenium.browser;
 public import selenium.browser.chrome;
 public import selenium.browser.firefox;
+public import selenium.browser.edge;
+public import selenium.browser.safari;
 
 public import selenium.driver;
 public import selenium.driver.cookies;
