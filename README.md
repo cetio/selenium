@@ -4,11 +4,11 @@
 [![DUB Package](https://img.shields.io/badge/DUB-latest-red)](https://code.dlang.org/packages/selenium)
 ![Unit Tests](https://github.com/cetio/selenium/actions/workflows/unit-tests.yml/badge.svg)
 
-| OS | Chrome | Firefox |
+| OS | Chrome | Firefox | Safari |
 | --- | --- | --- |
-| Ubuntu | ![Chrome / Ubuntu](https://github.com/cetio/selenium/actions/workflows/chrome-ubuntu.yml/badge.svg) | ![Firefox / Ubuntu](https://github.com/cetio/selenium/actions/workflows/firefox-ubuntu.yml/badge.svg) |
-| macOS | ![Chrome / macOS](https://github.com/cetio/selenium/actions/workflows/chrome-macos.yml/badge.svg) | ![Firefox / macOS](https://github.com/cetio/selenium/actions/workflows/firefox-macos.yml/badge.svg) |
-| Windows | ![Chrome / Windows](https://github.com/cetio/selenium/actions/workflows/chrome-windows.yml/badge.svg) | ![Firefox / Windows](https://github.com/cetio/selenium/actions/workflows/firefox-windows.yml/badge.svg) |
+| Ubuntu | ![Chrome / Ubuntu](https://github.com/cetio/selenium/actions/workflows/chrome-ubuntu.yml/badge.svg) | ![Firefox / Ubuntu](https://github.com/cetio/selenium/actions/workflows/firefox-ubuntu.yml/badge.svg) | |
+| macOS | ![Chrome / macOS](https://github.com/cetio/selenium/actions/workflows/chrome-macos.yml/badge.svg) | ![Firefox / macOS](https://github.com/cetio/selenium/actions/workflows/firefox-macos.yml/badge.svg) | ![Safari / macOS](https://github.com/cetio/selenium/actions/workflows/safari-macos.yml/badge.svg) |
+| Windows | ![Chrome / Windows](https://github.com/cetio/selenium/actions/workflows/chrome-windows.yml/badge.svg) | ![Firefox / Windows](https://github.com/cetio/selenium/actions/workflows/firefox-windows.yml/badge.svg) | |
 
 Selenium is a native D implementation of the W3C WebDriver protocol. It drives Chrome, Firefox, Edge, and Safari directly over HTTP, with no external language bindings or C wrappers. The API often mirrors the Selenium Ruby bindings, so it should be familiar to existing Selenium users.
 
