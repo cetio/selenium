@@ -632,21 +632,26 @@ mixin template BrowserIntegration()
         isolated.title;
     }
 
-    @Name("navigation honors a page-load timeout while the document is executing")
-    @Serial @ShouldFailWith!WebDriverTimeoutException
-    unittest
+    // TODO: Open issue for this. Safari does not throw this despite spec.
+    version(safari) { }
+    else
     {
-        Driver isolated = Driver.start(browser);
-        scope(exit)
+        @Name("navigation honors a page-load timeout while the document is executing")
+        @Serial @ShouldFailWith!WebDriverTimeoutException
+        unittest
         {
-            isolated.stop();
-            isolated.bridge.stop();
-        }
+            Driver isolated = Driver.start(browser);
+            scope(exit)
+            {
+                isolated.stop();
+                isolated.bridge.stop();
+            }
 
-        isolated.browser.timeouts.pageLoad = 100.msecs;
-        isolated.go(dataUri(
-            "<html><body><script>while (true) {}</script></body></html>"
-        ));
+            isolated.browser.timeouts.pageLoad = 100.msecs;
+            isolated.go(dataUri(
+                "<html><body><script>while (true) {}</script></body></html>"
+            ));
+        }
     }
 
     @Name("shadow root findAll preserves order and returns empty results") @Serial
