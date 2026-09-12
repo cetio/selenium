@@ -21,6 +21,7 @@ mixin template BrowserIntegration()
     import unit_threaded;
 
     import std.json : JSONValue;
+    import std.stdio : stderr;
     import core.time : msecs, seconds;
 
     @Name("title returns page title") @Serial
@@ -628,8 +629,25 @@ mixin template BrowserIntegration()
     {
         Driver isolated = Driver.start(browser);
         scope(exit) isolated.bridge.stop();
-        isolated.stop();
-        isolated.title;
+        try
+            isolated.stop();
+        catch (Exception exception)
+        {
+            stderr.writeln("isolated.stop threw ", exception.classinfo.name, ": ", exception.msg);
+            throw exception;
+        }
+
+        stderr.writeln(
+            "session present after stop: ",
+            (isolated.id in isolated.bridge.sessions) !is null
+        );
+        try
+            isolated.title;
+        catch (Exception exception)
+        {
+            stderr.writeln("isolated.title threw ", exception.classinfo.name, ": ", exception.msg);
+            throw exception;
+        }
     }
 
     // TODO: Open issue for this. Safari does not throw this despite spec.
