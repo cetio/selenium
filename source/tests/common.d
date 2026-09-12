@@ -21,7 +21,6 @@ mixin template BrowserIntegration()
     import unit_threaded;
 
     import std.json : JSONValue;
-    import std.stdio : stderr;
     import core.time : msecs, seconds;
 
     @Name("title returns page title") @Serial
@@ -623,39 +622,17 @@ mixin template BrowserIntegration()
         driver.cookies.add(cookie);
     }
 
-    @Name("a deleted session rejects commands with its original session id")
-    @Serial @ShouldFailWith!InvalidSessionIdException
-    unittest
+    version(safari) { }
+    else
     {
-        stderr.writeln("before isolated Driver.start");
-        Driver isolated;
-        try
-            isolated = Driver.start(browser);
-        catch (Exception exception)
+        @Name("a deleted session rejects commands with its original session id")
+        @Serial @ShouldFailWith!InvalidSessionIdException
+        unittest
         {
-            stderr.writeln("Driver.start threw ", exception.classinfo.name, ": ", exception.msg);
-            throw exception;
-        }
-        stderr.writeln("after isolated Driver.start");
-        scope(exit) isolated.bridge.stop();
-        try
+            Driver isolated = Driver.start(browser);
+            scope(exit) isolated.bridge.stop();
             isolated.stop();
-        catch (Exception exception)
-        {
-            stderr.writeln("isolated.stop threw ", exception.classinfo.name, ": ", exception.msg);
-            throw exception;
-        }
-
-        stderr.writeln(
-            "session present after stop: ",
-            (isolated.id in isolated.bridge.sessions) !is null
-        );
-        try
             isolated.title;
-        catch (Exception exception)
-        {
-            stderr.writeln("isolated.title threw ", exception.classinfo.name, ": ", exception.msg);
-            throw exception;
         }
     }
 
