@@ -627,7 +627,16 @@ mixin template BrowserIntegration()
     @Serial @ShouldFailWith!InvalidSessionIdException
     unittest
     {
-        Driver isolated = Driver.start(browser);
+        stderr.writeln("before isolated Driver.start");
+        Driver isolated;
+        try
+            isolated = Driver.start(browser);
+        catch (Exception exception)
+        {
+            stderr.writeln("Driver.start threw ", exception.classinfo.name, ": ", exception.msg);
+            throw exception;
+        }
+        stderr.writeln("after isolated Driver.start");
         scope(exit) isolated.bridge.stop();
         try
             isolated.stop();
