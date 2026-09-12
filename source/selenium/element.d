@@ -208,9 +208,9 @@ public:
 
                 if (clickState == "intercepted")
                     throw new ElementClickInterceptedException("Another element intercepted the click.");
-
-                throw exception;
             }
+
+            throw exception;
         }
     }
     /**
