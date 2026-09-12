@@ -21,3 +21,4 @@ playground/*
 !playground/.gitkeep
 docs/_site/
 docs/.bundle/
+bench/
