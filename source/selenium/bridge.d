@@ -184,10 +184,18 @@ public:
      */
     void closeSession(string id)
     {
-        try
-            del(id, "");
-        catch (Exception) { }
+        if (id !in sessions)
+            return;
+
         sessions.remove(id);
+        try
+        {
+            Request req = request();
+            send({
+                return req.deleteRequest(address~"/session/"~id);
+            });
+        }
+        catch (Exception) { }
     }
 
     /// Kills a locally spawned process and clears all session state.

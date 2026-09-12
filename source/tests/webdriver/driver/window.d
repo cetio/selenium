@@ -3,7 +3,7 @@ module tests.webdriver.driver.window;
 
 import selenium.bridge : Bridge;
 import selenium.browser : Browser;
-import selenium.exception : WebDriverConnectionException;
+import selenium.exception : InvalidSessionIdException, WebDriverConnectionException;
 
 import unit_threaded;
 
@@ -70,6 +70,16 @@ unittest
     Bridge bridge = new Bridge();
     bridge.address = "http://127.0.0.1:0";
     bridge.status();
+}
+
+@Name("closed sessions fail locally before a request") @ShouldFailWith!InvalidSessionIdException
+unittest
+{
+    Bridge bridge = new Bridge();
+    bridge.address = "http://127.0.0.1:0";
+    bridge.sessions["closed"] = new Browser();
+    bridge.closeSession("closed");
+    bridge.get!JSONValue("closed", "/title");
 }
 
 @Name("session creation accepts a custom timeout") @ShouldFailWith!WebDriverConnectionException
