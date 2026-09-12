@@ -492,7 +492,7 @@ private:
                     return;
             }
             catch (Exception) { }
-            Thread.sleep(100.msecs);
+            Thread.sleep(10.msecs);
         }
 
         throw new WebDriverConnectionException(
