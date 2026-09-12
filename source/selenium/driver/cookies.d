@@ -2,6 +2,7 @@
 module selenium.driver.cookies;
 
 import selenium.driver : Driver;
+import selenium.exception : UnableToSetCookieException;
 
 import std.json : JSONValue;
 
@@ -122,6 +123,9 @@ public:
      */
     void add(Cookie cookie)
     {
+        if (cookie.domain != null && driver.url.length >= 5 && driver.url[0 .. 5] == "data:")
+            throw new UnableToSetCookieException("A domain cookie cannot be set for an opaque origin.");
+
         // TODO: Must set cookie domain to current URL??
         driver.bridge.post(
             driver.id,

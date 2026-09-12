@@ -6,6 +6,7 @@ import selenium.browser : Browser;
 import selenium.element : By, Element, Size;
 import selenium.root : Root, RootState, RootType;
 import selenium.driver.logger : Logger;
+import selenium.exception;
 
 import std.array : join;
 import std.json : JSONValue;
@@ -315,6 +316,7 @@ class Driver
      */
     Element find(By by)
     {
+        by.validate();
         bridge.ensureTimeoutsSynced(id, browser);
 
         JSONValue resp = bridge.post(id, "/element", by.toJSON());
@@ -332,6 +334,7 @@ class Driver
      */
     Element[] findAll(By by)
     {
+        by.validate();
         bridge.ensureTimeoutsSynced(id, browser);
 
         JSONValue resp = bridge.post(id, "/elements", by.toJSON());
@@ -426,7 +429,13 @@ class Driver
         /// Switches focus to the top-level browsing context.
         void switchTo() => bridge.post!void(this.id, "/frame", JSONValue(["id": JSONValue(null)]));
         /// Switches focus to the frame at the given index.
-        void switchTo(long id) => bridge.post!void(this.id, "/frame", JSONValue(["id": id]));
+        void switchTo(long id)
+        {
+            if (id < 0)
+                throw new InvalidArgumentException("Frame index must not be negative.");
+
+            bridge.post!void(this.id, "/frame", JSONValue(["id": id]));
+        }
         /// Switches focus to the frame identified by the given element.
         void switchTo(Element element)
             => bridge.post!void(this.id, "/frame", JSONValue(["id": element.toJSON()]));

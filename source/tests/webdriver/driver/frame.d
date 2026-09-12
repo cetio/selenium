@@ -2,6 +2,7 @@
 module tests.webdriver.driver.frame;
 
 import selenium.element : By;
+import selenium.exception : InvalidSelectorException;
 
 import unit_threaded;
 
@@ -17,6 +18,12 @@ unittest
 {
     By.xpath("//div[@class='test']").toJSON()["using"].str.should == "xpath";
     By.xpath("//div[@class='test']").toJSON()["value"].str.should == "//div[@class='test']";
+}
+
+@Name("By.xpath rejects unbalanced delimiters") @ShouldFailWith!InvalidSelectorException
+unittest
+{
+    By.xpath("//*[ ").validate();
 }
 
 @Name("By.tagName serializes correctly")

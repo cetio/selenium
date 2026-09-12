@@ -220,6 +220,7 @@ public:
     /// Issues a GET against a session and parses the result.
     T get(T = JSONValue)(string id, string path)
     {
+        ensureSession(id);
         Request req = request();
         return parseResponse!T(send({
             return req.get(address~"/session/"~id~path);
@@ -247,6 +248,7 @@ public:
     /// Issues a POST with a raw string body and optional content type, using Content-Length.
     T post(T = JSONValue)(string id, string path, string data, string contentType)
     {
+        ensureSession(id);
         return parseResponse!T(send({
             return request(data).post(address~"/session/"~id~path, data, contentType);
         }));
@@ -255,6 +257,7 @@ public:
     /// Issues a PUT with a JSONValue body against a session and parses the result.
     T put(T = JSONValue)(string id, string path, JSONValue data)
     {
+        ensureSession(id);
         string str = data.toString();
         return parseResponse!T(send({
             return request(str).put(
@@ -268,6 +271,7 @@ public:
     /// Issues a PATCH with a JSONValue body against a session and parses the result.
     T patch(T = JSONValue)(string id, string path, JSONValue data)
     {
+        ensureSession(id);
         string str = data.toString();
         return parseResponse!T(send({
             return request(str).patch(
@@ -281,6 +285,7 @@ public:
     /// Issues a DELETE against a session and parses the result.
     T del(T = JSONValue)(string id, string path)
     {
+        ensureSession(id);
         Request req = request();
         return parseResponse!T(send({
             return req.deleteRequest(address~"/session/"~id~path);
@@ -397,6 +402,18 @@ public:
     }
 
 private:
+    void ensureSession(string id)
+    {
+        if (id !in sessions)
+            throw new InvalidSessionIdException("Session is not active.");
+    }
+
+    static bool isSafari(Browser browser)
+    {
+        return browser !is null
+            && (browser.name == "safari" || browser.name == "Safari Technology Preview");
+    }
+
     /// Creates a request with the given timeout.
     static Request request(Duration timeout = 30.seconds)
     {

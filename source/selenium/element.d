@@ -3,7 +3,8 @@ module selenium.element;
 
 import selenium.bridge : Bridge;
 import selenium.driver : Driver;
-import selenium.exception : NoSuchShadowRootException;
+import selenium.exception : ElementClickInterceptedException, InvalidSelectorException, NoSuchShadowRootException,
+    WebDriverException;
 import selenium.root : Root, RootState, RootType;
 
 import std.array : join;
@@ -38,6 +39,55 @@ struct By
     /// Locates elements by XPath expression.
     static By xpath(string value)
         => By("xpath", value);
+
+    void validate() const
+    {
+        if (using != "xpath")
+            return;
+
+        if (value.length == 0)
+            throw new InvalidSelectorException("XPath expression must not be empty.");
+
+        dchar quote;
+        dchar[] delimiters;
+        foreach (dchar character; value)
+        {
+            if (quote != 0)
+            {
+                if (character == quote)
+                    quote = 0;
+                continue;
+            }
+
+            if (character == '\'' || character == '"')
+            {
+                quote = character;
+                continue;
+            }
+
+            switch (character)
+            {
+                case '[', '(':
+                    delimiters ~= character;
+                    break;
+                case ']':
+                    if (delimiters.length == 0 || delimiters[$ - 1] != '[')
+                        throw new InvalidSelectorException("XPath expression has unbalanced delimiters.");
+                    delimiters = delimiters[0 .. $ - 1];
+                    break;
+                case ')':
+                    if (delimiters.length == 0 || delimiters[$ - 1] != '(')
+                        throw new InvalidSelectorException("XPath expression has unbalanced delimiters.");
+                    delimiters = delimiters[0 .. $ - 1];
+                    break;
+                default:
+                    break;
+            }
+        }
+
+        if (quote != 0 || delimiters.length > 0)
+            throw new InvalidSelectorException("XPath expression has unbalanced delimiters.");
+    }
 
     /// Serializes the strategy into the `{using, value}` locator payload.
     JSONValue toJSON()
@@ -129,7 +179,40 @@ public:
     bool enabled() => driver.bridge.get!bool(driver.id, path("/enabled"));
 
     /// Clicks the element.
-    void click() => driver.bridge.post!void(driver.id, path("/click"));
+    void click()
+    {
+        try
+            driver.bridge.post!void(driver.id, path("/click"));
+        catch (WebDriverException exception)
+        {
+            // TODO: Should we ensure proper exceptions are always thrown?
+            version(safari)
+            {
+                string clickState;
+                try
+                {
+                    clickState = driver.execute!string(
+                        `var element = arguments[0];`~
+                        `var style = window.getComputedStyle(element);`~
+                        `var rect = element.getBoundingClientRect();`~
+                        `if (style.display === "none" || style.visibility === "hidden" ||`~
+                        ` style.pointerEvents === "none" || rect.width === 0 || rect.height === 0)`~
+                        ` return "not interactable";`~
+                        `var hit = document.elementFromPoint(`~
+                        `rect.left + rect.width / 2, rect.top + rect.height / 2);`~
+                        `return hit === element || element.contains(hit) ? "ok" : "intercepted";`,
+                        JSONValue([toJSON()])
+                    );
+                }
+                catch (Exception) { }
+
+                if (clickState == "intercepted")
+                    throw new ElementClickInterceptedException("Another element intercepted the click.");
+
+                throw exception;
+            }
+        }
+    }
     /**
      * Types the given key sequences into the element.
      *
@@ -170,6 +253,7 @@ public:
      */
     Element find(By by)
     {
+        by.validate();
         driver.bridge.ensureTimeoutsSynced(driver.id, driver.browser);
 
         JSONValue resp = driver.bridge.post(driver.id, path("/element"), by.toJSON());
@@ -187,6 +271,7 @@ public:
      */
     Element[] findAll(By by)
     {
+        by.validate();
         driver.bridge.ensureTimeoutsSynced(driver.id, driver.browser);
 
         JSONValue resp = driver.bridge.post(driver.id, path("/elements"), by.toJSON());

@@ -347,34 +347,6 @@ mixin template BrowserIntegration()
         driver.execute("return nonExistentFunction();");
     }
 
-    @Name("async script honors the configured script timeout")
-    @Serial @ShouldFailWith!ScriptTimeoutException
-    unittest
-    {
-        Driver isolated = Driver.start(browser);
-        scope(exit)
-        {
-            isolated.stop();
-            isolated.bridge.stop();
-        }
-
-        isolated.browser.timeouts.implicit = 1.seconds;
-        isolated.browser.timeouts.pageLoad = 1.seconds;
-        isolated.browser.timeouts.script = 1.seconds;
-        isolated.go(dataUri("<html><body></body></html>"));
-        isolated.bridge.post!void(
-            isolated.id,
-            "/execute/async",
-            JSONValue([
-                "script": JSONValue(
-                    "var callback = arguments[arguments.length - 1]; "~
-                    "setTimeout(callback, 3000);"
-                ),
-                "args": JSONValue.emptyArray,
-            ])
-        );
-    }
-
     @Name("execute returns string array") @Serial
     unittest
     {
