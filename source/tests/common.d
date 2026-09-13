@@ -107,10 +107,10 @@ mixin template BrowserIntegration()
     {
         driver.go(dataUri("<html><body></body></html>"));
         Rect original = driver.window.rect;
-        driver.window.rect(Rect(original.x, original.y, 500, 400));
+        driver.window.rect(Rect(original.x, original.y, original.width - 50, original.height - 50));
         Rect changed = driver.window.rect;
-        changed.width.should == 500;
-        changed.height.should == 400;
+        changed.width.should == original.width - 50;
+        changed.height.should == original.height - 50;
     }
 
     @Name("position returns a coordinate pair") @Serial
