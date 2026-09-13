@@ -58,7 +58,7 @@ class Firefox : Browser
         if (profile != null)
         {
             if (profile.exists && profile.isDir)
-                launchArgs ~= ["-profile", profile];
+                launchArgs ~= "--profile "~profile;
             else if (profile.match(ctRegex!(`^([A-Za-z0-9+/]{4})*([A-Za-z0-9+/]{3}=|[A-Za-z0-9+/]{2}==)?$`)))
                 opts["profile"] = JSONValue(profile);
             else
