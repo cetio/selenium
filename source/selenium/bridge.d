@@ -477,7 +477,9 @@ private:
     /// Parses a response body and converts an HTTP error status into an exception.
     static JSONValue checkAndParse(Response response)
     {
-        string content = cast(string)response.responseBody.data;
+        string content = cast(string)response.responseBody.data.dup;
+        ushort code = response.code;
+
         if (content.length == 0)
             return JSONValue.emptyObject;
 
@@ -486,16 +488,16 @@ private:
             ret = parseJSON(content);
         catch (Exception)
         {
-            if (response.code >= 200 && response.code < 300)
+            if (code >= 200 && code < 300)
                 return JSONValue.emptyObject;
 
-            if (response.code == 404 || response.code == 405)
+            if (code == 404 || code == 405)
                 throw new UnknownCommandException(content);
 
             throw new WebDriverConnectionException("Invalid response from server:"~content);
         }
 
-        if (response.code >= 400)
+        if (code >= 400)
             throw mapException(ret);
 
         return ret;
