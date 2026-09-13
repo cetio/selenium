@@ -67,7 +67,7 @@ writeln(driver.title);
 
 ### WebDriver protocol
 
-- [ ] Fix Safari support (see integration tests)
+- [x] Fix Safari support (see integration tests)
 - [ ] Asynchronous script execution (`POST /execute/async`)
 - [ ] Actions API, including perform and release
 - [x] Alert text, accept, dismiss, and prompt input commands
