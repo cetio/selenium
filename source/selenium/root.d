@@ -98,7 +98,8 @@ public:
      * Finds the first element matching the locator within this root.
      *
      * For `Embedded` roots the current frame is switched to the iframe before
-     * searching. The driver remains in the iframe context after the call.
+     * searching. For `Primary` roots the frame is reset to the top-level first.
+     * The driver remains in the resulting context after the call.
      *
      * Params:
      *  by = The location strategy and selector.
@@ -117,6 +118,7 @@ public:
         final switch (_type)
         {
             case RootType.Primary:
+                driver.frame.switchTo();
                 JSONValue resp = driver.bridge.post(
                     driver.id,
                     _findPath,
@@ -125,6 +127,7 @@ public:
                 return new Element(driver, Bridge.parseElementId(resp));
 
             case RootType.Embedded:
+                driver.frame.switchTo();
                 Element iframe = new Element(driver, id);
                 driver.frame.switchTo(iframe);
                 JSONValue resp = driver.bridge.post(
@@ -133,7 +136,7 @@ public:
                     by.toJSON()
                 );
                 return new Element(driver, Bridge.parseElementId(resp));
-                
+
             case RootType.Shadow:
                 JSONValue resp = driver.bridge.post(
                     driver.id,
@@ -148,7 +151,8 @@ public:
      * Finds every element matching the locator within this root.
      *
      * For `Embedded` roots the current frame is switched to the iframe before
-     * searching. The driver remains in the iframe context after the call.
+     * searching. For `Primary` roots the frame is reset to the top-level first.
+     * The driver remains in the resulting context after the call.
      *
      * Params:
      *  by = The location strategy and selector.
@@ -164,6 +168,7 @@ public:
         final switch (_type)
         {
             case RootType.Primary:
+                driver.frame.switchTo();
                 JSONValue resp = driver.bridge.post(
                     driver.id,
                     _findAllPath,
@@ -174,6 +179,7 @@ public:
                     ret ~= new Element(driver, eid);
                 return ret;
             case RootType.Embedded:
+                driver.frame.switchTo();
                 Element iframe = new Element(driver, id);
                 driver.frame.switchTo(iframe);
                 JSONValue resp = driver.bridge.post(

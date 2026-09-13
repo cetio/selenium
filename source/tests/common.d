@@ -703,5 +703,27 @@ mixin template BrowserIntegration()
         elements[0].text.should == "first";
         elements[1].text.should == "second";
     }
+
+    @Name("primary root find works after embedded root search") @Serial
+    unittest
+    {
+        string iframeHtml = "<p id='inner'>inside</p>";
+        string html = "<html><body><p id='outer'>outside</p>"~
+            "<iframe srcdoc=\""~iframeHtml~"\"></iframe></body></html>";
+        driver.go(dataUri(html));
+
+        Root embedded;
+        foreach (root; driver.roots())
+        {
+            if (root.type == RootType.Embedded)
+            {
+                embedded = root;
+                break;
+            }
+        }
+
+        embedded.find(By.css("#inner")).text.should == "inside";
+        driver.root().find(By.css("#outer")).text.should == "outside";
+    }
 }
 
