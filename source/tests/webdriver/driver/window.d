@@ -2,7 +2,7 @@
 module tests.webdriver.driver.window;
 
 import selenium.bridge : Bridge;
-import selenium.browser : Browser;
+import selenium.browser : Browser, Platform;
 import selenium.exception : InvalidSessionIdException, WebDriverConnectionException;
 
 import unit_threaded;
@@ -88,4 +88,55 @@ unittest
     Bridge bridge = new Bridge();
     bridge.address = "http://127.0.0.1:0";
     bridge.createSession(JSONValue.emptyObject, 1.msecs);
+}
+
+@Name("parseSession reads a W3C new-session response")
+unittest
+{
+    JSONValue json = JSONValue([
+        "value": JSONValue([
+            "sessionId": JSONValue("sess-1"),
+            "capabilities": JSONValue([
+                "browserName": JSONValue("safari"),
+                "platformName": JSONValue("Mac"),
+                "acceptInsecureCerts": JSONValue(true),
+            ]),
+        ]),
+    ]);
+
+    string id;
+    Browser browser = Bridge.parseSession(json, id);
+    id.should == "sess-1";
+    browser.name.should == "safari";
+    (browser.platform == Platform.Mac).should == true;
+    browser.acceptInsecureCerts.should == true;
+}
+
+@Name("parseSession rejects malformed new-session responses")
+unittest
+{
+    void expectInvalid(JSONValue value)
+    {
+        string id;
+        Bridge.parseSession(JSONValue(["value": value]), id).shouldThrow!WebDriverConnectionException;
+    }
+
+    expectInvalid(JSONValue([
+        "capabilities": JSONValue.emptyObject,
+    ]));
+    expectInvalid(JSONValue([
+        "sessionId": JSONValue(""),
+        "capabilities": JSONValue.emptyObject,
+    ]));
+    expectInvalid(JSONValue([
+        "sessionId": JSONValue(9),
+        "capabilities": JSONValue.emptyObject,
+    ]));
+    expectInvalid(JSONValue([
+        "sessionId": JSONValue("sess-1"),
+    ]));
+    expectInvalid(JSONValue([
+        "sessionId": JSONValue("sess-1"),
+        "capabilities": JSONValue(9),
+    ]));
 }

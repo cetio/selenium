@@ -160,16 +160,8 @@ public:
         JSONValue json = checkAndParse(response);
 
         string id;
-        if ("value" in json && "sessionId" in json["value"])
-            id = json["value"]["sessionId"].str;
-
-        JSONValue capabilities;
-        if ("value" in json && "capabilities" in json["value"])
-            capabilities = json["value"]["capabilities"];
-        else
-            capabilities = JSONValue.emptyObject;
-
-        sessions[id] = Browser.fromJSONValue(capabilities);
+        Browser browser = parseSession(json, id);
+        sessions[id] = browser;
         return id;
     }
 
@@ -407,6 +399,21 @@ public:
         }
         else
             return value.get!T;
+    }
+
+    static Browser parseSession(JSONValue json, out string id)
+    {
+        if (json.type != JSONType.object || "value" !in json || json["value"].type != JSONType.object)
+            throw new WebDriverConnectionException("Invalid new session response.");
+
+        JSONValue value = json["value"];
+        if ("sessionId" !in value || value["sessionId"].type != JSONType.string || value["sessionId"].str.length == 0)
+            throw new WebDriverConnectionException("Invalid new session response.");
+        if ("capabilities" !in value || value["capabilities"].type != JSONType.object)
+            throw new WebDriverConnectionException("Invalid new session response.");
+
+        id = value["sessionId"].str;
+        return Browser.fromJSONValue(value["capabilities"]);
     }
 
 private:
