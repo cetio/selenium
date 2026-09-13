@@ -141,3 +141,32 @@ unittest
         "capabilities": JSONValue(9),
     ]));
 }
+
+@Name("timeout synchronization is isolated per session")
+unittest
+{
+    Bridge bridge = new Bridge();
+    bridge.address = "http://127.0.0.1:0";
+    Browser browser = new Browser();
+    browser.timeouts.pageLoad = 100.msecs;
+    bridge.sessions["first"] = browser;
+    bridge.sessions["second"] = browser;
+    bridge.timeoutSyncs["first"] = Bridge.TimeoutSync(0, 100, 0);
+
+    bridge.ensureTimeoutsSynced("first", browser);
+
+    bridge.ensureTimeoutsSynced("second", browser).shouldThrow!WebDriverConnectionException;
+}
+
+@Name("timeout synchronization sends zero resets")
+unittest
+{
+    Bridge bridge = new Bridge();
+    bridge.address = "http://127.0.0.1:0";
+    Browser browser = new Browser();
+    bridge.sessions["active"] = browser;
+    bridge.timeoutSyncs["active"] = Bridge.TimeoutSync(0, 100, 0);
+
+    bridge.ensureTimeoutsSynced("active", browser).shouldThrow!WebDriverConnectionException;
+    bridge.timeoutSyncs["active"].page.should == 100;
+}

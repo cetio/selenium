@@ -28,50 +28,6 @@ package (selenium):
     /// The capability key identifying a W3C shadow root reference in payloads.
     enum string SHADOW_KEY = "shadow-6066-11e4-a52e-4f735466cecf";
 
-    /// Last implicit wait pushed to the server, in milliseconds.
-    int syncImplicit;
-    /// Last page load timeout pushed to the server, in milliseconds.
-    int syncPage;
-    /// Last script timeout pushed to the server, in milliseconds.
-    int syncScript;
-
-    /**
-     * Pushes the browser timeout configuration to the session if it has changed.
-     *
-     * Timeouts are synced lazily so that unchanged values do not incur an extra
-     * request before each command. Failures are swallowed so a rejected sync does
-     * not abort the caller's command.
-     *
-     * Params:
-     *  id = The target session id.
-     *  browser = The browser whose timeout configuration to apply.
-     */
-    void ensureTimeoutsSynced(string id, Browser browser)
-    {
-        int implicitTimeout = cast(int)browser.timeouts.implicit.total!"msecs";
-        int pageTimeout = cast(int)browser.timeouts.pageLoad.total!"msecs";
-        int scriptTimeout = cast(int)browser.timeouts.script.total!"msecs";
-
-        if (implicitTimeout == syncImplicit && pageTimeout == syncPage && scriptTimeout == syncScript)
-            return;
-
-        JSONValue data = JSONValue.emptyObject;
-        if (implicitTimeout != 0)
-            data["implicit"] = JSONValue(implicitTimeout);
-        if (pageTimeout != 0)
-            data["pageLoad"] = JSONValue(pageTimeout);
-        if (scriptTimeout != 0)
-            data["script"] = JSONValue(scriptTimeout);
-        try
-        {
-            post(id, "/timeouts", data);
-            syncImplicit = implicitTimeout;
-            syncPage = pageTimeout;
-            syncScript = scriptTimeout;
-        }
-        catch (Exception) { }
-    }
-
 public:
     /// Base URL of the WebDriver server, e.g. "http://127.0.0.1:9515".
     string address;
@@ -81,6 +37,15 @@ public:
     const int capacity;
     /// Active sessions keyed by session id, mapped to their negotiated browser.
     Browser[string] sessions;
+
+    struct TimeoutSync
+    {
+        int implicit;
+        int page;
+        int script;
+    }
+
+    TimeoutSync[string] timeoutSyncs;
 
     /**
      * Creates a bridge with the given session capacity.
@@ -190,6 +155,41 @@ public:
         catch (InvalidSessionIdException) { }
 
         sessions.remove(id);
+        timeoutSyncs.remove(id);
+    }
+
+    /**
+     * Pushes the browser timeout configuration to the session if it has changed.
+     *
+     * Timeouts are synced lazily so that unchanged values do not incur an extra
+     * request before each command. The last synced state is cached per session,
+     * and failures propagate to the caller.
+     *
+     * Params:
+     *  id = The target session id.
+     *  browser = The browser whose timeout configuration to apply.
+     */
+    void ensureTimeoutsSynced(string id, Browser browser)
+    {
+        TimeoutSync current;
+        current.implicit = cast(int)browser.timeouts.implicit.total!"msecs";
+        current.page = cast(int)browser.timeouts.pageLoad.total!"msecs";
+        current.script = cast(int)browser.timeouts.script.total!"msecs";
+        TimeoutSync synced = timeoutSyncs.get(id, TimeoutSync.init);
+
+        if (current == synced)
+            return;
+
+        JSONValue data = JSONValue.emptyObject;
+        if (current.implicit != synced.implicit)
+            data["implicit"] = JSONValue(current.implicit);
+        if (current.page != synced.page)
+            data["pageLoad"] = JSONValue(current.page);
+        if (current.script != synced.script)
+            data["script"] = JSONValue(current.script);
+
+        post(id, "/timeouts", data);
+        timeoutSyncs[id] = current;
     }
 
     /// Kills a locally spawned process and clears all session state.
@@ -201,6 +201,7 @@ public:
             pid = Pid.init;
         }
         sessions = null;
+        timeoutSyncs = null;
     }
 
     /// The server status from `GET /status`, as the raw parsed JSON.
