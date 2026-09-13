@@ -42,7 +42,8 @@ mixin template BrowserIntegration()
     unittest
     {
         driver.go(dataUri("<html><body></body></html>"));
-        Size original = driver.window.size;
+        Rect original = driver.window.rect;
+        scope (exit) driver.window.rect = original;
         driver.window.resize(Size(original.width - 50, original.height - 50));
         Size changed = driver.window.size;
         changed.width.should == original.width - 50;
@@ -53,6 +54,8 @@ mixin template BrowserIntegration()
     unittest
     {
         driver.go(dataUri("<html><body></body></html>"));
+        Rect original = driver.window.rect;
+        scope (exit) driver.window.rect = original;
         driver.window.resize(Size(400, 400));
         driver.window.maximize();
         Size maximized = driver.window.size;
@@ -64,6 +67,8 @@ mixin template BrowserIntegration()
     unittest
     {
         driver.go(dataUri("<html><body></body></html>"));
+        Rect original = driver.window.rect;
+        scope (exit) driver.window.rect = original;
         driver.window.minimize();
         driver.execute!bool("return document.hidden;").should == true;
     }
@@ -107,7 +112,8 @@ mixin template BrowserIntegration()
     {
         driver.go(dataUri("<html><body></body></html>"));
         Rect original = driver.window.rect;
-        driver.window.rect(Rect(original.x, original.y, original.width - 50, original.height - 50));
+        scope (exit) driver.window.rect = original;
+        driver.window.rect = Rect(original.x, original.y, original.width - 50, original.height - 50);
         Rect changed = driver.window.rect;
         changed.width.should == original.width - 50;
         changed.height.should == original.height - 50;
@@ -129,8 +135,9 @@ mixin template BrowserIntegration()
         unittest
         {
             driver.go(dataUri("<html><body></body></html>"));
-            Position original = driver.window.position;
-            driver.window.position(Position(original.x + 50, original.y + 50));
+            Rect original = driver.window.rect;
+            scope (exit) driver.window.rect = original;
+            driver.window.position = Position(original.x + 50, original.y + 50);
             Position moved = driver.window.position;
             moved.x.should == original.x + 50;
             moved.y.should == original.y + 50;

@@ -113,8 +113,8 @@ Window commands are grouped under `driver.window`:
 | `switchTo(handle)` | Focus a window. |
 | `close()` | Close the current window. |
 | `resize(Size)` | Resize the current window. |
-| `position(Position)` | Move the current window. |
-| `rect(Rect)` | Set the current window position and size. |
+| `position = Position(...)` | Move the current window. |
+| `rect = Rect(...)` | Set the current window position and size. |
 | `maximize()` | Maximize the current window. |
 | `minimize()` | Minimize the current window. |
 | `fullscreen()` | Enter fullscreen mode. |

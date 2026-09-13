@@ -410,13 +410,13 @@ class Driver
             return Size(value["width"].get!long, value["height"].get!long);
         }
         /// The position of the current window.
-        Position position()
+        @property Position position()
         {
             JSONValue value = bridge.unwrapAndParse!JSONValue(bridge.get(id, "/window/rect"));
             return Position(value["x"].get!long, value["y"].get!long);
         }
         /// The full rectangle of the current window.
-        Rect rect()
+        @property Rect rect()
         {
             JSONValue value = bridge.unwrapAndParse!JSONValue(bridge.get(id, "/window/rect"));
             return Rect(
@@ -443,14 +443,14 @@ class Driver
                 JSONValue(["width": value.width, "height": value.height])
             );
         /// Moves the current window to the given position.
-        void position(Position value)
+        @property void position(Position value)
             => bridge.post!void(
                 id,
                 "/window/rect",
                 JSONValue(["x": value.x, "y": value.y])
             );
         /// Sets the full rectangle of the current window.
-        void rect(Rect value)
+        @property void rect(Rect value)
             => bridge.post!void(
                 id,
                 "/window/rect",
