@@ -14,6 +14,7 @@ The `selenium:webdriver` package is a native D client for the W3C WebDriver prot
 - [Bridge](bridge/) — local processes, remote connections, sessions, status, and low-level commands.
 - [Driver](driver/) — navigation, elements, scripts, windows, frames, roots, cookies, and logging.
 - [Elements](elements/) — locators, element state, interaction, scoped search, and shadow roots.
+- [Actions](actions/) — W3C input sources, keyboard, pointer, and wheel action sequences.
 
 Supported browser capability classes are `Chrome`, `Firefox`, `Edge`, and `Safari`. The matching WebDriver executable must already be installed for local sessions. The library does not download it.
 

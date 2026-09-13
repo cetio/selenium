@@ -12,6 +12,7 @@ public import selenium.driver.cookies;
 public import selenium.driver.logger;
 public import selenium.driver.print;
 
+public import selenium.actions;
 public import selenium.bridge;
 public import selenium.element;
 public import selenium.exception;
