@@ -8,7 +8,7 @@ import requests : Request, Response;
 
 import std.json : JSONType, JSONValue, parseJSON;
 import std.conv : to;
-import std.process : kill, Pid, spawnProcess;
+import std.process : Pid, spawnProcess;
 import std.socket;
 import core.thread : Thread;
 import core.time : MonoTime, msecs, seconds, Duration;
@@ -63,11 +63,11 @@ public:
     }
 
     /// Stops the server and tears down all sessions on collection.
-    ~this()
+    ~this() @nogc nothrow
     {
-        stop();
+        tryKill(pid);
     }
-    
+
     /**
      * Spawns a WebDriver binary on a free port and waits for it to accept requests.
      *
@@ -537,11 +537,25 @@ private:
         );
     }
 
-    /// Kills a process, ignoring failures from an already dead process.
-    static void tryKill(Pid process)
+    /// Kills a process without allocating, including when called by the destructor.
+    static void tryKill(Pid process) @nogc nothrow
     {
-        try
-            kill(process);
-        catch (Exception) { }
+        if (process is null)
+            return;
+
+        version (Windows)
+        {
+            import core.sys.windows.windows : INVALID_HANDLE_VALUE, TerminateProcess;
+
+            if (process.osHandle != INVALID_HANDLE_VALUE)
+                TerminateProcess(process.osHandle, 1);
+        }
+        else version (Posix)
+        {
+            import core.sys.posix.signal : SIGTERM, kill;
+
+            if (process.osHandle >= 0)
+                kill(process.osHandle, SIGTERM);
+        }
     }
 }
