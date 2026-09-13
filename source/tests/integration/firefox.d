@@ -19,6 +19,7 @@ version(firefox)
     import unit_threaded;
 
     import std.json : JSONValue, parseJSON;
+    import std.file : tempDir;
 
 private:
     shared Driver _driver;
@@ -108,5 +109,17 @@ private:
         roundTrip.binary.should == "/opt/firefox";
         roundTrip.args.should == ["--private"];
         roundTrip.profile.should == "YWJj";
+    }
+
+    @Name("Firefox filesystem profile serializes as separate args")
+    unittest
+    {
+        Firefox firefox = new Firefox();
+        firefox.profile = tempDir;
+        JSONValue json = firefox.toJSON();
+        JSONValue[] args = json["moz:firefoxOptions"]["args"].array;
+        args.length.should == 2;
+        args[0].str.should == "-profile";
+        args[1].str.should == firefox.profile;
     }
 }
