@@ -168,8 +168,8 @@ public:
     /**
      * Ends a single session and removes it from `sessions`.
      *
-     * Errors from the delete request are ignored so that a dead session is still
-     * dropped locally.
+     * Ambiguous failures retain the session for retry, while an already-invalid
+     * remote session is dropped locally.
      *
      * Params:
      *  id = The session id to close.
@@ -179,15 +179,17 @@ public:
         if (id !in sessions)
             return;
 
-        sessions.remove(id);
         try
         {
             Request req = request();
-            send({
+            Response response = send({
                 return req.deleteRequest(address~"/session/"~id);
             });
+            checkAndParse(response);
         }
-        catch (Exception) { }
+        catch (InvalidSessionIdException) { }
+
+        sessions.remove(id);
     }
 
     /// Kills a locally spawned process and clears all session state.
