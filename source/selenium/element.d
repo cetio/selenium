@@ -117,6 +117,19 @@ struct Position
     long y;
 }
 
+/// A position and size pair in pixels, used for window and element rectangles.
+struct Rect
+{
+    /// Horizontal offset in pixels.
+    long x;
+    /// Vertical offset in pixels.
+    long y;
+    /// Width in pixels.
+    long width;
+    /// Height in pixels.
+    long height;
+}
+
 /// A handle to a remote element, identified by its W3C element reference.
 ///
 /// Every method issues a request against the owning driver's session, so a handle
@@ -158,6 +171,13 @@ public:
     /// The computed value of the named CSS property.
     string cssValue(string property)
         => driver.bridge.get!string(driver.id, path("/css/"~property));
+
+    /// The computed WAI-ARIA role of the element, or an empty string when none applies.
+    string computedRole()
+        => driver.bridge.get!string(driver.id, path("/computedrole"));
+    /// The computed accessible name of the element, or an empty string when none applies.
+    string computedLabel()
+        => driver.bridge.get!string(driver.id, path("/computedlabel"));
 
     /// The element bounding rectangle as a width and height pair.
     Size size()

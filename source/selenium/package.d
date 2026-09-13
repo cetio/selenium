@@ -10,6 +10,7 @@ public import selenium.browser.safari;
 public import selenium.driver;
 public import selenium.driver.cookies;
 public import selenium.driver.logger;
+public import selenium.driver.print;
 
 public import selenium.bridge;
 public import selenium.element;

@@ -46,6 +46,8 @@ Element[] links = driver.findAll(By.tagName("a"));
 | `position` | Top-left coordinates as `Position`. |
 | `selected` | Whether an option or checkable input is selected. |
 | `enabled` | Whether the element is enabled. |
+| `computedRole` | Computed WAI-ARIA role. |
+| `computedLabel` | Computed accessible name. |
 | `screenshot` | Base64 PNG of the element. |
 
 ```d
@@ -55,6 +57,16 @@ writeln(input.attribute("placeholder"));
 writeln(input.property("value"));
 writeln(input.enabled);
 writeln(input.size.width);
+```
+
+### Computed Accessibility
+
+`computedRole` and `computedLabel` expose the W3C computed accessibility values for an element. `computedRole` returns the WAI-ARIA role the browser applies, and `computedLabel` returns the accessible name. Both return an empty string when no role or name applies. Support varies by driver but Chromium-based drivers implement these endpoints.
+
+```d
+Element button = driver.find(By.css("#save"));
+writeln(button.computedRole);
+writeln(button.computedLabel);
 ```
 
 ## Interaction

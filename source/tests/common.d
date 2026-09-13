@@ -15,7 +15,8 @@ mixin template BrowserIntegration()
     import tests.common : dataUri;
     import selenium.driver : Driver;
     import selenium.driver.cookies : Cookie, cookies;
-    import selenium.element : By, Element, Size;
+    import selenium.driver.print : Orientation, PrintOptions;
+    import selenium.element : By, Element, Position, Rect, Size;
     import selenium.exception;
     import selenium.root : Root, RootType;
     import unit_threaded;
@@ -89,6 +90,51 @@ mixin template BrowserIntegration()
         driver.window.switchTo(original);
         driver.window.handle.should == original;
         driver.window.handles.length.should == 1;
+    }
+
+    @Name("rect returns width and height matching size") @Serial
+    unittest
+    {
+        driver.go(dataUri("<html><body></body></html>"));
+        Size windowSize = driver.window.size;
+        Rect windowRect = driver.window.rect;
+        windowRect.width.should == windowSize.width;
+        windowRect.height.should == windowSize.height;
+    }
+
+    @Name("rect setter updates window rectangle") @Serial
+    unittest
+    {
+        driver.go(dataUri("<html><body></body></html>"));
+        Rect original = driver.window.rect;
+        driver.window.rect(Rect(original.x, original.y, 500, 400));
+        Rect changed = driver.window.rect;
+        changed.width.should == 500;
+        changed.height.should == 400;
+    }
+
+    @Name("position returns a coordinate pair") @Serial
+    unittest
+    {
+        driver.go(dataUri("<html><body></body></html>"));
+        Position windowPosition = driver.window.position;
+        windowPosition.x.shouldBeGreaterThan(-1);
+        windowPosition.y.shouldBeGreaterThan(-1);
+    }
+
+    version(safari) { }
+    else
+    {
+        @Name("position setter moves the window") @Serial
+        unittest
+        {
+            driver.go(dataUri("<html><body></body></html>"));
+            Position original = driver.window.position;
+            driver.window.position(Position(original.x + 50, original.y + 50));
+            Position moved = driver.window.position;
+            moved.x.should == original.x + 50;
+            moved.y.should == original.y + 50;
+        }
     }
 
     @Name("click updates button text") @Serial
@@ -724,6 +770,50 @@ mixin template BrowserIntegration()
 
         embedded.find(By.css("#inner")).text.should == "inside";
         driver.root().find(By.css("#outer")).text.should == "outside";
+    }
+
+    version(safari) { }
+    else
+    {
+        @Name("print returns a base64 PDF document") @Serial
+        unittest
+        {
+            driver.go(dataUri("<html><body><p>printable</p></body></html>"));
+            string pdf = driver.print();
+            pdf.length.shouldBeGreaterThan(0);
+        }
+
+        @Name("print accepts landscape orientation and custom scale") @Serial
+        unittest
+        {
+            driver.go(dataUri("<html><body><p>printable</p></body></html>"));
+            PrintOptions options;
+            options.orientation = Orientation.Landscape;
+            options.scale = 0.5;
+            string pdf = driver.print(options);
+            pdf.length.shouldBeGreaterThan(0);
+        }
+    }
+
+    version(firefox) { } else version(safari) { } else
+    {
+        @Name("computedRole returns the element role") @Serial
+        unittest
+        {
+            driver.go(dataUri(
+                "<html><body><button id='btn'>click</button></body></html>"
+            ));
+            driver.find(By.css("#btn")).computedRole.length.shouldBeGreaterThan(0);
+        }
+
+        @Name("computedLabel returns the accessible name") @Serial
+        unittest
+        {
+            driver.go(dataUri(
+                "<html><body><button id='btn'>Save</button></body></html>"
+            ));
+            driver.find(By.css("#btn")).computedLabel.should == "Save";
+        }
     }
 }
 

@@ -3,9 +3,10 @@ module selenium.driver;
 
 import selenium.bridge : Bridge;
 import selenium.browser : Browser;
-import selenium.element : By, Element, Size;
+import selenium.element : By, Element, Position, Rect, Size;
 import selenium.root : Root, RootState, RootType;
 import selenium.driver.logger : Logger;
+import selenium.driver.print : PrintOptions;
 import selenium.exception;
 
 import std.array : join;
@@ -174,6 +175,17 @@ class Driver
     string source() => bridge.get!string(id, "/source");
     /// A base64 PNG screenshot of the current viewport.
     string screenshot() => bridge.get!string(id, "/screenshot");
+
+    /**
+     * Prints the current page to a PDF document.
+     *
+     * Params:
+     *  options = Print configuration, defaulting to portrait US Letter at 100% scale.
+     *
+     * Returns:
+     *  A base64-encoded PDF document.
+     */
+    string print(PrintOptions options = PrintOptions()) => bridge.post!string(id, "/print", options.toJSON());
 
     /**
      * Navigates the session to a URL.
@@ -397,6 +409,23 @@ class Driver
             JSONValue value = bridge.unwrapAndParse!JSONValue(bridge.get(id, "/window/rect"));
             return Size(value["width"].get!long, value["height"].get!long);
         }
+        /// The position of the current window.
+        Position position()
+        {
+            JSONValue value = bridge.unwrapAndParse!JSONValue(bridge.get(id, "/window/rect"));
+            return Position(value["x"].get!long, value["y"].get!long);
+        }
+        /// The full rectangle of the current window.
+        Rect rect()
+        {
+            JSONValue value = bridge.unwrapAndParse!JSONValue(bridge.get(id, "/window/rect"));
+            return Rect(
+                value["x"].get!long,
+                value["y"].get!long,
+                value["width"].get!long,
+                value["height"].get!long
+            );
+        }
 
         /// Closes the current window.
         void close() => bridge.del!void(id, "/window");
@@ -412,6 +441,25 @@ class Driver
                 id,
                 "/window/rect",
                 JSONValue(["width": value.width, "height": value.height])
+            );
+        /// Moves the current window to the given position.
+        void position(Position value)
+            => bridge.post!void(
+                id,
+                "/window/rect",
+                JSONValue(["x": value.x, "y": value.y])
+            );
+        /// Sets the full rectangle of the current window.
+        void rect(Rect value)
+            => bridge.post!void(
+                id,
+                "/window/rect",
+                JSONValue([
+                    "x": value.x,
+                    "y": value.y,
+                    "width": value.width,
+                    "height": value.height,
+                ])
             );
 
         /// Switches focus to the window with the given handle.

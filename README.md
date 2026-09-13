@@ -71,10 +71,10 @@ writeln(driver.title);
 - [ ] Asynchronous script execution (`POST /execute/async`)
 - [ ] Actions API, including perform and release
 - [x] Alert text, accept, dismiss, and prompt input commands
-- [ ] Computed accessibility role and label accessors
-- [ ] Page printing (`POST /print`)
+- [x] Computed accessibility role and label accessors
+- [x] Page printing (`POST /print`)
 - [ ] First-class timeout retrieval and updates
-- [ ] Full window rectangle support, including window position
+- [x] Full window rectangle support, including window position
 
 ### Client API
 

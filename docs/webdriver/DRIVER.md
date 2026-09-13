@@ -47,11 +47,27 @@ scope (exit) driver.stop();
 | `title` | Current document title. |
 | `source` | Serialized page source. |
 | `screenshot` | Base64 PNG of the viewport. |
+| `print(options)` | Base64 PDF of the page. |
 
 ```d
 driver.go("https://example.com");
 writeln(driver.title);
 driver.refresh();
+```
+
+### Printing
+
+`print` renders the current page to a PDF and returns it as a base64-encoded string. It accepts an optional `PrintOptions`.
+
+```d
+import selenium.driver.print : PrintOptions, Orientation;
+
+string pdf = driver.print();
+
+PrintOptions options;
+options.orientation = Orientation.Landscape;
+options.background = true;
+string styled = driver.print(options);
 ```
 
 ## Finding Elements
@@ -91,10 +107,14 @@ Window commands are grouped under `driver.window`:
 | `handle` | Current window handle. |
 | `handles` | All window handles. |
 | `size` | Current window width and height. |
+| `position` | Current window top-left coordinates. |
+| `rect` | Current window position and size. |
 | `open(type = "tab")` | Open a tab or window and return its handle. |
 | `switchTo(handle)` | Focus a window. |
 | `close()` | Close the current window. |
 | `resize(Size)` | Resize the current window. |
+| `position(Position)` | Move the current window. |
+| `rect(Rect)` | Set the current window position and size. |
 | `maximize()` | Maximize the current window. |
 | `minimize()` | Minimize the current window. |
 | `fullscreen()` | Enter fullscreen mode. |
@@ -106,6 +126,8 @@ driver.window.switchTo(opened);
 driver.window.close();
 driver.window.switchTo(original);
 ```
+
+`size`, `position`, and `rect` each read the W3C `/window/rect` endpoint. `resize`, `position`, and `rect` setters POST a partial or full rectangle to the same endpoint. Window position may be constrained by the operating system or headless mode.
 
 ## Frames
 
