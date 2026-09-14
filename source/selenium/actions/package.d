@@ -299,7 +299,7 @@ public:
      *  keys = The string to type, decoded as UTF-8 code points.
      *  id = The keyboard source id, defaulting to `keyboard`.
      */
-    Actions sendKeys(string keys, string id = "keyboard")
+    Actions sendKeys(dstring keys, string id = "keyboard")
     {
         size_t i = keyIndex(id);
         foreach (dchar ch; keys)

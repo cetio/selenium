@@ -13,6 +13,7 @@ string dataUri(string html)
 mixin template BrowserIntegration()
 {
     import tests.common : dataUri;
+    import selenium.actions.key : Key;
     import selenium.driver : Driver;
     import selenium.driver.cookies : Cookie, cookies;
     import selenium.driver.print : Orientation, PrintOptions;
@@ -163,6 +164,61 @@ mixin template BrowserIntegration()
         driver.find(By.css("#field")).clear();
         driver.find(By.css("#field")).sendKeys("abc");
         driver.find(By.css("#field")).property("value").should == "abc";
+    }
+
+    @Name("sendKeys dispatches special key code points") @Serial
+    unittest
+    {
+        driver.go(dataUri(
+            "<html><body>"~
+            "<input id='field'>"~
+            "<script>"~
+            "document.getElementById('field').addEventListener("~
+            "'keydown',"~
+            "function(e){ document.body.setAttribute('data-key', e.key); }"~
+            ");"~
+            "</script>"~
+            "</body></html>"
+        ));
+        driver.find(By.css("#field")).sendKeys(Key.Enter);
+        driver.execute!string("return document.body.getAttribute('data-key');").should == "Enter";
+    }
+
+    @Name("sendKeys mixes printable text and special keys") @Serial
+    unittest
+    {
+        driver.go(dataUri(
+            "<html><body>"~
+            "<input id='field'>"~
+            "<script>"~
+            "document.getElementById('field').addEventListener("~
+            "'keydown',"~
+            "function(e){ document.body.setAttribute('data-key', e.key); }"~
+            ");"~
+            "</script>"~
+            "</body></html>"
+        ));
+        driver.find(By.css("#field")).sendKeys("hi", Key.ArrowLeft);
+        driver.find(By.css("#field")).property("value").should == "hi";
+        driver.execute!string("return document.body.getAttribute('data-key');").should == "ArrowLeft";
+    }
+
+    @Name("sendKeys accepts a single special key") @Serial
+    unittest
+    {
+        driver.go(dataUri(
+            "<html><body>"~
+            "<input id='field'>"~
+            "<script>"~
+            "document.getElementById('field').addEventListener("~
+            "'keydown',"~
+            "function(e){ document.body.setAttribute('data-key', e.key); }"~
+            ");"~
+            "</script>"~
+            "</body></html>"
+        ));
+        driver.find(By.css("#field")).sendKeys(Key.Escape);
+        driver.execute!string("return document.body.getAttribute('data-key');").should == "Escape";
     }
 
     @Name("clear empties input field") @Serial

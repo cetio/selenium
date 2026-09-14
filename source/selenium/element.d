@@ -7,7 +7,6 @@ import selenium.exception : ElementClickInterceptedException, InvalidSelectorExc
     WebDriverException;
 import selenium.root : Root, RootState, RootType;
 
-import std.array : join;
 import std.conv : to;
 import std.json : JSONValue;
 import std.string : toLower;
@@ -71,14 +70,14 @@ struct By
                     delimiters ~= character;
                     break;
                 case ']':
-                    if (delimiters.length == 0 || delimiters[$ - 1] != '[')
+                    if (delimiters.length == 0 || delimiters[$-1] != '[')
                         throw new InvalidSelectorException("XPath expression has unbalanced delimiters.");
-                    delimiters = delimiters[0 .. $ - 1];
+                    delimiters = delimiters[0..$-1];
                     break;
                 case ')':
-                    if (delimiters.length == 0 || delimiters[$ - 1] != '(')
+                    if (delimiters.length == 0 || delimiters[$-1] != '(')
                         throw new InvalidSelectorException("XPath expression has unbalanced delimiters.");
-                    delimiters = delimiters[0 .. $ - 1];
+                    delimiters = delimiters[0..$-1];
                     break;
                 default:
                     break;
@@ -237,20 +236,37 @@ public:
      * Types the given key sequences into the element.
      *
      * Each argument is concatenated and dispatched character by character so that
-     * key handlers fire per keystroke.
+     * key handlers fire per keystroke. Arguments may be strings of printable
+     * characters or `Key` values for non-printable keys such as `Key.Enter`,
+     * `Key.Tab`, and `Key.ArrowLeft`.
      *
      * Params:
-     *  keys = One or more strings to type in order.
+     *  args = One or more strings or `Key` values to type in order.
      */
-    void sendKeys(string[] keys...)
+    void sendKeys(T...)(T args)
     {
         JSONValue[] value;
-        foreach (key; keys)
-            foreach (dchar ch; key)
-                value ~= JSONValue(ch.to!string);
+        string text;
+        foreach (arg; args)
+        {
+            static if (is(typeof(arg) == string))
+            {
+                text ~= arg;
+                foreach (dchar ch; arg)
+                    value ~= JSONValue(ch.to!string);
+            }
+            else static if (is(typeof(arg) : dchar))
+            {
+                string s = (cast(dchar)arg).to!string;
+                text ~= s;
+                value ~= JSONValue(s);
+            }
+            else
+                static assert(0, "sendKeys accepts string or dchar/Key, not "~typeof(arg).stringof);
+        }
 
         driver.bridge.post!void(driver.id, path("/value"), JSONValue([
-            "text": JSONValue(keys.join()),
+            "text": JSONValue(text),
             "value": JSONValue(value),
         ]));
     }

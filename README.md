@@ -79,7 +79,7 @@ writeln(driver.title);
 ### Client API
 
 - [ ] Explicit waits with reusable expected conditions
-- [ ] Special keys such as Enter, Tab, Escape, and arrows for `sendKeys`
+- [x] Special keys such as Enter, Tab, Escape, and arrows for `sendKeys`
 - [ ] Convenience locators such as id, name, and class name
 - [ ] Element display state (`isDisplayed`)
 - [ ] Select-element helper
