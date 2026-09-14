@@ -23,7 +23,19 @@ unittest
 @Name("By.xpath rejects unbalanced delimiters") @ShouldFailWith!InvalidSelectorException
 unittest
 {
-    By.xpath("//*[ ").validate();
+    By.xpath("//*[ ");
+}
+
+@Name("By rejects an unknown location strategy") @ShouldFailWith!InvalidSelectorException
+unittest
+{
+    By("bogus", "x");
+}
+
+@Name("By rejects an empty selector") @ShouldFailWith!InvalidSelectorException
+unittest
+{
+    By.css("");
 }
 
 @Name("By.tagName serializes correctly")

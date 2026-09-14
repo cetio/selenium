@@ -112,7 +112,6 @@ public:
      */
     Element find(By by)
     {
-        by.validate();
         driver.bridge.ensureTimeoutsSynced(driver.id, driver.browser);
 
         final switch (_type)
@@ -162,7 +161,6 @@ public:
      */
     Element[] findAll(By by)
     {
-        by.validate();
         driver.bridge.ensureTimeoutsSynced(driver.id, driver.browser);
 
         final switch (_type)

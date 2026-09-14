@@ -328,7 +328,6 @@ class Driver
      */
     Element find(By by)
     {
-        by.validate();
         bridge.ensureTimeoutsSynced(id, browser);
 
         JSONValue resp = bridge.post(id, "/element", by.toJSON());
@@ -346,7 +345,6 @@ class Driver
      */
     Element[] findAll(By by)
     {
-        by.validate();
         bridge.ensureTimeoutsSynced(id, browser);
 
         JSONValue resp = bridge.post(id, "/elements", by.toJSON());
