@@ -81,7 +81,7 @@ Element message = driver.find(By.css("#message"));
 writeln(message.text);
 ```
 
-The API follows familiar Selenium concepts: `driver.go` navigates, `find` and `findAll` accept a `By` locator, and an `Element` exposes interaction and state methods. Timeouts are configured on the browser capabilities object. Changes made to `driver.browser.timeouts` after session creation are synchronized lazily before commands that use them.
+The API follows familiar Selenium concepts: `driver.go` navigates, `find` and `findAll` accept a `By` locator, and an `Element` exposes interaction and state methods. Configure initial timeout capabilities on `browser.timeouts` before starting a session. After session creation, use `driver.timeouts`.
 
 ## Browser Capabilities
 

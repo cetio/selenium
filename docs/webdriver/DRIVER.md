@@ -87,6 +87,8 @@ See [Elements](../elements/) for locators, element state, interaction, descendan
 `execute!T` runs a synchronous script. Its optional arguments must be a JSON array. Results are deserialized as `T`. `Element` and `Element[]` results become handles for this driver.
 
 ```d
+import selenium.element : Element;
+
 import std.json : JSONValue;
 
 int sum = driver.execute!int(
@@ -96,7 +98,16 @@ int sum = driver.execute!int(
 Element selected = driver.execute!Element("return document.querySelector('#selected');");
 ```
 
-Asynchronous script execution is not currently implemented.
+`executeAsync!T` runs a W3C asynchronous script. WebDriver appends a completion callback after every value in `args`; the script must invoke that last argument with its result. A supplied timeout is applied through `driver.timeouts.script` and remains the session script timeout afterward.
+
+```d
+string status = driver.executeAsync!string(
+    `const done = arguments[arguments.length - 1];`~
+    `setTimeout(function() { done("ready"); }, 0);`
+);
+```
+
+If the callback does not run before the script timeout, `executeAsync` throws `ScriptTimeoutException`. A script that throws instead produces `JavaScriptException`.
 
 ## Windows and Tabs
 

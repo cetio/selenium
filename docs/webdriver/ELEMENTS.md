@@ -96,7 +96,7 @@ Element[] rows = table.findAll(By.tagName("tr"));
 Element firstCell = table.find(By.tagName("td"));
 ```
 
-The browser's implicit timeout is synchronized before descendant searches.
+Descendant searches use the current session timeout configured through `driver.timeouts.implicit`.
 
 ## Shadow Roots
 
@@ -108,7 +108,9 @@ Root shadow = host.shadowRoot;
 Element button = shadow.find(By.css("button"));
 ```
 
-Only open shadow roots can be discovered by `driver.roots`. A directly returned root records open and complete state flags.
+ChromeDriver and geckodriver return and search closed shadow roots through this endpoint, even though page JavaScript cannot read `host.shadowRoot` for a closed root. Safari does not expose closed roots through `/shadow` and raises `NoSuchShadowRootException`.
+
+Only open shadow roots can be discovered by `driver.roots`, because it walks the page through JavaScript.
 
 ## Serialization
 

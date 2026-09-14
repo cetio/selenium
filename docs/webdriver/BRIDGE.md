@@ -24,12 +24,22 @@ A directly constructed bridge has no address until the caller sets `bridge.addre
 
 ## Starting a Local WebDriver
 
-`Bridge.start` finds a free loopback port, launches the executable with `--port=<port>`, appends any supplied arguments, and waits up to five seconds for `/status` to return HTTP 200.
+`Bridge.start` finds a free loopback port, launches the executable with `--port=<port>`, appends any supplied arguments, and waits up to five seconds for `/status` to return HTTP 200. Child stdin and stderr inherit the caller's streams by default, while child stdout defaults to caller stderr so driver banners do not contaminate protocol output. Callers can supply any `File` for each stream.
 
 ```d
 import selenium;
 
-Bridge bridge = Bridge.start("chromedriver", ["--log-level=OFF"], 2);
+import std.stdio : File, stdin, stderr;
+
+File log = File("driver.log", "w");
+Bridge bridge = Bridge.start(
+    "chromedriver",
+    ["--log-level=OFF"],
+    2,
+    stdin,
+    log,
+    stderr
+);
 scope (exit) bridge.stop();
 ```
 
@@ -38,6 +48,11 @@ scope (exit) bridge.stop();
 | `binary` | WebDriver executable path. |
 | `args` | Additional process arguments. Defaults to `null`. |
 | `capacity` | Maximum concurrent sessions, or zero for unlimited. Defaults to zero. |
+| `childStdin` | Child standard input. Defaults to caller stdin. |
+| `childStdout` | Child standard output. Defaults to caller stderr. |
+| `childStderr` | Child standard error. Defaults to caller stderr. |
+
+The free-port strategy has an unavoidable time-of-check/time-of-use window: the probe binds an ephemeral port, reads its number, closes it, and only then starts the driver. Another process can claim that port before the driver binds it. Retry a failed start in environments with heavy port contention.
 
 The bridge owns the spawned process. `stop` kills it and clears local session state. The destructor also calls `stop`, but explicit cleanup is recommended.
 
