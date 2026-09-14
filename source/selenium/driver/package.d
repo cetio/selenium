@@ -437,8 +437,8 @@ class Driver
      *
      * WebDriver injects the completion callback as the last element of `arguments`.
      * The script must invoke it exactly once with the value to return. When
-     * `timeout` is supplied, it is applied through the live timeout setter and
-     * remains the session's script timeout after this call.
+     * `timeout` is supplied, it is applied for this call only and the
+     * previous script timeout is restored afterward.
      *
      * When T is Element or Element[] the returned references are wrapped into
      * handles, otherwise the result is deserialized into T.
@@ -446,7 +446,7 @@ class Driver
      * Params:
      *  script = The script body, which must invoke the injected completion callback.
      *  args = The arguments exposed before the callback in `arguments`.
-     *  timeout = A persistent script timeout override, or Duration.init to use the session timeout.
+     *  timeout = A per-call script timeout override, or Duration.init to use the session timeout.
      *
      * Returns:
      *  The callback result as T.
@@ -461,6 +461,9 @@ class Driver
         Duration timeout = Duration.init
     )
     {
+        Duration origTimeout = timeouts.script;
+        scope (exit) timeouts.script = origTimeout;
+
         if (timeout != Duration.init)
             timeouts.script = timeout;
 

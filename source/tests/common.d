@@ -500,6 +500,15 @@ mixin template BrowserIntegration()
         elements[1].text.should == "second";
     }
 
+    @Name("executeAsync restores the previous script timeout") @Serial
+    unittest
+    {
+        driver.go(dataUri("<html><body></body></html>"));
+        driver.timeouts.script = 5.seconds;
+        driver.executeAsync!JSONValue("arguments[0](true);", JSONValue.emptyArray, 2.seconds);
+        driver.timeouts.script.should == 5.seconds;
+    }
+
     @Name("timeout setter updates a live script timeout") @Serial
     unittest
     {
