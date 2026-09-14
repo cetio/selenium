@@ -19,8 +19,12 @@ struct PrintOptions
 {
 private:
     double _scale = 1.0;
-    double _pageWidth = 8.5;
-    double _pageHeight = 11.0;
+    double _pageWidth = 21.59;
+    double _pageHeight = 27.94;
+    double _marginTop = 1.0;
+    double _marginBottom = 1.0;
+    double _marginLeft = 1.0;
+    double _marginRight = 1.0;
 
 public:
     /// Page orientation, defaulting to portrait.
@@ -31,6 +35,102 @@ public:
     bool shrinkToFit = true;
     /// Page ranges to print.
     string[] pageRanges;
+
+    /// Paper width in centimeters, defaulting to 21.59 (US Letter).
+    @property double pageWidth() const
+        => _pageWidth;
+
+    /**
+     * Sets the paper width.
+     *
+     * Params:
+     *  val = The width in centimeters, must be at least 2.54/72 (1 point).
+     *
+     * Throws:
+     *  InvalidArgumentException if val is less than 2.54/72.
+     */
+    @property double pageWidth(double val)
+    {
+        if (val < 2.54 / 72)
+            throw new InvalidArgumentException("Print page width must be at least 1 point.");
+        return _pageWidth = val;
+    }
+
+    /// Paper height in centimeters, defaulting to 27.94 (US Letter).
+    @property double pageHeight() const
+        => _pageHeight;
+
+    /**
+     * Sets the paper height.
+     *
+     * Params:
+     *  val = The height in centimeters, must be at least 2.54/72 (1 point).
+     *
+     * Throws:
+     *  InvalidArgumentException if val is less than 2.54/72.
+     */
+    @property double pageHeight(double val)
+    {
+        if (val < 2.54 / 72)
+            throw new InvalidArgumentException("Print page height must be at least 1 point.");
+        return _pageHeight = val;
+    }
+
+    /// Top page margin in centimeters, defaulting to 1.0.
+    @property double marginTop() const
+        => _marginTop;
+
+    /**
+     * Sets the top page margin.
+     *
+     * Params:
+     *  val = The margin in centimeters, must not be negative.
+     *
+     * Throws:
+     *  InvalidArgumentException if val is negative.
+     */
+    @property double marginTop(double val)
+    {
+        if (val < 0)
+            throw new InvalidArgumentException("Print margin must not be negative.");
+        return _marginTop = val;
+    }
+
+    /// Bottom page margin in centimeters, defaulting to 1.0.
+    @property double marginBottom() const
+        => _marginBottom;
+
+    /// Sets the bottom page margin. See marginTop for validation.
+    @property double marginBottom(double val)
+    {
+        if (val < 0)
+            throw new InvalidArgumentException("Print margin must not be negative.");
+        return _marginBottom = val;
+    }
+
+    /// Left page margin in centimeters, defaulting to 1.0.
+    @property double marginLeft() const
+        => _marginLeft;
+
+    /// Sets the left page margin. See marginTop for validation.
+    @property double marginLeft(double val)
+    {
+        if (val < 0)
+            throw new InvalidArgumentException("Print margin must not be negative.");
+        return _marginLeft = val;
+    }
+
+    /// Right page margin in centimeters, defaulting to 1.0.
+    @property double marginRight() const
+        => _marginRight;
+
+    /// Sets the right page margin. See marginTop for validation.
+    @property double marginRight(double val)
+    {
+        if (val < 0)
+            throw new InvalidArgumentException("Print margin must not be negative.");
+        return _marginRight = val;
+    }
 
     /// Scale factor clamped to the range 0.1 through 2.0, defaulting to 1.0.
     @property double scale() const
@@ -52,46 +152,6 @@ public:
         return _scale = val;
     }
 
-    /// Paper width in inches, defaulting to 8.5 (US Letter).
-    @property double pageWidth() const
-        => _pageWidth;
-
-    /**
-     * Sets the paper width.
-     *
-     * Params:
-     *  val = The width in inches, must be positive.
-     *
-     * Throws:
-     *  InvalidArgumentException if val is not positive.
-     */
-    @property double pageWidth(double val)
-    {
-        if (val <= 0)
-            throw new InvalidArgumentException("Print page width must be positive.");
-        return _pageWidth = val;
-    }
-
-    /// Paper height in inches, defaulting to 11.0 (US Letter).
-    @property double pageHeight() const
-        => _pageHeight;
-
-    /**
-     * Sets the paper height.
-     *
-     * Params:
-     *  val = The height in inches, must be positive.
-     *
-     * Throws:
-     *  InvalidArgumentException if val is not positive.
-     */
-    @property double pageHeight(double val)
-    {
-        if (val <= 0)
-            throw new InvalidArgumentException("Print page height must be positive.");
-        return _pageHeight = val;
-    }
-
     /**
      * Serializes the options into the W3C `/print` request body.
      *
@@ -103,8 +163,19 @@ public:
         ret["orientation"] = JSONValue(cast(string)orientation);
         ret["scale"] = JSONValue(_scale);
         ret["background"] = JSONValue(background);
-        ret["pageWidth"] = JSONValue(_pageWidth);
-        ret["pageHeight"] = JSONValue(_pageHeight);
+
+        JSONValue page = JSONValue.emptyObject;
+        page["width"] = JSONValue(_pageWidth);
+        page["height"] = JSONValue(_pageHeight);
+        ret["page"] = page;
+
+        JSONValue margin = JSONValue.emptyObject;
+        margin["top"] = JSONValue(_marginTop);
+        margin["bottom"] = JSONValue(_marginBottom);
+        margin["left"] = JSONValue(_marginLeft);
+        margin["right"] = JSONValue(_marginRight);
+        ret["margin"] = margin;
+
         ret["shrinkToFit"] = JSONValue(shrinkToFit);
         if (pageRanges != null)
             ret["pageRanges"] = JSONValue(pageRanges);
