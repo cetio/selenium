@@ -3,8 +3,7 @@ module selenium.element;
 
 import selenium.bridge : Bridge;
 import selenium.driver : Driver;
-import selenium.exception : ElementClickInterceptedException, InvalidSelectorException, NoSuchShadowRootException,
-    WebDriverException;
+import selenium.exception;
 import selenium.root : Root, RootState, RootType;
 
 import std.conv : to;
@@ -309,10 +308,11 @@ public:
     }
 
     /**
-     * Returns the shadow root attached to this element, if any.
+     * Returns the shadow root attached to this element.
      *
      * Throws:
      *  NoSuchShadowRootException if the element does not have a shadow root.
+     *  DetachedShadowRootException if the shadow root is no longer attached.
      */
     Root shadowRoot()
     {
@@ -321,7 +321,20 @@ public:
         if (shadowId is null)
             throw new NoSuchShadowRootException("Element does not have a shadow root.");
 
-        return new Root(driver, shadowId, RootType.Shadow, RootState.Open | RootState.Complete);
+        return new Root(driver, shadowId, RootType.Shadow, RootState.None);
+    }
+
+    /// Whether this element has a shadow root. False if no shadow root or detached.
+    bool hasShadowRoot()
+    {
+        try
+            driver.bridge.get(driver.id, path("/shadow"));
+        catch (NoSuchShadowRootException)
+            return false;
+        catch (DetachedShadowRootException)
+            return false;
+
+        return true;
     }
 
     /// Serializes the element into the W3C element reference object.

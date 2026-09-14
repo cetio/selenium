@@ -652,6 +652,22 @@ mixin template BrowserIntegration()
         plain.shadowRoot();
     }
 
+    @Name("hasShadowRoot returns true for open root and false when absent") @Serial
+    unittest
+    {
+        driver.go(dataUri(
+            `<html><body>`~
+            `<div id="host"></div>`~
+            `<script>`~
+            `document.getElementById("host").attachShadow({mode:"open"});`~
+            `</script>`~
+            `<div id="plain"></div>`~
+            `</body></html>`
+        ));
+        driver.find(By.css("#host")).hasShadowRoot().should == true;
+        driver.find(By.css("#plain")).hasShadowRoot().should == false;
+    }
+
     @Name("detached host invalidates retained shadow root") @Serial @ShouldFail
     unittest
     {
