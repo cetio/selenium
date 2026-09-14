@@ -445,10 +445,10 @@ private:
     }
 
     /// Executes an HTTP request and translates request-library failures to WebDriver errors.
-    static Response send(Response delegate() operation)
+    static Response send(Response delegate() dg)
     {
         try
-            return operation();
+            return dg();
         catch (Exception exception)
         {
             throw new WebDriverConnectionException(
