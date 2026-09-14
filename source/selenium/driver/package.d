@@ -428,17 +428,32 @@ class Driver
             );
         }
 
-        Duration scriptTimeout = timeout == Duration.init ? browser.timeouts.script : timeout;
-        Duration requestTimeout = scriptTimeout == Duration.init ? 31.seconds : scriptTimeout + 1.seconds;
-        JSONValue resp = bridge.postWithTimeout(
-            id,
-            "/execute/async",
-            JSONValue([
-                "script": JSONValue(script),
-                "args": args,
-            ]),
-            requestTimeout
-        );
+        Duration scriptTimeout = timeout == Duration.init
+            ? (browser.timeouts.script == Duration.init ? Bridge.DEFAULT_SCRIPT_TIMEOUT : browser.timeouts.script)
+            : timeout;
+        Duration requestTimeout = scriptTimeout + 1.seconds;
+        JSONValue resp;
+        try
+        {
+            resp = bridge.postWithTimeout(
+                id,
+                "/execute/async",
+                JSONValue([
+                    "script": JSONValue(script),
+                    "args": args,
+                ]),
+                requestTimeout
+            );
+        }
+        catch (WebDriverTimeoutException exception)
+        {
+            throw new ScriptTimeoutException(
+                exception.msg,
+                __FILE__,
+                __LINE__,
+                exception
+            );
+        }
 
         static if (is(T == Element))
             return new Element(this, Bridge.parseElementId(resp));

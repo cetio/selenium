@@ -28,14 +28,26 @@ package (selenium):
     enum string W3C_KEY = "element-6066-11e4-a52e-4f735466cecf";
     /// The capability key identifying a W3C shadow root reference in payloads.
     enum string SHADOW_KEY = "shadow-6066-11e4-a52e-4f735466cecf";
+    /// The W3C default page-load timeout used when a driver omits it from negotiated capabilities.
+    enum Duration DEFAULT_PAGE_TIMEOUT = 300.seconds;
+    /// The W3C default script timeout used when a driver omits it from negotiated capabilities.
+    enum Duration DEFAULT_SCRIPT_TIMEOUT = 30.seconds;
 
     /// Pushes every configured timeout without consulting or updating the synchronization cache.
     void pushTimeouts(string id, Browser browser)
     {
         JSONValue data = JSONValue([
             "implicit": JSONValue(cast(int)browser.timeouts.implicit.total!"msecs"),
-            "pageLoad": JSONValue(cast(int)browser.timeouts.pageLoad.total!"msecs"),
-            "script": JSONValue(cast(int)browser.timeouts.script.total!"msecs"),
+            "pageLoad": JSONValue(cast(int)(
+                (browser.timeouts.pageLoad == Duration.init
+                    ? DEFAULT_PAGE_TIMEOUT
+                    : browser.timeouts.pageLoad).total!"msecs"
+            )),
+            "script": JSONValue(cast(int)(
+                (browser.timeouts.script == Duration.init
+                    ? DEFAULT_SCRIPT_TIMEOUT
+                    : browser.timeouts.script).total!"msecs"
+            )),
         ]);
         post!void(id, "/timeouts", data);
     }

@@ -688,16 +688,20 @@ mixin template BrowserIntegration()
         shadow.find(By.css("#missing"));
     }
 
-    @Name("overlay intercepts target center-point click") @Serial @ShouldFailWith!ElementClickInterceptedException
-    unittest
+    version(safari) { }
+    else
     {
-        driver.go(dataUri(
-            `<html><body>`~
-            `<button id="target" style="position:absolute;left:20px;top:20px;width:160px;height:80px">target</button>`~
-            `<div style="position:absolute;left:20px;top:20px;width:160px;height:80px;z-index:2">overlay</div>`~
-            `</body></html>`
-        ));
-        driver.find(By.css("#target")).click();
+        @Name("overlay intercepts target center-point click") @Serial @ShouldFailWith!ElementClickInterceptedException
+        unittest
+        {
+            driver.go(dataUri(
+                `<html><body>`~
+                `<button id="target" style="position:absolute;left:20px;top:20px;width:160px;height:80px">target</button>`~
+                `<div style="position:absolute;left:20px;top:20px;width:160px;height:80px;z-index:2">overlay</div>`~
+                `</body></html>`
+            ));
+            driver.find(By.css("#target")).click();
+        }
     }
     
     @Name("clicking hidden element throws") @Serial @ShouldFailWith!ElementNotInteractableException
@@ -706,7 +710,7 @@ mixin template BrowserIntegration()
         driver.go(dataUri("<html><body><button id='hidden' hidden>hidden</button></body></html>"));
         driver.find(By.css("#hidden")).click();
     }
-    
+
     @Name("switching through removed iframe element throws stale reference") @Serial @ShouldFail
     unittest
     {

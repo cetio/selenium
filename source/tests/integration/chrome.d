@@ -19,7 +19,7 @@ version(chrome)
 
     import std.algorithm.searching : canFind;
     import std.json : JSONValue, parseJSON;
-    import std.stdio : File, stdin, stderr;
+    import std.stdio : File, stdin;
 
 private:
     shared Driver _driver;
@@ -64,17 +64,20 @@ private:
         File output = File.tmpfile();
         Bridge bridge = Bridge.start(
             browser.resolveBinary(),
-            ["--log-level=OFF"],
+            null,
             0,
             stdin,
             output,
-            stderr
+            output
         );
         scope (exit) bridge.stop();
         bridge.stop();
 
         output.rewind();
-        output.readln().canFind("ChromeDriver").should == true;
+        string banner;
+        while (!output.eof)
+            banner ~= output.readln();
+        banner.canFind("ChromeDriver").should == true;
     }
 
     @Name("Chrome toJSON includes browserName and flags")
