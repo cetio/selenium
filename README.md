@@ -97,4 +97,6 @@ writeln(driver.title);
 
 ## License
 
-Selenium is licensed under [Apache-2.0](LICENSE.txt).
+Selenium is licensed under [Apache-2.0](LICENSE.txt). Third-party attributions
+for the `requests` (BSL-1.0) and `unit-threaded` (BSD-3-Clause) dependencies are
+recorded in [NOTICE](NOTICE).
