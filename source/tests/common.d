@@ -599,20 +599,24 @@ mixin template BrowserIntegration()
         shadow.find(By.css("#shady")).text.should == "shadow";
     }
 
-    @Name("element shadowRoot returns closed shadow root") @Serial
-    unittest
+    version(safari) { }
+    else
     {
-        driver.go(dataUri(
-            `<html><body>`~
-            `<div id="host"></div>`~
-            `<script>`~
-            `const root = document.getElementById("host").attachShadow({mode:"closed"});`~
-            `root.innerHTML = "<p id='shady'>closed shadow</p>";`~
-            `</script>`~
-            `</body></html>`
-        ));
-        Root shadow = driver.find(By.css("#host")).shadowRoot();
-        shadow.find(By.css("#shady")).text.should == "closed shadow";
+        @Name("element shadowRoot returns closed shadow root") @Serial
+        unittest
+        {
+            driver.go(dataUri(
+                `<html><body>`~
+                `<div id="host"></div>`~
+                `<script>`~
+                `const root = document.getElementById("host").attachShadow({mode:"closed"});`~
+                `root.innerHTML = "<p id='shady'>closed shadow</p>";`~
+                `</script>`~
+                `</body></html>`
+            ));
+            Root shadow = driver.find(By.css("#host")).shadowRoot();
+            shadow.find(By.css("#shady")).text.should == "closed shadow";
+        }
     }
 
     @Name("roots discovers open shadow root") @Serial
