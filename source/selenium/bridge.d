@@ -28,29 +28,6 @@ package (selenium):
     enum string W3C_KEY = "element-6066-11e4-a52e-4f735466cecf";
     /// The capability key identifying a W3C shadow root reference in payloads.
     enum string SHADOW_KEY = "shadow-6066-11e4-a52e-4f735466cecf";
-    /// The W3C default page-load timeout used when a driver omits it from negotiated capabilities.
-    enum Duration DEFAULT_PAGE_TIMEOUT = 300.seconds;
-    /// The W3C default script timeout used when a driver omits it from negotiated capabilities.
-    enum Duration DEFAULT_SCRIPT_TIMEOUT = 30.seconds;
-
-    /// Pushes every configured timeout without consulting or updating the synchronization cache.
-    void pushTimeouts(string id, Browser browser)
-    {
-        JSONValue data = JSONValue([
-            "implicit": JSONValue(cast(int)browser.timeouts.implicit.total!"msecs"),
-            "pageLoad": JSONValue(cast(int)(
-                (browser.timeouts.pageLoad == Duration.init
-                    ? DEFAULT_PAGE_TIMEOUT
-                    : browser.timeouts.pageLoad).total!"msecs"
-            )),
-            "script": JSONValue(cast(int)(
-                (browser.timeouts.script == Duration.init
-                    ? DEFAULT_SCRIPT_TIMEOUT
-                    : browser.timeouts.script).total!"msecs"
-            )),
-        ]);
-        post!void(id, "/timeouts", data);
-    }
 
     /// Issues a JSON POST with a request timeout suitable for a blocking WebDriver command.
     T postWithTimeout(T = JSONValue)(
@@ -80,15 +57,6 @@ public:
     const int capacity;
     /// Active sessions keyed by session id, mapped to their negotiated browser.
     Browser[string] sessions;
-
-    struct TimeoutSync
-    {
-        int implicit;
-        int page;
-        int script;
-    }
-
-    TimeoutSync[string] timeoutSyncs;
 
     /**
      * Creates a bridge with the given session capacity.
@@ -219,42 +187,6 @@ public:
         catch (InvalidSessionIdException) { }
 
         sessions.remove(id);
-        timeoutSyncs.remove(id);
-    }
-
-    /**
-     * Pushes the browser timeout configuration to the session if it has changed.
-     *
-     * Timeouts are synced lazily so that unchanged values do not incur an extra
-     * request before each command. The last synced state is cached per session,
-     * and failures propagate to the caller.
-     *
-     * Params:
-     *  id = The target session id.
-     *  browser = The browser whose timeout configuration to apply.
-     */
-    // TODO: I don't like this. There must be a more succinct solution to timeouts.
-    void ensureTimeoutsSynced(string id, Browser browser)
-    {
-        TimeoutSync current;
-        current.implicit = cast(int)browser.timeouts.implicit.total!"msecs";
-        current.page = cast(int)browser.timeouts.pageLoad.total!"msecs";
-        current.script = cast(int)browser.timeouts.script.total!"msecs";
-        TimeoutSync synced = timeoutSyncs.get(id, TimeoutSync.init);
-
-        if (current == synced)
-            return;
-
-        JSONValue data = JSONValue.emptyObject;
-        if (current.implicit != synced.implicit)
-            data["implicit"] = JSONValue(current.implicit);
-        if (current.page != synced.page)
-            data["pageLoad"] = JSONValue(current.page);
-        if (current.script != synced.script)
-            data["script"] = JSONValue(current.script);
-
-        post(id, "/timeouts", data);
-        timeoutSyncs[id] = current;
     }
 
     /// Kills a locally spawned process and clears all session state.
@@ -266,7 +198,6 @@ public:
             pid = Pid.init;
         }
         sessions = null;
-        timeoutSyncs = null;
     }
 
     /// The server status from `GET /status`, as the raw parsed JSON.

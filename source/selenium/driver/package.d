@@ -11,7 +11,7 @@ import selenium.exception;
 
 import std.array : join;
 import std.json : JSONValue;
-import core.time : seconds, Duration;
+import core.time : msecs, seconds, Duration;
 
 /// A handle to a single WebDriver session.
 ///
@@ -31,6 +31,55 @@ class Driver
     Logger logger;
     /// The W3C session id.
     string id;
+
+    /// Live session timeout commands, accessed through the `timeouts` alias.
+    template Timeouts()
+    {
+        /// The current element-location wait.
+        @property Duration implicit() const => browser.timeouts.implicit;
+
+        /// Sets the element-location wait on the remote session.
+        @property void implicit(Duration value)
+        {
+            bridge.post!void(
+                id,
+                "/timeouts",
+                JSONValue(["implicit": JSONValue(cast(int)value.total!"msecs")])
+            );
+            browser.timeouts.implicit = value;
+        }
+
+        /// The current page-load wait.
+        @property Duration pageLoad() const => browser.timeouts.pageLoad;
+
+        /// Sets the page-load wait on the remote session.
+        @property void pageLoad(Duration value)
+        {
+            bridge.post!void(
+                id,
+                "/timeouts",
+                JSONValue(["pageLoad": JSONValue(cast(int)value.total!"msecs")])
+            );
+            browser.timeouts.pageLoad = value;
+        }
+
+        /// The current script wait.
+        @property Duration script() const => browser.timeouts.script;
+
+        /// Sets the script wait on the remote session.
+        @property void script(Duration value)
+        {
+            bridge.post!void(
+                id,
+                "/timeouts",
+                JSONValue(["script": JSONValue(cast(int)value.total!"msecs")])
+            );
+            browser.timeouts.script = value;
+        }
+    }
+
+    /// Live session timeout commands, accessed through the `timeouts` alias.
+    alias timeouts = Timeouts!();
 
     /**
      * Starts a session on an existing bridge.
@@ -195,7 +244,6 @@ class Driver
      */
     void go(string url)
     {
-        bridge.ensureTimeoutsSynced(id, browser);
         bridge.post(id, "/url", JSONValue(["url": url]));
     }
     /// Navigates back one entry in history.
@@ -244,7 +292,6 @@ class Driver
      */
     Root[] roots()
     {
-        bridge.ensureTimeoutsSynced(id, browser);
 
         JSONValue result = execute!JSONValue(`
             var UNINITIALIZED = 1, LOADING = 2, LOADED = 4, INTERACTIVE = 8, COMPLETE = 16, OPEN = 32, CLOSED = 64;
@@ -328,7 +375,6 @@ class Driver
      */
     Element find(By by)
     {
-        bridge.ensureTimeoutsSynced(id, browser);
 
         JSONValue resp = bridge.post(id, "/element", by.toJSON());
         return new Element(this, Bridge.parseElementId(resp));
@@ -345,7 +391,6 @@ class Driver
      */
     Element[] findAll(By by)
     {
-        bridge.ensureTimeoutsSynced(id, browser);
 
         JSONValue resp = bridge.post(id, "/elements", by.toJSON());
         Element[] ret;
@@ -369,7 +414,6 @@ class Driver
      */
     T execute(T = string)(string script, JSONValue args = JSONValue.emptyArray)
     {
-        bridge.ensureTimeoutsSynced(id, browser);
         JSONValue resp = bridge.post(id, "/execute/sync", JSONValue([
             "script": JSONValue(script),
             "args": args,
@@ -392,10 +436,9 @@ class Driver
      * Runs an asynchronous script in the page and returns its typed callback result.
      *
      * WebDriver injects the completion callback as the last element of `arguments`.
-     * The script must invoke it exactly once with the value to return. Every session
-     * timeout is pushed before execution without consulting the bridge cache. When
-     * `timeout` is supplied, it is applied in a second request and remains the
-     * session's script timeout after this call.
+     * The script must invoke it exactly once with the value to return. When
+     * `timeout` is supplied, it is applied through the live timeout setter and
+     * remains the session's script timeout after this call.
      *
      * When T is Element or Element[] the returned references are wrapped into
      * handles, otherwise the result is deserialized into T.
@@ -418,19 +461,10 @@ class Driver
         Duration timeout = Duration.init
     )
     {
-        bridge.pushTimeouts(id, browser);
         if (timeout != Duration.init)
-        {
-            bridge.post!void(
-                id,
-                "/timeouts",
-                JSONValue(["script": JSONValue(cast(int)timeout.total!"msecs")])
-            );
-        }
+            timeouts.script = timeout;
 
-        Duration scriptTimeout = timeout == Duration.init
-            ? (browser.timeouts.script == Duration.init ? Bridge.DEFAULT_SCRIPT_TIMEOUT : browser.timeouts.script)
-            : timeout;
+        Duration scriptTimeout = timeouts.script == Duration.init ? 30.seconds : timeouts.script;
         Duration requestTimeout = scriptTimeout + 1.seconds;
         JSONValue resp;
         try

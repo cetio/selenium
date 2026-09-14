@@ -226,40 +226,7 @@ public:
     bool enabled() => driver.bridge.get!bool(driver.id, path("/enabled"));
 
     /// Clicks the element.
-    void click()
-    {
-        try
-            driver.bridge.post!void(driver.id, path("/click"));
-        catch (WebDriverException exception)
-        {
-            // TODO: Should we ensure proper exceptions are always thrown?
-            version(safari)
-            {
-                string clickState;
-                try
-                {
-                    clickState = driver.execute!string(
-                        `var element = arguments[0];`~
-                        `var style = window.getComputedStyle(element);`~
-                        `var rect = element.getBoundingClientRect();`~
-                        `if (style.display === "none" || style.visibility === "hidden" ||`~
-                        ` style.pointerEvents === "none" || rect.width === 0 || rect.height === 0)`~
-                        ` return "not interactable";`~
-                        `var hit = document.elementFromPoint(`~
-                        `rect.left + rect.width / 2, rect.top + rect.height / 2);`~
-                        `return hit === element || element.contains(hit) ? "ok" : "intercepted";`,
-                        JSONValue([toJSON()])
-                    );
-                }
-                catch (Exception) { }
-
-                if (clickState == "intercepted")
-                    throw new ElementClickInterceptedException("Another element intercepted the click.");
-            }
-
-            throw exception;
-        }
-    }
+    void click() => driver.bridge.post!void(driver.id, path("/click"));
     /**
      * Types the given key sequences into the element.
      *
@@ -317,7 +284,6 @@ public:
      */
     Element find(By by)
     {
-        driver.bridge.ensureTimeoutsSynced(driver.id, driver.browser);
 
         JSONValue resp = driver.bridge.post(driver.id, path("/element"), by.toJSON());
         return new Element(driver, Bridge.parseElementId(resp));
@@ -334,7 +300,6 @@ public:
      */
     Element[] findAll(By by)
     {
-        driver.bridge.ensureTimeoutsSynced(driver.id, driver.browser);
 
         JSONValue resp = driver.bridge.post(driver.id, path("/elements"), by.toJSON());
         Element[] ret;

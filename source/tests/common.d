@@ -14,7 +14,6 @@ mixin template BrowserIntegration()
 {
     import tests.common : dataUri;
     import selenium.actions.key : Key;
-    import selenium.bridge : Bridge;
     import selenium.driver : Driver;
     import selenium.driver.cookies : Cookie, cookies;
     import selenium.driver.print : Orientation, PrintOptions;
@@ -501,60 +500,34 @@ mixin template BrowserIntegration()
         elements[1].text.should == "second";
     }
 
-    @Name("executeAsync throws a typed script timeout and leaves an override active") @Serial
+    @Name("timeout setter updates a live script timeout") @Serial
     unittest
     {
         driver.go(dataUri("<html><body></body></html>"));
-        Duration original = driver.browser.timeouts.script;
+        Duration original = driver.timeouts.script;
+        Duration restored = original == Duration.init ? 30.seconds : original;
         scope (exit)
-        {
-            driver.bridge.post!void(
-                driver.id,
-                "/timeouts",
-                JSONValue(["script": JSONValue(cast(int)original.total!"msecs")])
-            );
-        }
+            driver.timeouts.script = restored;
 
-        driver.executeAsync!JSONValue(
-            `void 0;`,
-            JSONValue.emptyArray,
-            20.msecs
-        ).shouldThrow!ScriptTimeoutException;
+        driver.timeouts.script = 20.msecs;
         JSONValue timeouts = driver.bridge.get(driver.id, "/timeouts");
         timeouts["value"]["script"].integer.should == 20;
+        driver.executeAsync!JSONValue(`void 0;`).shouldThrow!ScriptTimeoutException;
     }
 
-    @Name("executeAsync pushes all timeouts without trusting the bridge cache") @Serial
+    @Name("timeout setter sends zero resets") @Serial
     unittest
     {
         driver.go(dataUri("<html><body></body></html>"));
-        Duration original = driver.browser.timeouts.script;
+        Duration original = driver.timeouts.script;
+        Duration restored = original == Duration.init ? 30.seconds : original;
         scope (exit)
-        {
-            driver.browser.timeouts.script = original;
-            driver.bridge.post!void(
-                driver.id,
-                "/timeouts",
-                JSONValue(["script": JSONValue(cast(int)original.total!"msecs")])
-            );
-            driver.bridge.timeoutSyncs.remove(driver.id);
-        }
+            driver.timeouts.script = restored;
 
-        driver.browser.timeouts.script = 1.seconds;
-        driver.bridge.post!void(
-            driver.id,
-            "/timeouts",
-            JSONValue(["script": JSONValue(1)])
-        );
-        driver.bridge.timeoutSyncs[driver.id] = Bridge.TimeoutSync(
-            cast(int)driver.browser.timeouts.implicit.total!"msecs",
-            cast(int)driver.browser.timeouts.pageLoad.total!"msecs",
-            cast(int)driver.browser.timeouts.script.total!"msecs"
-        );
-
-        driver.executeAsync!string(
-            `setTimeout(arguments[arguments.length - 1], 50, "complete");`
-        ).should == "complete";
+        driver.timeouts.script = 1.seconds;
+        driver.timeouts.script = Duration.init;
+        JSONValue timeouts = driver.bridge.get(driver.id, "/timeouts");
+        timeouts["value"]["script"].integer.should == 0;
     }
 
     @Name("roots returns primary document first") @Serial
@@ -870,7 +843,7 @@ mixin template BrowserIntegration()
                 isolated.bridge.stop();
             }
 
-            isolated.browser.timeouts.pageLoad = 100.msecs;
+            isolated.timeouts.pageLoad = 100.msecs;
             isolated.go(dataUri(
                 "<html><body><script>while (true) {}</script></body></html>"
             ));
