@@ -41,8 +41,8 @@
 					"dependencies": {
 						"requests": "~>2.2.1",
 						"unit-threaded": {
-							"repository": "git+https://github.com/cetio/unit-threaded.git",
-							"version": "~master"
+							"repository": "git+https://github.com/atilaneves/unit-threaded.git",
+							"version": "64c8c75cee87804ef60869f551065db100d50461"
 						}
 					}
 				}
@@ -76,8 +76,8 @@
 					"dependencies": {
 						"requests": "~>2.2.1",
 						"unit-threaded": {
-							"repository": "git+https://github.com/cetio/unit-threaded.git",
-							"version": "~master"
+							"repository": "git+https://github.com/atilaneves/unit-threaded.git",
+							"version": "64c8c75cee87804ef60869f551065db100d50461"
 						}
 					}
 				}
@@ -102,8 +102,8 @@
 			"buildOptions": ["unittests"],
 			"dependencies": {
 				"unit-threaded": {
-					"repository": "git+https://github.com/cetio/unit-threaded.git",
-					"version": "~master"
+					"repository": "git+https://github.com/atilaneves/unit-threaded.git",
+					"version": "64c8c75cee87804ef60869f551065db100d50461"
 				}
 			}
 		},
@@ -120,12 +120,12 @@
 			"dependencies": {
 				"requests": "~>2.2.1",
 				"unit-threaded": {
-					"repository": "git+https://github.com/cetio/unit-threaded.git",
-					"version": "~master"
+					"repository": "git+https://github.com/atilaneves/unit-threaded.git",
+					"version": "64c8c75cee87804ef60869f551065db100d50461"
 				},
 				"unit-threaded:autorunner": {
-					"repository": "git+https://github.com/cetio/unit-threaded.git",
-					"version": "~master"
+					"repository": "git+https://github.com/atilaneves/unit-threaded.git",
+					"version": "64c8c75cee87804ef60869f551065db100d50461"
 				}
 			}
 		},
@@ -142,12 +142,12 @@
 			"dependencies": {
 				"requests": "~>2.2.1",
 				"unit-threaded": {
-					"repository": "git+https://github.com/cetio/unit-threaded.git",
-					"version": "~master"
+					"repository": "git+https://github.com/atilaneves/unit-threaded.git",
+					"version": "64c8c75cee87804ef60869f551065db100d50461"
 				},
 				"unit-threaded:autorunner": {
-					"repository": "git+https://github.com/cetio/unit-threaded.git",
-					"version": "~master"
+					"repository": "git+https://github.com/atilaneves/unit-threaded.git",
+					"version": "64c8c75cee87804ef60869f551065db100d50461"
 				}
 			}
 		}

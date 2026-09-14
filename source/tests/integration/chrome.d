@@ -17,7 +17,9 @@ version(chrome)
 
     import unit_threaded;
 
+    import std.algorithm.searching : canFind;
     import std.json : JSONValue, parseJSON;
+    import std.stdio : File, stdin, stderr;
 
 private:
     shared Driver _driver;
@@ -55,6 +57,25 @@ private:
     }
 
     mixin BrowserIntegration;
+
+    @Name("Bridge.start redirects child stdout") @Serial
+    unittest
+    {
+        File output = File.tmpfile();
+        Bridge bridge = Bridge.start(
+            browser.resolveBinary(),
+            ["--log-level=OFF"],
+            0,
+            stdin,
+            output,
+            stderr
+        );
+        scope (exit) bridge.stop();
+        bridge.stop();
+
+        output.rewind();
+        output.readln().canFind("ChromeDriver").should == true;
+    }
 
     @Name("Chrome toJSON includes browserName and flags")
     unittest
