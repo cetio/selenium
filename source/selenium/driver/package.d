@@ -341,13 +341,11 @@ class Driver
                     break;
                 case 1:
                     type = RootType.Embedded;
-                    JSONValue refValue = item["ref"];
-                    id = Bridge.parseElementId(refValue);
+                    id = Bridge.parseElementId(item["ref"]);
                     break;
                 case 2:
                     type = RootType.Shadow;
-                    JSONValue refValue = item["ref"];
-                    id = Bridge.parseShadowId(refValue);
+                    id = Bridge.parseShadowId(item["ref"]);
                     break;
                 default:
                     continue;
