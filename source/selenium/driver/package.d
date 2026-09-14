@@ -332,7 +332,7 @@ class Driver
         foreach (item; result.array)
         {
             RootType type;
-            string id;
+            string eid;
 
             switch (cast(int)item["type"].integer)
             {
@@ -341,11 +341,11 @@ class Driver
                     break;
                 case 1:
                     type = RootType.Embedded;
-                    id = Bridge.parseElementId(item["ref"]);
+                    eid = Bridge.parseElementId(item["ref"]);
                     break;
                 case 2:
                     type = RootType.Shadow;
-                    id = Bridge.parseShadowId(item["ref"]);
+                    eid = Bridge.parseShadowId(item["ref"]);
                     break;
                 default:
                     continue;
@@ -353,7 +353,7 @@ class Driver
 
             ret ~= new Root(
                 this, 
-                id, 
+                eid, 
                 type, 
                 cast(RootState)item["state"].integer
             );
