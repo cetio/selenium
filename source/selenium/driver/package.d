@@ -331,32 +331,34 @@ class Driver
         Root[] ret;
         foreach (item; result.array)
         {
-            int typeInt = cast(int)item["type"].integer;
-            uint stateInt = cast(uint)item["state"].integer;
+            RootType type;
+            string id;
 
-            RootType rootType;
-            string rootId;
-
-            switch (typeInt)
+            switch (cast(int)item["type"].integer)
             {
                 case 0:
-                    rootType = RootType.Primary;
+                    type = RootType.Primary;
                     break;
                 case 1:
-                    rootType = RootType.Embedded;
+                    type = RootType.Embedded;
                     JSONValue refValue = item["ref"];
-                    rootId = Bridge.parseElementId(refValue);
+                    id = Bridge.parseElementId(refValue);
                     break;
                 case 2:
-                    rootType = RootType.Shadow;
+                    type = RootType.Shadow;
                     JSONValue refValue = item["ref"];
-                    rootId = Bridge.parseShadowId(refValue);
+                    id = Bridge.parseShadowId(refValue);
                     break;
                 default:
                     continue;
             }
 
-            ret ~= new Root(this, rootId, rootType, cast(RootState)stateInt);
+            ret ~= new Root(
+                this, 
+                id, 
+                type, 
+                cast(RootState)item["state"].integer
+            );
         }
         return ret;
     }
