@@ -8,8 +8,9 @@ import requests : Request, Response;
 
 import std.json : JSONType, JSONValue, parseJSON;
 import std.conv : to;
-import std.process : Pid, spawnProcess;
+import std.process : Config, Pid, spawnProcess;
 import std.socket;
+import std.stdio : File, stdin, stderr;
 import core.thread : Thread;
 import core.time : MonoTime, msecs, seconds, Duration;
 
@@ -27,6 +28,36 @@ package (selenium):
     enum string W3C_KEY = "element-6066-11e4-a52e-4f735466cecf";
     /// The capability key identifying a W3C shadow root reference in payloads.
     enum string SHADOW_KEY = "shadow-6066-11e4-a52e-4f735466cecf";
+
+    /// Pushes every configured timeout without consulting or updating the synchronization cache.
+    void pushTimeouts(string id, Browser browser)
+    {
+        JSONValue data = JSONValue([
+            "implicit": JSONValue(cast(int)browser.timeouts.implicit.total!"msecs"),
+            "pageLoad": JSONValue(cast(int)browser.timeouts.pageLoad.total!"msecs"),
+            "script": JSONValue(cast(int)browser.timeouts.script.total!"msecs"),
+        ]);
+        post!void(id, "/timeouts", data);
+    }
+
+    /// Issues a JSON POST with a request timeout suitable for a blocking WebDriver command.
+    T postWithTimeout(T = JSONValue)(
+        string id,
+        string path,
+        JSONValue data,
+        Duration timeout
+    )
+    {
+        ensureSession(id);
+        string content = data.toString();
+        return parseResponse!T(send({
+            return request(content, timeout).post(
+                address~"/session/"~id~path,
+                content,
+                "application/json"
+            );
+        }));
+    }
 
 public:
     /// Base URL of the WebDriver server, e.g. "http://127.0.0.1:9515".
@@ -71,10 +102,17 @@ public:
     /**
      * Spawns a WebDriver binary on a free port and waits for it to accept requests.
      *
+     * The free port is released before the process starts, so another process can
+     * claim it between discovery and the driver's bind. Callers should retry a
+     * failed start when operating in an environment with heavy port contention.
+     *
      * Params:
      *  binary = Path to the driver executable.
      *  args = Extra command-line arguments forwarded to the executable.
      *  capacity = Maximum concurrent sessions, or 0 for unlimited.
+     *  childStdin = Standard input for the child process.
+     *  childStdout = Standard output for the child process, defaulting to caller stderr.
+     *  childStderr = Standard error for the child process.
      *
      * Returns:
      *  A Bridge owning the spawned process.
@@ -83,14 +121,28 @@ public:
      *  InvalidArgumentException if binary is null.
      *  WebDriverConnectionException if the server does not become ready in time.
      */
-    static Bridge start(string binary, string[] args = null, int capacity = 0)
+    static Bridge start(
+        string binary,
+        string[] args = null,
+        int capacity = 0,
+        File childStdin = stdin,
+        File childStdout = stderr,
+        File childStderr = stderr
+    )
     {
         if (binary == null)
             throw new InvalidArgumentException("Valid binary path must be provided.");
 
         Bridge ret = new Bridge(capacity);
         ushort port = findFreePort();
-        ret.pid = spawnProcess([binary, "--port="~port.to!string]~args);
+        ret.pid = spawnProcess(
+            [binary, "--port="~port.to!string]~args,
+            childStdin,
+            childStdout,
+            childStderr,
+            null,
+            Config.retainStdin | Config.retainStdout | Config.retainStderr
+        );
         ret.address = "http://127.0.0.1:"~port.to!string;
         ret.waitForServer(5000);
         return ret;
@@ -169,6 +221,7 @@ public:
      *  id = The target session id.
      *  browser = The browser whose timeout configuration to apply.
      */
+    // TODO: I don't like this. There must be a more succinct solution to timeouts.
     void ensureTimeoutsSynced(string id, Browser browser)
     {
         TimeoutSync current;

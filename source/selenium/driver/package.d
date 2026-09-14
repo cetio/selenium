@@ -388,7 +388,71 @@ class Driver
             return bridge.unwrapAndParse!T(resp);
     }
 
-    // TODO: executeAsync
+    /**
+     * Runs an asynchronous script in the page and returns its typed callback result.
+     *
+     * WebDriver injects the completion callback as the last element of `arguments`.
+     * The script must invoke it exactly once with the value to return. Every session
+     * timeout is pushed before execution without consulting the bridge cache. When
+     * `timeout` is supplied, it is applied in a second request and remains the
+     * session's script timeout after this call.
+     *
+     * When T is Element or Element[] the returned references are wrapped into
+     * handles, otherwise the result is deserialized into T.
+     *
+     * Params:
+     *  script = The script body, which must invoke the injected completion callback.
+     *  args = The arguments exposed before the callback in `arguments`.
+     *  timeout = A persistent script timeout override, or Duration.init to use the session timeout.
+     *
+     * Returns:
+     *  The callback result as T.
+     *
+     * Throws:
+     *  ScriptTimeoutException if the callback does not run within the script timeout.
+     *  JavaScriptException if the script throws during evaluation.
+     */
+    T executeAsync(T = JSONValue)(
+        string script,
+        JSONValue args = JSONValue.emptyArray,
+        Duration timeout = Duration.init
+    )
+    {
+        bridge.pushTimeouts(id, browser);
+        if (timeout != Duration.init)
+        {
+            bridge.post!void(
+                id,
+                "/timeouts",
+                JSONValue(["script": JSONValue(cast(int)timeout.total!"msecs")])
+            );
+        }
+
+        Duration scriptTimeout = timeout == Duration.init ? browser.timeouts.script : timeout;
+        Duration requestTimeout = scriptTimeout == Duration.init ? 31.seconds : scriptTimeout + 1.seconds;
+        JSONValue resp = bridge.postWithTimeout(
+            id,
+            "/execute/async",
+            JSONValue([
+                "script": JSONValue(script),
+                "args": args,
+            ]),
+            requestTimeout
+        );
+
+        static if (is(T == Element))
+            return new Element(this, Bridge.parseElementId(resp));
+        else static if (is(T == Element[]))
+        {
+            Element[] ret;
+            foreach (eid; Bridge.parseElementIds(resp))
+                ret ~= new Element(this, eid);
+            return ret;
+        }
+        else
+            return bridge.unwrapAndParse!T(resp);
+    }
+
     // TODO: auto retry on stale element references
 
     // Templates are used for grouping. Adding an alias is required to allow for functionality like `driver.window.handles`.

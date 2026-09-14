@@ -14,6 +14,7 @@ mixin template BrowserIntegration()
 {
     import tests.common : dataUri;
     import selenium.actions.key : Key;
+    import selenium.bridge : Bridge;
     import selenium.driver : Driver;
     import selenium.driver.cookies : Cookie, cookies;
     import selenium.driver.print : Orientation, PrintOptions;
@@ -23,7 +24,7 @@ mixin template BrowserIntegration()
     import unit_threaded;
 
     import std.json : JSONValue;
-    import core.time : msecs, seconds;
+    import core.time : Duration, msecs, seconds;
 
     @Name("title returns page title") @Serial
     unittest
@@ -467,6 +468,95 @@ mixin template BrowserIntegration()
         values[2].should == "two";
     }
 
+    @Name("executeAsync returns callback value") @Serial
+    unittest
+    {
+        driver.go(dataUri("<html><body></body></html>"));
+        driver.executeAsync!string(
+            `const done = arguments[arguments.length - 1];`~
+            `const value = arguments[0];`~
+            `setTimeout(function() { done(value); }, 0);`,
+            JSONValue([JSONValue("complete")])
+        ).should == "complete";
+    }
+
+    @Name("executeAsync returns callback element") @Serial
+    unittest
+    {
+        driver.go(dataUri("<html><body><a id='link'>test</a></body></html>"));
+        driver.executeAsync!Element(
+            `arguments[arguments.length - 1](document.getElementById("link"));`
+        ).tagName.should == "a";
+    }
+
+    @Name("executeAsync returns callback element array") @Serial
+    unittest
+    {
+        driver.go(dataUri("<html><body><p>first</p><p>second</p></body></html>"));
+        Element[] elements = driver.executeAsync!(Element[])(
+            `arguments[arguments.length - 1](Array.from(document.querySelectorAll("p")));`
+        );
+        elements.length.should == 2;
+        elements[0].text.should == "first";
+        elements[1].text.should == "second";
+    }
+
+    @Name("executeAsync throws a typed script timeout and leaves an override active") @Serial
+    unittest
+    {
+        driver.go(dataUri("<html><body></body></html>"));
+        Duration original = driver.browser.timeouts.script;
+        scope (exit)
+        {
+            driver.bridge.post!void(
+                driver.id,
+                "/timeouts",
+                JSONValue(["script": JSONValue(cast(int)original.total!"msecs")])
+            );
+        }
+
+        driver.executeAsync!JSONValue(
+            `void 0;`,
+            JSONValue.emptyArray,
+            20.msecs
+        ).shouldThrow!ScriptTimeoutException;
+        JSONValue timeouts = driver.bridge.get(driver.id, "/timeouts");
+        timeouts["value"]["script"].integer.should == 20;
+    }
+
+    @Name("executeAsync pushes all timeouts without trusting the bridge cache") @Serial
+    unittest
+    {
+        driver.go(dataUri("<html><body></body></html>"));
+        Duration original = driver.browser.timeouts.script;
+        scope (exit)
+        {
+            driver.browser.timeouts.script = original;
+            driver.bridge.post!void(
+                driver.id,
+                "/timeouts",
+                JSONValue(["script": JSONValue(cast(int)original.total!"msecs")])
+            );
+            driver.bridge.timeoutSyncs.remove(driver.id);
+        }
+
+        driver.browser.timeouts.script = 1.seconds;
+        driver.bridge.post!void(
+            driver.id,
+            "/timeouts",
+            JSONValue(["script": JSONValue(1)])
+        );
+        driver.bridge.timeoutSyncs[driver.id] = Bridge.TimeoutSync(
+            cast(int)driver.browser.timeouts.implicit.total!"msecs",
+            cast(int)driver.browser.timeouts.pageLoad.total!"msecs",
+            cast(int)driver.browser.timeouts.script.total!"msecs"
+        );
+
+        driver.executeAsync!string(
+            `setTimeout(arguments[arguments.length - 1], 50, "complete");`
+        ).should == "complete";
+    }
+
     @Name("roots returns primary document first") @Serial
     unittest
     {
@@ -534,6 +624,22 @@ mixin template BrowserIntegration()
         Root shadow = host.shadowRoot();
         shadow.type.should == RootType.Shadow;
         shadow.find(By.css("#shady")).text.should == "shadow";
+    }
+
+    @Name("element shadowRoot returns closed shadow root") @Serial
+    unittest
+    {
+        driver.go(dataUri(
+            `<html><body>`~
+            `<div id="host"></div>`~
+            `<script>`~
+            `const root = document.getElementById("host").attachShadow({mode:"closed"});`~
+            `root.innerHTML = "<p id='shady'>closed shadow</p>";`~
+            `</script>`~
+            `</body></html>`
+        ));
+        Root shadow = driver.find(By.css("#host")).shadowRoot();
+        shadow.find(By.css("#shady")).text.should == "closed shadow";
     }
 
     @Name("roots discovers open shadow root") @Serial
