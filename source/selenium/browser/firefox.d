@@ -2,6 +2,7 @@
 module selenium.browser.firefox;
 
 import selenium.browser : Browser;
+import selenium.driver.logger : LogLevel, fromGeckoDriverLevel, toGeckoDriverLevel;
 import selenium.exception : InvalidArgumentException;
 
 import std.json : JSONValue, JSONType;
@@ -36,6 +37,7 @@ class Firefox : Browser
     /// This is universal for both the recommended `--profile` and the legacy `firefox_profile`.
     /// Must be either a directory path or base-64 archive.
     string profile;
+    LogLevel logLevel = LogLevel.off;
 
     /// The `browserName` capability.
     override string name() const
@@ -72,6 +74,9 @@ class Firefox : Browser
 
         if (prefs.user.type == JSONType.object && prefs.user.object.length > 0)
             opts["prefs"] = prefs.user;
+
+        if (logLevel != LogLevel.off)
+            opts["log"] = JSONValue(["level": JSONValue(toGeckoDriverLevel(logLevel))]);
 
         if (opts.object.length > 0)
             ret["moz:firefoxOptions"] = opts;
@@ -111,6 +116,10 @@ protected:
 
             if ("prefs" in opts && opts["prefs"].type == JSONType.object)
                 prefs.user = opts["prefs"];
+
+            if ("log" in opts && opts["log"].type == JSONType.object
+                && "level" in opts["log"] && opts["log"]["level"].type == JSONType.string)
+                logLevel = fromGeckoDriverLevel(opts["log"]["level"].str);
         }
     }
 }

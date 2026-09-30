@@ -13,7 +13,7 @@ version(firefox)
     import selenium.browser : Browser;
     import selenium.browser.firefox : Firefox;
     import selenium.driver : Driver;
-    import selenium.driver.logger : Logger;
+    import selenium.driver.logger : LogLevel, Logger, LogType;
     import selenium.exception : InvalidArgumentException;
 
     import unit_threaded;
@@ -33,9 +33,10 @@ private:
         Firefox browser = new Firefox();
         browser.args = ["--headless"];
         Logger logger = new Logger();
+        logger.driverLevel = LogLevel.error;
         Bridge bridge = Bridge.start(
             browser.resolveBinary(),
-            ["--log", "fatal"],
+            logger.toDriverArgs(browser),
             browser.driverCapacity
         );
         _browser = cast(shared)browser;
@@ -109,6 +110,20 @@ private:
         roundTrip.binary.should == "/opt/firefox";
         roundTrip.args.should == ["--private"];
         roundTrip.profile.should == "YWJj";
+    }
+
+    @Name("Firefox logger types returns empty for unsupported endpoint")
+    @Serial
+    unittest
+    {
+        driver.logger.types().length.should == 0;
+    }
+
+    @Name("Firefox logger fetch returns empty for unsupported endpoint")
+    @Serial
+    unittest
+    {
+        driver.logger.fetch(LogType.Browser).length.should == 0;
     }
 
     @Name("Firefox filesystem profile serializes as separate args")

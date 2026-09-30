@@ -3,7 +3,9 @@ module selenium.driver.logger;
 
 public import std.logger : LogLevel;
 
+import selenium.browser : Browser;
 import selenium.driver : Driver;
+import selenium.exception : UnknownCommandException, UnsupportedOperationException;
 
 import std.json : JSONValue, JSONType;
 
@@ -45,6 +47,46 @@ LogLevel fromWebDriverLevel(string level)
         case "DEBUG":
             return LogLevel.trace;
         case "ALL":
+            return LogLevel.all;
+        default:
+            return LogLevel.off;
+    }
+}
+
+string toGeckoDriverLevel(LogLevel level)
+{
+    switch (level)
+    {
+        case LogLevel.error:
+            return "error";
+        case LogLevel.warning:
+            return "warn";
+        case LogLevel.info:
+            return "info";
+        case LogLevel.trace:
+            return "debug";
+        case LogLevel.all:
+            return "trace";
+        default:
+            return "fatal";
+    }
+}
+
+LogLevel fromGeckoDriverLevel(string level)
+{
+    switch (level)
+    {
+        case "fatal":
+        case "error":
+            return LogLevel.error;
+        case "warn":
+            return LogLevel.warning;
+        case "info":
+        case "config":
+            return LogLevel.info;
+        case "debug":
+            return LogLevel.trace;
+        case "trace":
             return LogLevel.all;
         default:
             return LogLevel.off;
@@ -148,7 +190,23 @@ public:
     /// Builds the driver-process command-line flags from the configured fields.
     string[] toDriverArgs() const
     {
+        return toDriverArgs(null);
+    }
+
+    string[] toDriverArgs(Browser browser) const
+    {
         string[] ret;
+        if (browser !is null && browser.name == "firefox")
+        {
+            if (driverLevel != LogLevel.off)
+                ret ~= ["--log", toGeckoDriverLevel(driverLevel)];
+            return ret;
+        }
+        if (browser !is null
+            && browser.name != "chrome"
+            && browser.name != "MicrosoftEdge"
+            && browser.name != "webview2")
+            return ret;
         if (path != null)
             ret ~= "--log-path="~path;
         if (driverLevel != LogLevel.off)
@@ -165,7 +223,13 @@ public:
     /// Queries the log types the driver exposes via the legacy `/log/types` command.
     string[] types()
     {
-        JSONValue resp = driver.bridge.get(driver.id, "/log/types");
+        JSONValue resp;
+        try
+            resp = driver.bridge.get(driver.id, "/log/types");
+        catch (UnknownCommandException e)
+            return [];
+        catch (UnsupportedOperationException e)
+            return [];
         JSONValue value = ("value" in resp) ? resp["value"] : resp;
         string[] ret;
         if (value.type == JSONType.array)
@@ -192,7 +256,13 @@ public:
      */
     LogEntry[] fetch(string type)
     {
-        JSONValue resp = driver.bridge.post(driver.id, "/log", JSONValue(["type": type]));
+        JSONValue resp;
+        try
+            resp = driver.bridge.post(driver.id, "/log", JSONValue(["type": type]));
+        catch (UnknownCommandException e)
+            return [];
+        catch (UnsupportedOperationException e)
+            return [];
         JSONValue value = ("value" in resp) ? resp["value"] : resp;
         LogEntry[] ret;
         if (value.type == JSONType.array)

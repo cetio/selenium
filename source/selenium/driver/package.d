@@ -164,7 +164,7 @@ class Driver
         return start(
             Bridge.start(
                 alwaysMatch.resolveBinary(),
-                logger.toDriverArgs(),
+                logger.toDriverArgs(alwaysMatch),
                 alwaysMatch.driverCapacity
             ),
             alwaysMatch,
