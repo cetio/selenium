@@ -69,7 +69,7 @@ writeln(driver.title);
 
 - [x] Fix Safari support (see integration tests)
 - [x] Asynchronous script execution (`POST /execute/async`)
-- [ ] Actions API, including perform and release
+- [x] Actions API, including perform and release
 - [x] Alert text, accept, dismiss, and prompt input commands
 - [x] Computed accessibility role and label accessors
 - [x] Page printing (`POST /print`)

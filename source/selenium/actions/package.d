@@ -207,11 +207,11 @@ struct Source
     }
 }
 
-/// A fluent builder for W3C action sequences scoped to one driver session.
+/// Builder for W3C action sequences scoped to one driver session.
 ///
-/// Each method appends an action item to the appropriate input source. Sources
-/// are created lazily on first use and keyed by id, so a single builder can
-/// coordinate keyboard, pointer, and wheel devices across aligned ticks. The
+/// Functions append their respective action items to the appropriate input source.
+/// Sources are created lazily on first use and keyed by id, so a single builder
+/// can coordinate keyboard, pointer, and wheel devices across aligned ticks. The
 /// W3C model aligns actions by tick index: the nth action of every source runs
 /// concurrently, and shorter sources are padded with implicit pauses. Call
 /// `perform` to dispatch the assembled sequence, or `release` to cancel every
