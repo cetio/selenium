@@ -40,10 +40,7 @@
 					"buildOptions": ["unittests"],
 					"dependencies": {
 						"requests": "~>2.2.1",
-						"unit-threaded": {
-							"repository": "git+https://github.com/atilaneves/unit-threaded.git",
-							"version": "64c8c75cee87804ef60869f551065db100d50461"
-						}
+						"unit-threaded": "~>2.2.6"
 					}
 				}
 			]
@@ -75,10 +72,7 @@
 					"buildOptions": ["unittests"],
 					"dependencies": {
 						"requests": "~>2.2.1",
-						"unit-threaded": {
-							"repository": "git+https://github.com/atilaneves/unit-threaded.git",
-							"version": "64c8c75cee87804ef60869f551065db100d50461"
-						}
+						"unit-threaded": "~>2.2.6"
 					}
 				}
 			]
@@ -101,10 +95,7 @@
 			"mainSourceFile": "bin/ut.d",
 			"buildOptions": ["unittests"],
 			"dependencies": {
-				"unit-threaded": {
-					"repository": "git+https://github.com/atilaneves/unit-threaded.git",
-					"version": "64c8c75cee87804ef60869f551065db100d50461"
-				}
+				"unit-threaded": "~>2.2.6"
 			}
 		},
 		{
@@ -119,14 +110,8 @@
 			"buildOptions": ["unittests"],
 			"dependencies": {
 				"requests": "~>2.2.1",
-				"unit-threaded": {
-					"repository": "git+https://github.com/atilaneves/unit-threaded.git",
-					"version": "64c8c75cee87804ef60869f551065db100d50461"
-				},
-				"unit-threaded:autorunner": {
-					"repository": "git+https://github.com/atilaneves/unit-threaded.git",
-					"version": "64c8c75cee87804ef60869f551065db100d50461"
-				}
+				"unit-threaded": "~>2.2.6",
+				"unit-threaded:autorunner": "~>2.2.6"
 			}
 		},
 		{
@@ -141,14 +126,8 @@
 			"buildOptions": ["unittests"],
 			"dependencies": {
 				"requests": "~>2.2.1",
-				"unit-threaded": {
-					"repository": "git+https://github.com/atilaneves/unit-threaded.git",
-					"version": "64c8c75cee87804ef60869f551065db100d50461"
-				},
-				"unit-threaded:autorunner": {
-					"repository": "git+https://github.com/atilaneves/unit-threaded.git",
-					"version": "64c8c75cee87804ef60869f551065db100d50461"
-				}
+				"unit-threaded": "~>2.2.6",
+				"unit-threaded:autorunner": "~>2.2.6"
 			}
 		}
 	]
