@@ -509,6 +509,15 @@ mixin template BrowserIntegration()
         driver.timeouts.script.should == 5.seconds;
     }
 
+    @Name("executeAsync without override leaves the script timeout untouched") @Serial
+    unittest
+    {
+        driver.go(dataUri("<html><body></body></html>"));
+        long before = driver.bridge.get(driver.id, "/timeouts")["value"]["script"].integer;
+        driver.executeAsync!JSONValue("arguments[0](true);", JSONValue.emptyArray);
+        driver.bridge.get(driver.id, "/timeouts")["value"]["script"].integer.should == before;
+    }
+
     @Name("timeout setter updates a live script timeout") @Serial
     unittest
     {
@@ -661,20 +670,25 @@ mixin template BrowserIntegration()
         plain.shadowRoot();
     }
 
-    @Name("hasShadowRoot returns true for open root and false when absent") @Serial
-    unittest
+    // Safari reports a shadow root for elements without one.
+    version(safari) { }
+    else
     {
-        driver.go(dataUri(
-            `<html><body>`~
-            `<div id="host"></div>`~
-            `<script>`~
-            `document.getElementById("host").attachShadow({mode:"open"});`~
-            `</script>`~
-            `<div id="plain"></div>`~
-            `</body></html>`
-        ));
-        driver.find(By.css("#host")).hasShadowRoot().should == true;
-        driver.find(By.css("#plain")).hasShadowRoot().should == false;
+        @Name("hasShadowRoot returns true for open root and false when absent") @Serial
+        unittest
+        {
+            driver.go(dataUri(
+                `<html><body>`~
+                `<div id="host"></div>`~
+                `<script>`~
+                `document.getElementById("host").attachShadow({mode:"open"});`~
+                `</script>`~
+                `<div id="plain"></div>`~
+                `</body></html>`
+            ));
+            driver.find(By.css("#host")).hasShadowRoot().should == true;
+            driver.find(By.css("#plain")).hasShadowRoot().should == false;
+        }
     }
 
     @Name("detached host invalidates retained shadow root") @Serial @ShouldFail

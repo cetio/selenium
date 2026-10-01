@@ -462,7 +462,11 @@ class Driver
     )
     {
         Duration origTimeout = timeouts.script;
-        scope (exit) timeouts.script = origTimeout;
+        scope (exit)
+        {
+            if (timeout != Duration.init)
+                timeouts.script = origTimeout == Duration.init ? 30.seconds : origTimeout;
+        }
 
         if (timeout != Duration.init)
             timeouts.script = timeout;
