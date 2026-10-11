@@ -93,9 +93,8 @@ public:
     /// Every cookie visible to the current document.
     Cookie[] all()
     {
-        JSONValue value = driver.bridge.unwrapAndParse!JSONValue(driver.bridge.get(driver.id, "/cookie"));
         Cookie[] ret;
-        foreach (json; value.array)
+        foreach (json; driver.bridge.unwrapAndParse!JSONValue(driver.bridge.get(driver.id, "/cookie")).array)
             ret ~= Cookie.fromJSON(json);
         return ret;
     }
@@ -110,10 +109,7 @@ public:
      *  The matching cookie.
      */
     Cookie find(string name)
-    {
-        JSONValue json = driver.bridge.unwrapAndParse!JSONValue(driver.bridge.get(driver.id, "/cookie/"~name));
-        return Cookie.fromJSON(json);
-    }
+        => Cookie.fromJSON(driver.bridge.unwrapAndParse!JSONValue(driver.bridge.get(driver.id, "/cookie/"~name)));
 
     /**
      * Adds or updates a cookie on the current document.

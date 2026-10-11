@@ -13,6 +13,59 @@ import std.string : toLower;
 /// A W3C location strategy paired with the selector value to match against.
 struct By
 {
+
+    /// The location strategy name sent as the `using` field.
+    string using;
+    /// The selector expression interpreted according to `using`.
+    string value;
+
+    /**
+     * Constructs a locator.
+     *
+     * Params:
+     *  using = The W3C location strategy name.
+     *  value = The selector expression.
+     *
+     * Throws:
+     *  InvalidSelectorException if the strategy is unknown, the value is
+     *  empty, or an XPath value has unbalanced delimiters.
+     */
+    this(string using, string value)
+    {
+        validate(using, value);
+        this.using = using;
+        this.value = value;
+    }
+
+    /// Locates elements by CSS selector.
+    static By css(string value)
+        => By("css selector", value);
+
+    /// Locates elements by tag name.
+    static By tagName(string value)
+        => By("tag name", value);
+
+    /// Locates anchors whose visible text equals the value.
+    static By linkText(string value)
+        => By("link text", value);
+
+    /// Locates anchors whose visible text contains the value.
+    static By partialLinkText(string value)
+        => By("partial link text", value);
+
+    /// Locates elements by XPath expression.
+    static By xpath(string value)
+        => By("xpath", value);
+
+    /// Serializes the strategy into the `{using, value}` locator payload.
+    JSONValue toJSON()
+    {
+        JSONValue ret = JSONValue.emptyObject;
+        ret["using"] = using;
+        ret["value"] = value;
+        return ret;
+    }
+
 private:
     static void validate(string using, string value)
     {
@@ -69,59 +122,6 @@ private:
 
         if (quote != 0 || delimiters.length > 0)
             throw new InvalidSelectorException("XPath expression has unbalanced delimiters.");
-    }
-
-public:
-    /// The location strategy name sent as the `using` field.
-    string using;
-    /// The selector expression interpreted according to `using`.
-    string value;
-
-    /**
-     * Constructs a locator.
-     *
-     * Params:
-     *  using = The W3C location strategy name.
-     *  value = The selector expression.
-     *
-     * Throws:
-     *  InvalidSelectorException if the strategy is unknown, the value is
-     *  empty, or an XPath value has unbalanced delimiters.
-     */
-    this(string using, string value)
-    {
-        validate(using, value);
-        this.using = using;
-        this.value = value;
-    }
-
-    /// Locates elements by CSS selector.
-    static By css(string value)
-        => By("css selector", value);
-
-    /// Locates elements by tag name.
-    static By tagName(string value)
-        => By("tag name", value);
-
-    /// Locates anchors whose visible text equals the value.
-    static By linkText(string value)
-        => By("link text", value);
-
-    /// Locates anchors whose visible text contains the value.
-    static By partialLinkText(string value)
-        => By("partial link text", value);
-
-    /// Locates elements by XPath expression.
-    static By xpath(string value)
-        => By("xpath", value);
-
-    /// Serializes the strategy into the `{using, value}` locator payload.
-    JSONValue toJSON()
-    {
-        JSONValue ret = JSONValue.emptyObject;
-        ret["using"] = using;
-        ret["value"] = value;
-        return ret;
     }
 }
 
@@ -282,11 +282,7 @@ public:
      *  NoSuchElementException if no descendant matches.
      */
     Element find(By by)
-    {
-
-        JSONValue resp = driver.bridge.post(driver.id, path("/element"), by.toJSON());
-        return new Element(driver, Bridge.parseElementId(resp));
-    }
+        => new Element(driver, Bridge.parseElementId(driver.bridge.post(driver.id, path("/element"), by.toJSON())));
 
     /**
      * Finds every descendant matching the locator.
@@ -299,10 +295,8 @@ public:
      */
     Element[] findAll(By by)
     {
-
-        JSONValue resp = driver.bridge.post(driver.id, path("/elements"), by.toJSON());
         Element[] ret;
-        foreach (eid; Bridge.parseElementIds(resp))
+        foreach (eid; Bridge.parseElementIds(driver.bridge.post(driver.id, path("/elements"), by.toJSON())))
             ret ~= new Element(driver, eid);
         return ret;
     }
@@ -316,8 +310,7 @@ public:
      */
     Root shadowRoot()
     {
-        JSONValue resp = driver.bridge.get(driver.id, path("/shadow"));
-        string shadowId = Bridge.parseShadowId(resp);
+        string shadowId = Bridge.parseShadowId(driver.bridge.get(driver.id, path("/shadow")));
         if (shadowId is null)
             throw new NoSuchShadowRootException("Element does not have a shadow root.");
 

@@ -357,8 +357,12 @@ public:
         PointerType pointerType = PointerType.Mouse
     )
     {
-        JSONValue origin = JSONValue(cast(string)Origin.Viewport);
-        sources[pointerIndex(id, pointerType)].actions ~= Action.pointerMove(x, y, duration, origin);
+        sources[pointerIndex(id, pointerType)].actions ~= Action.pointerMove(
+            x,
+            y,
+            duration,
+            JSONValue(cast(string)Origin.Viewport)
+        );
         return this;
     }
 
@@ -382,8 +386,12 @@ public:
         PointerType pointerType = PointerType.Mouse
     )
     {
-        JSONValue originValue = JSONValue(cast(string)origin);
-        sources[pointerIndex(id, pointerType)].actions ~= Action.pointerMove(x, y, duration, originValue);
+        sources[pointerIndex(id, pointerType)].actions ~= Action.pointerMove(
+            x,
+            y,
+            duration,
+            JSONValue(cast(string)origin)
+        );
         return this;
     }
 

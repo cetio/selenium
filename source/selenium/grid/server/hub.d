@@ -15,7 +15,6 @@ import std.json : JSONValue;
 /// session requests to a matching node and tracks which node owns each session.
 class Hub
 {
-public:
     /// The base URL the hub advertises, e.g. "http://127.0.0.1:4444".
     string address;
     /// The registration secret required by secured grid endpoints, or null.
@@ -65,8 +64,7 @@ public:
         GridStatus ret;
         ret.ready = nodes.length > 0;
         ret.message = nodes.length > 0 ? "Selenium Grid ready." : "No nodes registered.";
-        foreach (node; nodes.byValue)
-            ret.nodes ~= node;
+        ret.nodes = nodes.values;
         return ret;
     }
 
@@ -113,9 +111,7 @@ package:
     {
         // Forward-thinking: forward the delete to the owning node.
         // For the scaffold, drop the session locally if known.
-        string sessionId = request.params["sessionId"];
-        if (sessionId in sessions)
-            sessions.remove(sessionId);
+        sessions.remove(request.params["sessionId"]);
 
         return Response.okValue(JSONValue.emptyObject);
     }

@@ -17,7 +17,6 @@ import std.json : JSONValue;
 /// hub. Each slot maps to a capability stereotype and hosts at most one session.
 class Node
 {
-public:
     /// The node id as registered with the hub, or null to derive from `address`.
     string id;
     /// The base URL the node advertises, e.g. "http://127.0.0.1:5555".
@@ -129,16 +128,13 @@ package:
             return Response.error(403, "Forbidden", "unknown command", "Invalid registration secret.");
 
         string sessionId = request.params["sessionId"];
-        bool owns;
         foreach (slot; slots)
         {
             if (slot.sessionId == sessionId)
-            {
-                owns = true;
-                break;
-            }
+                return Response.okValue(JSONValue(true));
         }
-        return Response.okValue(JSONValue(owns));
+
+        return Response.okValue(JSONValue(false));
     }
 
     Response handleDeleteSession(Request request)

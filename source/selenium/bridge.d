@@ -178,11 +178,9 @@ public:
 
         try
         {
-            Request req = request();
-            Response response = send({
-                return req.deleteRequest(address~"/session/"~id);
-            });
-            checkAndParse(response);
+            checkAndParse(send({
+                return request().deleteRequest(address~"/session/"~id);
+            }));
         }
         catch (InvalidSessionIdException) { }
 
@@ -209,20 +207,17 @@ public:
     /// directly, keeping `Bridge` decoupled from grid types.
     JSONValue status()
     {
-        Request req = request();
-        Response response = send({
-            return req.get(address~"/status");
-        });
-        return checkAndParse(response);
+        return checkAndParse(send({
+            return request().get(address~"/status");
+        }));
     }
 
     /// Issues a GET against a session and parses the result.
     T get(T = JSONValue)(string id, string path)
     {
         ensureSession(id);
-        Request req = request();
         return parseResponse!T(send({
-            return req.get(address~"/session/"~id~path);
+            return request().get(address~"/session/"~id~path);
         }));
     }
 
@@ -285,9 +280,8 @@ public:
     T del(T = JSONValue)(string id, string path)
     {
         ensureSession(id);
-        Request req = request();
         return parseResponse!T(send({
-            return req.deleteRequest(address~"/session/"~id~path);
+            return request().deleteRequest(address~"/session/"~id~path);
         }));
     }
 

@@ -40,32 +40,6 @@ private:
     RootType _type;
     RootState _state;
 
-    string _findPath() const
-    {
-        final switch (_type)
-        {
-            case RootType.Primary:
-                return "/element";
-            case RootType.Embedded:
-                return "/element";
-            case RootType.Shadow:
-                return "/shadow/"~id~"/element";
-        }
-    }
-
-    string _findAllPath() const
-    {
-        final switch (_type)
-        {
-            case RootType.Primary:
-                return "/elements";
-            case RootType.Embedded:
-                return "/elements";
-            case RootType.Shadow:
-                return "/shadow/"~id~"/elements";
-        }
-    }
-
 public:
     /// The driver whose session owns this root.
     Driver driver;
@@ -112,37 +86,18 @@ public:
      */
     Element find(By by)
     {
-
-        final switch (_type)
+        if (_type == RootType.Primary)
+            driver.frame.switchTo();
+        else if (_type == RootType.Embedded)
         {
-            case RootType.Primary:
-                driver.frame.switchTo();
-                JSONValue resp = driver.bridge.post(
-                    driver.id,
-                    _findPath,
-                    by.toJSON()
-                );
-                return new Element(driver, Bridge.parseElementId(resp));
-
-            case RootType.Embedded:
-                driver.frame.switchTo();
-                Element iframe = new Element(driver, id);
-                driver.frame.switchTo(iframe);
-                JSONValue resp = driver.bridge.post(
-                    driver.id,
-                    _findPath,
-                    by.toJSON()
-                );
-                return new Element(driver, Bridge.parseElementId(resp));
-
-            case RootType.Shadow:
-                JSONValue resp = driver.bridge.post(
-                    driver.id,
-                    _findPath,
-                    by.toJSON()
-                );
-                return new Element(driver, Bridge.parseElementId(resp));
+            driver.frame.switchTo();
+            driver.frame.switchTo(new Element(driver, id));
         }
+
+        string path = _type == RootType.Shadow 
+            ? "/shadow/"~id~"/element" 
+            : "/element";
+        return new Element(driver, Bridge.parseElementId(driver.bridge.post(driver.id, path, by.toJSON())));
     }
 
     /**
@@ -160,44 +115,21 @@ public:
      */
     Element[] findAll(By by)
     {
-
-        final switch (_type)
+        if (_type == RootType.Primary)
+            driver.frame.switchTo();
+        else if (_type == RootType.Embedded)
         {
-            case RootType.Primary:
-                driver.frame.switchTo();
-                JSONValue resp = driver.bridge.post(
-                    driver.id,
-                    _findAllPath,
-                    by.toJSON()
-                );
-                Element[] ret;
-                foreach (eid; Bridge.parseElementIds(resp))
-                    ret ~= new Element(driver, eid);
-                return ret;
-            case RootType.Embedded:
-                driver.frame.switchTo();
-                Element iframe = new Element(driver, id);
-                driver.frame.switchTo(iframe);
-                JSONValue resp = driver.bridge.post(
-                    driver.id,
-                    _findAllPath,
-                    by.toJSON()
-                );
-                Element[] ret;
-                foreach (eid; Bridge.parseElementIds(resp))
-                    ret ~= new Element(driver, eid);
-                return ret;
-            case RootType.Shadow:
-                JSONValue resp = driver.bridge.post(
-                    driver.id,
-                    _findAllPath,
-                    by.toJSON()
-                );
-                Element[] ret;
-                foreach (eid; Bridge.parseElementIds(resp))
-                    ret ~= new Element(driver, eid);
-                return ret;
+            driver.frame.switchTo();
+            driver.frame.switchTo(new Element(driver, id));
         }
+
+        string path = _type == RootType.Shadow 
+            ? "/shadow/"~id~"/elements" 
+            : "/elements";
+        Element[] ret;
+        foreach (eid; Bridge.parseElementIds(driver.bridge.post(driver.id, path, by.toJSON())))
+            ret ~= new Element(driver, eid);
+        return ret;
     }
 
     /// Serializes the root into the appropriate W3C reference object.
