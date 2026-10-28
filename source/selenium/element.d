@@ -10,6 +10,8 @@ import std.conv : to;
 import std.json : JSONValue;
 import std.string : toLower;
 
+// TODO: Separate locator from element structure.
+
 /// A W3C location strategy paired with the selector value to match against.
 struct By
 {
@@ -37,27 +39,56 @@ struct By
         this.value = value;
     }
 
-    /// Locates elements by CSS selector.
+    /**
+     * Locates elements by CSS selector.
+     *
+     * Throws:
+     *  InvalidSelectorException if `value` is empty.
+     */
     static By css(string value)
         => By("css selector", value);
 
-    /// Locates elements by tag name.
+    /**
+     * Locates elements by tag name.
+     *
+     * Throws:
+     *  InvalidSelectorException if `value` is empty.
+     */
     static By tagName(string value)
         => By("tag name", value);
 
-    /// Locates anchors whose visible text equals the value.
+    /**
+     * Locates anchors whose visible text equals the value.
+     *
+     * Throws:
+     *  InvalidSelectorException if `value` is empty.
+     */
     static By linkText(string value)
         => By("link text", value);
 
-    /// Locates anchors whose visible text contains the value.
+    /**
+     * Locates anchors whose visible text contains the value.
+     *
+     * Throws:
+     *  InvalidSelectorException if `value` is empty.
+     */
     static By partialLinkText(string value)
         => By("partial link text", value);
 
-    /// Locates elements by XPath expression.
+    /**
+     * Locates elements by XPath expression.
+     *
+     * Throws:
+     *  InvalidSelectorException if `value` is empty or has unbalanced delimiters.
+     */
     static By xpath(string value)
         => By("xpath", value);
 
-    /// Serializes the strategy into the `{using, value}` locator payload.
+    /**
+     * Serializes the strategy into the `{using, value}` locator payload.
+     *
+     * Returns: The locator payload.
+     */
     JSONValue toJSON()
     {
         JSONValue ret = JSONValue.emptyObject;
@@ -186,56 +217,164 @@ public:
         this.id = id;
     }
 
-    /// The rendered, visible text of the element.
+    /**
+     * The rendered, visible text of the element.
+     *
+     * Throws:
+     *  StaleElementReferenceException if the element is detached.
+     *  WebDriverException subtypes for connection or server failures.
+     *  JSONException if the response is not a string.
+     */
     string text() => driver.bridge.get!string(driver.id, path("/text"));
-    /// The lowercased tag name of the element.
+    /**
+     * The lowercased tag name of the element.
+     *
+     * Throws:
+     *  StaleElementReferenceException if the element is detached.
+     *  WebDriverException subtypes for connection or server failures.
+     *  JSONException if the response is not a string.
+     */
     string tagName() => driver.bridge.get!string(driver.id, path("/name")).toLower();
-    /// The value of the named HTML attribute as it appears in markup.
+    /**
+     * The value of the named HTML attribute as it appears in markup.
+     *
+     * Params:
+     *  name = The attribute name, interpolated into the URL path without encoding.
+     *
+     * Throws:
+     *  StaleElementReferenceException if the element is detached.
+     *  WebDriverException subtypes for connection or server failures.
+     *  JSONException if the response is not a string.
+     */
     string attribute(string name) => driver.bridge.get!string(driver.id, path("/attribute/"~name));
-    /// The value of the named live DOM property, which may differ from the markup attribute.
+    /**
+     * The value of the named live DOM property, which may differ from the markup attribute.
+     *
+     * Params:
+     *  name = The property name, interpolated into the URL path without encoding.
+     *
+     * Throws:
+     *  StaleElementReferenceException if the element is detached.
+     *  WebDriverException subtypes for connection or server failures.
+     *  JSONException if the response is not a string.
+     */
     string property(string name) => driver.bridge.get!string(driver.id, path("/property/"~name));
-    /// The computed value of the named CSS property.
+    /**
+     * The computed value of the named CSS property.
+     *
+     * Params:
+     *  property = The CSS property name, interpolated into the URL path without encoding.
+     *
+     * Throws:
+     *  StaleElementReferenceException if the element is detached.
+     *  WebDriverException subtypes for connection or server failures.
+     *  JSONException if the response is not a string.
+     */
     string cssValue(string property)
         => driver.bridge.get!string(driver.id, path("/css/"~property));
 
-    /// The computed WAI-ARIA role of the element, or an empty string when none applies.
+    /**
+     * The computed WAI-ARIA role of the element, or an empty string when none applies.
+     *
+     * Support varies by driver; Chromium-based drivers implement the endpoint.
+     *
+     * Throws:
+     *  StaleElementReferenceException if the element is detached.
+     *  WebDriverException subtypes for connection or server failures.
+     *  JSONException if the response is not a string.
+     */
     string computedRole()
         => driver.bridge.get!string(driver.id, path("/computedrole"));
-    /// The computed accessible name of the element, or an empty string when none applies.
+    /**
+     * The computed accessible name of the element, or an empty string when none applies.
+     *
+     * Support varies by driver; Chromium-based drivers implement the endpoint.
+     *
+     * Throws:
+     *  StaleElementReferenceException if the element is detached.
+     *  WebDriverException subtypes for connection or server failures.
+     *  JSONException if the response is not a string.
+     */
     string computedLabel()
         => driver.bridge.get!string(driver.id, path("/computedlabel"));
 
-    /// The element bounding rectangle as a width and height pair.
+    /**
+     * The element bounding rectangle as a width and height pair.
+     *
+     * Throws:
+     *  StaleElementReferenceException if the element is detached.
+     *  WebDriverException subtypes for connection or server failures.
+     *  JSONException if the response shape is invalid.
+     */
     Size size()
     {
         JSONValue value = driver.bridge.unwrapAndParse!JSONValue(driver.bridge.get(driver.id, path("/rect")));
         return Size(value["width"].get!long, value["height"].get!long);
     }
 
-    /// The element bounding rectangle as a top-left coordinate pair.
+    /**
+     * The element bounding rectangle as a top-left coordinate pair.
+     *
+     * Throws:
+     *  StaleElementReferenceException if the element is detached.
+     *  WebDriverException subtypes for connection or server failures.
+     *  JSONException if the response shape is invalid.
+     */
     Position position()
     {
         JSONValue value = driver.bridge.unwrapAndParse!JSONValue(driver.bridge.get(driver.id, path("/rect")));
         return Position(value["x"].get!long, value["y"].get!long);
     }
 
-    /// Whether the element is currently selected, applicable to options and checkable inputs.
+    /**
+     * Whether the element is currently selected, applicable to options and checkable inputs.
+     *
+     * Throws:
+     *  StaleElementReferenceException if the element is detached.
+     *  WebDriverException subtypes for connection or server failures.
+     *  JSONException if the response is not a boolean.
+     */
     bool selected() => driver.bridge.get!bool(driver.id, path("/selected"));
-    /// Whether the element is enabled rather than disabled.
+    /**
+     * Whether the element is enabled.
+     *
+     * Throws:
+     *  StaleElementReferenceException if the element is detached.
+     *  WebDriverException subtypes for connection or server failures.
+     *  JSONException if the response is not a boolean.
+     */
     bool enabled() => driver.bridge.get!bool(driver.id, path("/enabled"));
 
-    /// Clicks the element.
+    /**
+     * Clicks the element.
+     *
+     * Throws:
+     *  ElementClickInterceptedException if another element intercepts the click.
+     *  ElementNotInteractableException if the element cannot receive the click.
+     *  StaleElementReferenceException if the element is detached.
+     *  InvalidSessionIdException if the session is not active.
+     *  WebDriverConnectionException if the request fails.
+     *  WebDriverException subtypes mapped from server errors.
+     */
     void click() => driver.bridge.post!void(driver.id, path("/click"));
     /**
      * Types the given key sequences into the element.
      *
      * Each argument is concatenated and dispatched character by character so that
      * key handlers fire per keystroke. Arguments may be strings of printable
-     * characters or `Key` values for non-printable keys such as `Key.Enter`,
-     * `Key.Tab`, and `Key.ArrowLeft`.
+     * characters or any `Key` values.
      *
      * Params:
-     *  args = One or more strings or `Key` values to type in order.
+     *  T = One or more `string` or `dchar`/`Key` arguments.
+     *  args = The key sequences to type in order.
+     *
+     * Throws:
+     *  ElementNotInteractableException if the element cannot receive input.
+     *  InvalidElementStateException if the element is not editable.
+     *  StaleElementReferenceException if the element is detached.
+     *  InvalidSessionIdException if the session is not active.
+     *  WebDriverConnectionException if the request fails.
+     *  WebDriverException subtypes mapped from server errors.
      */
     void sendKeys(T...)(T args)
     {
@@ -264,9 +403,28 @@ public:
             "value": JSONValue(value),
         ]));
     }
-    /// Clears the value of an editable element.
+    /**
+     * Clears the value of an editable element.
+     *
+     * Throws:
+     *  ElementNotInteractableException if the element cannot receive input.
+     *  InvalidElementStateException if the element is not editable.
+     *  StaleElementReferenceException if the element is detached.
+     *  InvalidSessionIdException if the session is not active.
+     *  WebDriverConnectionException if the request fails.
+     *  WebDriverException subtypes mapped from server errors.
+     */
     void clear() => driver.bridge.post!void(driver.id, path("/clear"));
-    /// A base64 PNG screenshot of the element.
+    /**
+     * A base64 PNG screenshot of the element.
+     *
+     * Throws:
+     *  StaleElementReferenceException if the element is detached.
+     *  InvalidSessionIdException if the session is not active.
+     *  WebDriverConnectionException if the request fails.
+     *  WebDriverException subtypes mapped from server errors.
+     *  JSONException if the response is not a string.
+     */
     string screenshot() => driver.bridge.get!string(driver.id, path("/screenshot"));
 
     /**
@@ -280,6 +438,11 @@ public:
      *
      * Throws:
      *  NoSuchElementException if no descendant matches.
+     *  InvalidSelectorException if the locator is rejected.
+     *  StaleElementReferenceException if the element is detached.
+     *  InvalidSessionIdException if the session is not active.
+     *  WebDriverConnectionException if the request fails.
+     *  WebDriverException subtypes mapped from server errors.
      */
     Element find(By by)
         => new Element(driver, Bridge.parseElementId(driver.bridge.post(driver.id, path("/element"), by.toJSON())));
@@ -292,6 +455,13 @@ public:
      *
      * Returns:
      *  Handles to all matched descendants, or an empty array if none match.
+     *
+     * Throws:
+     *  InvalidSelectorException if the locator is rejected.
+     *  StaleElementReferenceException if the element is detached.
+     *  InvalidSessionIdException if the session is not active.
+     *  WebDriverConnectionException if the request fails.
+     *  WebDriverException subtypes mapped from server errors.
      */
     Element[] findAll(By by)
     {
@@ -304,9 +474,18 @@ public:
     /**
      * Returns the shadow root attached to this element.
      *
+     * The returned root has `RootState.None`. 
+     * Chromium and Firefox support this, but Safari is finicky.
+     *
+     * Returns: A handle to the shadow root.
+     *
      * Throws:
      *  NoSuchShadowRootException if the element does not have a shadow root.
      *  DetachedShadowRootException if the shadow root is no longer attached.
+     *  StaleElementReferenceException if the element is detached.
+     *  InvalidSessionIdException if the session is not active.
+     *  WebDriverConnectionException if the request fails.
+     *  WebDriverException subtypes mapped from server errors.
      */
     Root shadowRoot()
     {
@@ -317,7 +496,17 @@ public:
         return new Root(driver, shadowId, RootType.Shadow, RootState.None);
     }
 
-    /// Whether this element has a shadow root. False if no shadow root or detached.
+    /**
+     * Whether this element has a shadow root. False if no shadow root or detached.
+     *
+     * Returns: True if a shadow root is present.
+     *
+     * Throws:
+     *  StaleElementReferenceException if the element is detached.
+     *  InvalidSessionIdException if the session is not active.
+     *  WebDriverConnectionException if the request fails.
+     *  WebDriverException subtypes mapped from server errors.
+     */
     bool hasShadowRoot()
     {
         try
@@ -330,7 +519,11 @@ public:
         return true;
     }
 
-    /// Serializes the element into the W3C element reference object.
+    /**
+     * Serializes the element into the W3C element reference object.
+     *
+     * Returns: The W3C element reference.
+     */
     JSONValue toJSON() const
     {
         JSONValue ret = JSONValue.emptyObject;

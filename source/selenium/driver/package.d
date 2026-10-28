@@ -33,12 +33,24 @@ class Driver
     string id;
 
     /// Live session timeout commands, accessed through the `timeouts` alias.
+    ///
+    /// Getters return cached negotiated values. Setters send whole milliseconds
+    /// and, on success, cache the original duration. 
+    ///
+    /// Sub-millisecond values truncate to zero and negatives aren't validated.
     template Timeouts()
     {
         /// The current element-location wait.
         @property Duration implicit() const => browser.timeouts.implicit;
 
-        /// Sets the element-location wait on the remote session.
+        /**
+         * Sets the element-location wait on the remote session.
+         *
+         * Throws:
+         *  InvalidSessionIdException if the session is not active.
+         *  WebDriverConnectionException if the request fails.
+         *  WebDriverException subtypes mapped from server errors.
+         */
         @property void implicit(Duration value)
         {
             bridge.post!void(
@@ -52,7 +64,14 @@ class Driver
         /// The current page-load wait.
         @property Duration pageLoad() const => browser.timeouts.pageLoad;
 
-        /// Sets the page-load wait on the remote session.
+        /**
+         * Sets the page-load wait on the remote session.
+         *
+         * Throws:
+         *  InvalidSessionIdException if the session is not active.
+         *  WebDriverConnectionException if the request fails.
+         *  WebDriverException subtypes mapped from server errors.
+         */
         @property void pageLoad(Duration value)
         {
             bridge.post!void(
@@ -66,7 +85,14 @@ class Driver
         /// The current script wait.
         @property Duration script() const => browser.timeouts.script;
 
-        /// Sets the script wait on the remote session.
+        /**
+         * Sets the script wait on the remote session.
+         *
+         * Throws:
+         *  InvalidSessionIdException if the session is not active.
+         *  WebDriverConnectionException if the request fails.
+         *  WebDriverException subtypes mapped from server errors.
+         */
         @property void script(Duration value)
         {
             bridge.post!void(
@@ -87,7 +113,8 @@ class Driver
      * Each browser's logging configuration is merged into the logger before the
      * capabilities are built, so per-browser preferences propagate upward into the
      * single session logger. The capabilities use `alwaysMatch` for the required
-     * browser and `firstMatch` for acceptable alternatives.
+     * browser and `firstMatch` for acceptable alternatives. `alwaysMatch` and
+     * every `firstMatch` entry must be non-null.
      *
      * Params:
      *  bridge = The connection to create the session on.
@@ -98,6 +125,10 @@ class Driver
      *
      * Returns:
      *  A driver bound to the new session.
+     *
+     * Throws:
+     *  WebDriverConnectionException if the session cannot be created.
+     *  WebDriverException subtypes mapped from a server error response.
      */
     static Driver start(
         Bridge bridge,
@@ -143,6 +174,10 @@ class Driver
      * Convenience entry point for the common case of owning a freshly spawned
      * driver process. Driver-process logging arguments are derived from the logger.
      *
+     * `firstMatch` is not considered for binary resolution. 
+     *
+     * `alwaysMatch` and every `firstMatch` entry must be non-null.
+     *
      * Params:
      *  alwaysMatch = The required browser capabilities, also used to resolve the binary.
      *  firstMatch = Alternative capability sets the server may pick from.
@@ -151,6 +186,11 @@ class Driver
      *
      * Returns:
      *  A driver bound to a session on a newly spawned bridge.
+     *
+     * Throws:
+     *  WebDriverConnectionException if no binary is found or the session cannot be created.
+     *  ProcessException if the process cannot be spawned.
+     *  WebDriverException subtypes mapped from a server error response.
      */
     static Driver start(
         Browser alwaysMatch,
@@ -174,7 +214,16 @@ class Driver
         );
     }
 
-    /// Starts a session with a generic browser, letting the first driver on PATH win.
+    /**
+     * Starts a session with a generic browser, letting the first driver on PATH win.
+     *
+     * Returns: A driver bound to a session on a newly spawned bridge.
+     *
+     * Throws:
+     *  WebDriverConnectionException if no driver binary is found or the session cannot be created.
+     *  ProcessException if the process cannot be spawned.
+     *  WebDriverException subtypes mapped from a server error response.
+     */
     static Driver start()
         => start(new Browser());
 
@@ -183,8 +232,10 @@ class Driver
      *
      * The created `Bridge` has a capacity of 1, so only this driver's session may
      * use it. The bridge does not own a process, so `stop` will not kill the remote
-     * server. This is the entry point for remote endpoints and grids, mirroring
-     * Ruby's `RemoteWebDriver`.
+     * server. The address is used verbatim; a trailing slash is not normalized.
+     * `alwaysMatch` and every `firstMatch` entry must be non-null. This is the
+     * entry point for remote endpoints and grids, mirroring Ruby's
+     * `RemoteWebDriver`.
      *
      * Params:
      *  address = Base URL of the running server.
@@ -195,6 +246,10 @@ class Driver
      *
      * Returns:
      *  A driver bound to a session on the remote server.
+     *
+     * Throws:
+     *  WebDriverConnectionException if the session cannot be created.
+     *  WebDriverException subtypes mapped from a server error response.
      */
     static Driver connect(
         string address,
@@ -209,20 +264,61 @@ class Driver
         return start(bridge, alwaysMatch, firstMatch, logger, timeout);
     }
 
-    /// Ends this session, leaving the bridge and its other sessions intact.
+    /**
+     * Ends this session, leaving the bridge and its other sessions intact.
+     *
+     * The bridge and any local driver process remain alive; call `bridge.stop`
+     * to kill a locally spawned process.
+     *
+     * Throws:
+     *  WebDriverConnectionException if the close request fails.
+     *  WebDriverException subtypes mapped from a server error response.
+     */
     void stop()
     {
         if (bridge !is null)
             bridge.closeSession(id);
     }
 
-    /// The current document URL.
+    /**
+     * The current document URL.
+     *
+     * Throws:
+     *  InvalidSessionIdException if the session is not active.
+     *  WebDriverConnectionException if the request fails.
+     *  WebDriverException subtypes mapped from server errors.
+     *  JSONException if the response is not a string.
+     */
     string url() => bridge.get!string(id, "/url");
-    /// The current document title.
+    /**
+     * The current document title.
+     *
+     * Throws:
+     *  InvalidSessionIdException if the session is not active.
+     *  WebDriverConnectionException if the request fails.
+     *  WebDriverException subtypes mapped from server errors.
+     *  JSONException if the response is not a string.
+     */
     string title() => bridge.get!string(id, "/title");
-    /// The serialized source of the current document.
+    /**
+     * The serialized source of the current document.
+     *
+     * Throws:
+     *  InvalidSessionIdException if the session is not active.
+     *  WebDriverConnectionException if the request fails.
+     *  WebDriverException subtypes mapped from server errors.
+     *  JSONException if the response is not a string.
+     */
     string source() => bridge.get!string(id, "/source");
-    /// A base64 PNG screenshot of the current viewport.
+    /**
+     * A base64 PNG screenshot of the current viewport.
+     *
+     * Throws:
+     *  InvalidSessionIdException if the session is not active.
+     *  WebDriverConnectionException if the request fails.
+     *  WebDriverException subtypes mapped from server errors.
+     *  JSONException if the response is not a string.
+     */
     string screenshot() => bridge.get!string(id, "/screenshot");
 
     /**
@@ -233,6 +329,13 @@ class Driver
      *
      * Returns:
      *  A base64-encoded PDF document.
+     *
+     * Throws:
+     *  InvalidSessionIdException if the session is not active.
+     *  WebDriverConnectionException if the request fails.
+     *  UnsupportedOperationException if the driver does not support printing.
+     *  WebDriverException subtypes mapped from server errors.
+     *  JSONException if the response is not a string.
      */
     string print(PrintOptions options = PrintOptions()) => bridge.post!string(id, "/print", options.toJSON());
 
@@ -241,34 +344,97 @@ class Driver
      *
      * Params:
      *  url = The destination URL.
+     *
+     * Throws:
+     *  InvalidSessionIdException if the session is not active.
+     *  WebDriverConnectionException if the request fails.
+     *  WebDriverException subtypes mapped from server errors.
      */
     void go(string url)
     {
         bridge.post(id, "/url", JSONValue(["url": url]));
     }
-    /// Navigates back one entry in history.
+    /**
+     * Navigates back one entry in history.
+     *
+     * Throws:
+     *  InvalidSessionIdException if the session is not active.
+     *  WebDriverConnectionException if the request fails.
+     *  WebDriverException subtypes mapped from server errors.
+     */
     void back() => bridge.post!void(id, "/back");
-    /// Navigates forward one entry in history.
+    /**
+     * Navigates forward one entry in history.
+     *
+     * Throws:
+     *  InvalidSessionIdException if the session is not active.
+     *  WebDriverConnectionException if the request fails.
+     *  WebDriverException subtypes mapped from server errors.
+     */
     void forward() => bridge.post!void(id, "/forward");
-    /// Reloads the current document.
+    /**
+     * Reloads the current document.
+     *
+     * Throws:
+     *  InvalidSessionIdException if the session is not active.
+     *  WebDriverConnectionException if the request fails.
+     *  WebDriverException subtypes mapped from server errors.
+     */
     void refresh() => bridge.post!void(id, "/refresh");
 
     /// Alert commands, accessed through the `alert` alias.
     template Alert()
     {
-        /// The text displayed by the current alert or prompt.
+        /**
+         * The text displayed by the current alert or prompt.
+         *
+         * Throws:
+         *  NoSuchAlertException if no alert is open.
+         *  UnexpectedAlertOpenException if an unexpected alert is open.
+         *  InvalidSessionIdException if the session is not active.
+         *  WebDriverConnectionException if the request fails.
+         *  WebDriverException subtypes mapped from server errors.
+         *  JSONException if the response is not a string.
+         */
         string text() => bridge.get!string(id, "/alert/text");
 
-        /// Accepts the current alert, confirmation, or prompt.
+        /**
+         * Accepts the current alert, confirmation, or prompt.
+         *
+         * Throws:
+         *  NoSuchAlertException if no alert is open.
+         *  UnexpectedAlertOpenException if an unexpected alert is open.
+         *  InvalidSessionIdException if the session is not active.
+         *  WebDriverConnectionException if the request fails.
+         *  WebDriverException subtypes mapped from server errors.
+         */
         void accept() => bridge.post!void(id, "/alert/accept");
-        /// Dismisses the current alert, confirmation, or prompt.
+        /**
+         * Dismisses the current alert, confirmation, or prompt.
+         *
+         * Throws:
+         *  NoSuchAlertException if no alert is open.
+         *  UnexpectedAlertOpenException if an unexpected alert is open.
+         *  InvalidSessionIdException if the session is not active.
+         *  WebDriverConnectionException if the request fails.
+         *  WebDriverException subtypes mapped from server errors.
+         */
         void dismiss() => bridge.post!void(id, "/alert/dismiss");
 
         /**
          * Types text into the current prompt.
          *
+         * The arguments are concatenated with no separator before being sent.
+         *
          * Params:
          *  keys = One or more strings to type in order.
+         *
+         * Throws:
+         *  NoSuchAlertException if no alert is open.
+         *  UnexpectedAlertOpenException if an unexpected alert is open.
+         *  InvalidSessionIdException if the session is not active.
+         *  WebDriverConnectionException if the request fails.
+         *  WebDriverException subtypes mapped from server errors.
          */
         void sendKeys(string[] keys...)
             => bridge.post!void(id, "/alert/text", JSONValue(["text": JSONValue(keys.join())]));
@@ -276,19 +442,49 @@ class Driver
     /// Alert command group, e.g. `driver.alert.text` or `driver.alert.accept()`.
     alias alert = Alert!();
 
-    /// The element that currently has focus.
+    /**
+     * The element that currently has focus.
+     *
+     * Wraps `Bridge.parseElementId`; a null reference produces an `Element` with
+     * a null id.
+     *
+     * Returns: A handle to the focused element.
+     *
+     * Throws:
+     *  InvalidSessionIdException if the session is not active.
+     *  WebDriverConnectionException if the request fails.
+     *  WebDriverException subtypes mapped from server errors.
+     */
     Element activeElement()
         => new Element(this, Bridge.parseElementId(bridge.get(id, "/element/active")));
 
-    /// The primary document root.
+    /**
+     * The primary document root.
+     *
+     * The returned root currently has `RootState.Complete` regardless of the
+     * live document readiness.
+     *
+     * Returns: A primary root handle.
+     */
     Root root()
         => new Root(this, null, RootType.Primary, RootState.Complete);
 
     /**
-     * All searchable roots in the current browsing context.
+     * Discovers the primary document, top-level iframes, and open shadow roots.
      *
-     * Requires JavaScript execution. The primary document is always first.
-     * Shadow roots and iframes are discovered by traversing the DOM.
+     * Requires JavaScript execution. The primary document is always first. This
+     * does not traverse iframe documents, iframes inside shadow roots, or closed
+     * shadow roots. `RootState.Loaded` is never produced, and `Closed` is not
+     * discoverable through this method.
+     *
+     * Returns: The discovered roots.
+     *
+     * Throws:
+     *  InvalidSessionIdException if the session is not active.
+     *  JavaScriptException if the discovery script throws.
+     *  WebDriverConnectionException if the request fails.
+     *  WebDriverException subtypes mapped from server errors.
+     *  JSONException if the response shape is invalid.
      */
     Root[] roots()
     {
@@ -372,6 +568,10 @@ class Driver
      *
      * Throws:
      *  NoSuchElementException if no element matches.
+     *  InvalidSelectorException if the locator is rejected.
+     *  InvalidSessionIdException if the session is not active.
+     *  WebDriverConnectionException if the request fails.
+     *  WebDriverException subtypes mapped from server errors.
      */
     Element find(By by)
     {
@@ -388,6 +588,12 @@ class Driver
      *
      * Returns:
      *  Handles to all matched elements, or an empty array if none match.
+     *
+     * Throws:
+     *  InvalidSelectorException if the locator is rejected.
+     *  InvalidSessionIdException if the session is not active.
+     *  WebDriverConnectionException if the request fails.
+     *  WebDriverException subtypes mapped from server errors.
      */
     Element[] findAll(By by)
     {
@@ -402,15 +608,25 @@ class Driver
     /**
      * Runs a synchronous script in the page and returns its typed result.
      *
-     * When T is Element or Element[] the returned references are wrapped into
-     * handles, otherwise the result is deserialized into T.
+     * When `T` is `Element` or `Element[]` the returned references are wrapped
+     * into handles, otherwise the result is deserialized into `T`. `args` must
+     * be a JSON array; `Element` arguments must already be converted with
+     * `toJSON`.
      *
      * Params:
+     *  T = The result type.
      *  script = The script body, which may return a value.
      *  args = The arguments exposed to the script as `arguments`.
      *
      * Returns:
-     *  The script result as T.
+     *  The script result as `T`.
+     *
+     * Throws:
+     *  InvalidSessionIdException if the session is not active.
+     *  JavaScriptException if the script throws during evaluation.
+     *  WebDriverConnectionException if the request fails.
+     *  WebDriverException subtypes mapped from server errors.
+     *  JSONException if a non-`JSONValue` `T` cannot be deserialized.
      */
     T execute(T = string)(string script, JSONValue args = JSONValue.emptyArray)
     {
@@ -436,24 +652,26 @@ class Driver
      * Runs an asynchronous script in the page and returns its typed callback result.
      *
      * WebDriver injects the completion callback as the last element of `arguments`.
-     * The script must invoke it exactly once with the value to return. When
-     * `timeout` is supplied, it is applied for this call only and the
-     * previous script timeout is restored afterward.
-     *
-     * When T is Element or Element[] the returned references are wrapped into
-     * handles, otherwise the result is deserialized into T.
-     *
+     * The script must invoke it exactly once with the value to return. 
+     * 
      * Params:
+     *  T = The callback result type.
      *  script = The script body, which must invoke the injected completion callback.
      *  args = The arguments exposed before the callback in `arguments`.
-     *  timeout = A per-call script timeout override, or Duration.init to use the session timeout.
+     *      Element arguments must already be converted with `toJSON`.
+     *  timeout = A per-call script timeout override, or `Duration.init` to use the session timeout.
+     *      Timeouts apply only to this call.
      *
      * Returns:
-     *  The callback result as T.
+     *  The callback result as `T`.
      *
      * Throws:
      *  ScriptTimeoutException if the callback does not run within the script timeout.
      *  JavaScriptException if the script throws during evaluation.
+     *  InvalidSessionIdException if the session is not active.
+     *  WebDriverConnectionException if the request fails.
+     *  WebDriverException subtypes mapped from server errors.
+     *  JSONException if a non-`JSONValue` `T` cannot be deserialized.
      */
     T executeAsync(T = JSONValue)(
         string script,
@@ -517,23 +735,68 @@ class Driver
     /// Window and tab commands, accessed through the `window` alias.
     template Window()
     {
-        /// The handle of the current window.
+        /**
+         * The handle of the current window.
+         *
+         * Throws:
+         *  NoSuchWindowException if the window no longer exists.
+         *  InvalidSessionIdException if the session is not active.
+         *  WebDriverConnectionException if the request fails.
+         *  WebDriverException subtypes mapped from server errors.
+         *  JSONException if the response is not a string.
+         */
         string handle() => bridge.get!string(id, "/window");
-        /// Handles of all open windows.
+        /**
+         * Handles of all open windows.
+         *
+         * Throws:
+         *  NoSuchWindowException if the current window no longer exists.
+         *  InvalidSessionIdException if the session is not active.
+         *  WebDriverConnectionException if the request fails.
+         *  WebDriverException subtypes mapped from server errors.
+         *  JSONException if the response is not an array of strings.
+         */
         string[] handles() => bridge.get!(string[])(id, "/window/handles");
-        /// The size of the current window.
+        /**
+         * The size of the current window.
+         *
+         * Throws:
+         *  NoSuchWindowException if the window no longer exists.
+         *  InvalidSessionIdException if the session is not active.
+         *  WebDriverConnectionException if the request fails.
+         *  WebDriverException subtypes mapped from server errors.
+         *  JSONException if the response shape is invalid.
+         */
         Size size()
         {
             JSONValue value = bridge.unwrapAndParse!JSONValue(bridge.get(id, "/window/rect"));
             return Size(value["width"].get!long, value["height"].get!long);
         }
-        /// The position of the current window.
+        /**
+         * The position of the current window.
+         *
+         * Throws:
+         *  NoSuchWindowException if the window no longer exists.
+         *  InvalidSessionIdException if the session is not active.
+         *  WebDriverConnectionException if the request fails.
+         *  WebDriverException subtypes mapped from server errors.
+         *  JSONException if the response shape is invalid.
+         */
         @property Position position()
         {
             JSONValue value = bridge.unwrapAndParse!JSONValue(bridge.get(id, "/window/rect"));
             return Position(value["x"].get!long, value["y"].get!long);
         }
-        /// The full rectangle of the current window.
+        /**
+         * The full rectangle of the current window.
+         *
+         * Throws:
+         *  NoSuchWindowException if the window no longer exists.
+         *  InvalidSessionIdException if the session is not active.
+         *  WebDriverConnectionException if the request fails.
+         *  WebDriverException subtypes mapped from server errors.
+         *  JSONException if the response shape is invalid.
+         */
         @property Rect rect()
         {
             JSONValue value = bridge.unwrapAndParse!JSONValue(bridge.get(id, "/window/rect"));
@@ -545,29 +808,94 @@ class Driver
             );
         }
 
-        /// Closes the current window.
+        /**
+         * Closes the current window.
+         *
+         * Throws:
+         *  NoSuchWindowException if the window no longer exists.
+         *  InvalidSessionIdException if the session is not active.
+         *  WebDriverConnectionException if the request fails.
+         *  WebDriverException subtypes mapped from server errors.
+         */
         void close() => bridge.del!void(id, "/window");
-        /// Maximizes the current window.
+        /**
+         * Maximizes the current window.
+         *
+         * Throws:
+         *  NoSuchWindowException if the window no longer exists.
+         *  InvalidSessionIdException if the session is not active.
+         *  WebDriverConnectionException if the request fails.
+         *  WebDriverException subtypes mapped from server errors.
+         */
         void maximize() => bridge.post!void(id, "/window/maximize");
-        /// Makes the current window fullscreen.
+        /**
+         * Makes the current window fullscreen.
+         *
+         * Throws:
+         *  NoSuchWindowException if the window no longer exists.
+         *  InvalidSessionIdException if the session is not active.
+         *  WebDriverConnectionException if the request fails.
+         *  WebDriverException subtypes mapped from server errors.
+         */
         void fullscreen() => bridge.post!void(id, "/window/fullscreen");
-        /// Minimizes the current window.
+        /**
+         * Minimizes the current window.
+         *
+         * Throws:
+         *  NoSuchWindowException if the window no longer exists.
+         *  InvalidSessionIdException if the session is not active.
+         *  WebDriverConnectionException if the request fails.
+         *  WebDriverException subtypes mapped from server errors.
+         */
         void minimize() => bridge.post!void(id, "/window/minimize");
-        /// Resizes the current window.
+        /**
+         * Resizes the current window.
+         *
+         * Params:
+         *  value = The new window size.
+         *
+         * Throws:
+         *  NoSuchWindowException if the window no longer exists.
+         *  InvalidSessionIdException if the session is not active.
+         *  WebDriverConnectionException if the request fails.
+         *  WebDriverException subtypes mapped from server errors.
+         */
         void resize(Size value)
             => bridge.post!void(
                 id,
                 "/window/rect",
                 JSONValue(["width": value.width, "height": value.height])
             );
-        /// Moves the current window to the given position.
+        /**
+         * Moves the current window to the given position.
+         *
+         * Params:
+         *  value = The new window position.
+         *
+         * Throws:
+         *  NoSuchWindowException if the window no longer exists.
+         *  InvalidSessionIdException if the session is not active.
+         *  WebDriverConnectionException if the request fails.
+         *  WebDriverException subtypes mapped from server errors.
+         */
         @property void position(Position value)
             => bridge.post!void(
                 id,
                 "/window/rect",
                 JSONValue(["x": value.x, "y": value.y])
             );
-        /// Sets the full rectangle of the current window.
+        /**
+         * Sets the full rectangle of the current window.
+         *
+         * Params:
+         *  value = The new window rectangle.
+         *
+         * Throws:
+         *  NoSuchWindowException if the window no longer exists.
+         *  InvalidSessionIdException if the session is not active.
+         *  WebDriverConnectionException if the request fails.
+         *  WebDriverException subtypes mapped from server errors.
+         */
         @property void rect(Rect value)
             => bridge.post!void(
                 id,
@@ -580,9 +908,35 @@ class Driver
                 ])
             );
 
-        /// Switches focus to the window with the given handle.
+        /**
+         * Switches focus to the window with the given handle.
+         *
+         * Params:
+         *  handle = The target window handle.
+         *
+         * Throws:
+         *  NoSuchWindowException if the window no longer exists.
+         *  InvalidSessionIdException if the session is not active.
+         *  WebDriverConnectionException if the request fails.
+         *  WebDriverException subtypes mapped from server errors.
+         */
         void switchTo(string handle) => bridge.post!void(id, "/window", JSONValue(["handle": handle]));
-        /// Opens a new window or tab and returns its handle.
+        /**
+         * Opens a new window or tab and returns its handle.
+         *
+         * Params:
+         *  type = "tab" or "window", defaulting to "tab".
+         *
+         * Returns: The new window handle.
+         *
+         * Throws:
+         *  NoSuchWindowException if the current window no longer exists.
+         *  InvalidArgumentException if the driver rejects the window type.
+         *  InvalidSessionIdException if the session is not active.
+         *  WebDriverConnectionException if the request fails.
+         *  WebDriverException subtypes mapped from server errors.
+         *  JSONException if the response shape is invalid.
+         */
         string open(string type = "tab")
             => bridge.post(id, "/window/new", JSONValue(["type": type]))["value"]["handle"].str;
     }
@@ -592,9 +946,29 @@ class Driver
     /// Frame switching commands, accessed through the `frame` alias.
     template Frame()
     {
-        /// Switches focus to the top-level browsing context.
+        /**
+         * Switches focus to the top-level browsing context.
+         *
+         * Throws:
+         *  NoSuchFrameException if the current frame is no longer available.
+         *  InvalidSessionIdException if the session is not active.
+         *  WebDriverConnectionException if the request fails.
+         *  WebDriverException subtypes mapped from server errors.
+         */
         void switchTo() => bridge.post!void(this.id, "/frame", JSONValue(["id": JSONValue(null)]));
-        /// Switches focus to the frame at the given index.
+        /**
+         * Switches focus to the frame at the given index.
+         *
+         * Params:
+         *  id = The frame index.
+         *
+         * Throws:
+         *  InvalidArgumentException if `id` is negative.
+         *  NoSuchFrameException if no frame has that index.
+         *  InvalidSessionIdException if the session is not active.
+         *  WebDriverConnectionException if the request fails.
+         *  WebDriverException subtypes mapped from server errors.
+         */
         void switchTo(long id)
         {
             if (id < 0)
@@ -602,10 +976,30 @@ class Driver
 
             bridge.post!void(this.id, "/frame", JSONValue(["id": id]));
         }
-        /// Switches focus to the frame identified by the given element.
+        /**
+         * Switches focus to the frame identified by the given element.
+         *
+         * Params:
+         *  element = The frame element.
+         *
+         * Throws:
+         *  NoSuchFrameException if the element is not a frame.
+         *  StaleElementReferenceException if the element is detached.
+         *  InvalidSessionIdException if the session is not active.
+         *  WebDriverConnectionException if the request fails.
+         *  WebDriverException subtypes mapped from server errors.
+         */
         void switchTo(Element element)
             => bridge.post!void(this.id, "/frame", JSONValue(["id": element.toJSON()]));
-        /// Switches focus to the parent of the current frame.
+        /**
+         * Switches focus to the parent of the current frame.
+         *
+         * Throws:
+         *  NoSuchFrameException if there is no parent frame.
+         *  InvalidSessionIdException if the session is not active.
+         *  WebDriverConnectionException if the request fails.
+         *  WebDriverException subtypes mapped from server errors.
+         */
         void switchToParent() => bridge.post!void(this.id, "/frame/parent");
     }
     /// Frame command group, e.g. `driver.frame.switchTo(0)`.
