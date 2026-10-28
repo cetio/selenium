@@ -395,6 +395,20 @@ public:
     }
 
     // TODO: Don't include this in public API
+    /**
+     * Parses a W3C new-session response into browser capabilities.
+     *
+     * Params:
+     *  json = The new-session response envelope.
+     *  id = Receives the non-empty session id from `value.sessionId`.
+     *
+     * Returns: The browser capabilities parsed from `value.capabilities`.
+     *
+     * Throws:
+     *  WebDriverConnectionException if `json` is not an object, `value` is
+     *  missing or not an object, `value.sessionId` is missing, empty, or not a
+     *  string, or `value.capabilities` is missing or not an object.
+     */
     static Browser parseSession(JSONValue json, out string id)
     {
         if (json.type != JSONType.object || "value" !in json || json["value"].type != JSONType.object)

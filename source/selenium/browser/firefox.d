@@ -37,6 +37,8 @@ class Firefox : Browser
     /// This is universal for both the recommended `--profile` and the legacy `firefox_profile`.
     /// Must be either a directory path or base-64 archive.
     string profile;
+    /// Driver log verbosity, serialized as `moz:firefoxOptions.log.level`.
+    /// Defaults to `LogLevel.off`, which omits the field.
     LogLevel logLevel = LogLevel.off;
 
     /// The `browserName` capability.

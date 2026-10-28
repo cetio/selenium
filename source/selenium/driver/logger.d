@@ -54,6 +54,18 @@ LogLevel fromWebDriverLevel(string level)
 }
 
 // TODO: Don't include this in public API
+/**
+ * Maps a std.logger level to a geckodriver `log.level` string.
+ *
+ * `LogLevel.error` maps to `"error"`, `warning` to `"warn"`, `info` to
+ * `"info"`, `trace` to `"debug"`, and `all` to `"trace"`. `LogLevel.off` and
+ * any other level map to `"fatal"`.
+ *
+ * Params:
+ *  level = The std.logger level to map.
+ *
+ * Returns: The geckodriver level string.
+ */
 string toGeckoDriverLevel(LogLevel level)
 {
     switch (level)
@@ -74,6 +86,19 @@ string toGeckoDriverLevel(LogLevel level)
 }
 
 // TODO: Don't include this in public API
+/**
+ * Maps a geckodriver `log.level` string to a std.logger level.
+ *
+ * `"fatal"` and `"error"` map to `LogLevel.error`, `"warn"` to
+ * `LogLevel.warning`, `"info"` and `"config"` to `LogLevel.info`, `"debug"` to
+ * `LogLevel.trace`, and `"trace"` to `LogLevel.all`. Any other string maps to
+ * `LogLevel.off`.
+ *
+ * Params:
+ *  level = The geckodriver level string to map.
+ *
+ * Returns: The mapped std.logger level.
+ */
 LogLevel fromGeckoDriverLevel(string level)
 {
     switch (level)
@@ -195,6 +220,20 @@ public:
         return toDriverArgs(null);
     }
 
+    /**
+     * Builds driver-process command-line flags for a specific browser.
+     *
+     * Firefox uses only `--log <level>` when `driverLevel` is not
+     * `LogLevel.off`. Chrome, Edge, and WebView2 use `--log-path`,
+     * `--log-level`, `--append-log`, `--readable-timestamp`, and `--silent`
+     * when the corresponding fields are set.
+     *
+     * Params:
+     *  browser = The browser whose driver is being launched, or `null` for the
+     *   Chromium default.
+     *
+     * Returns: The driver command-line arguments or null.
+     */
     string[] toDriverArgs(Browser browser) const
     {
         string[] ret;

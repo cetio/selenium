@@ -46,6 +46,23 @@ struct Cookie
         return ret;
     }
 
+    /**
+     * Parses a cookie from a WebDriver cookie object.
+     *
+     * `name` and `value` are required. Optional fields that are absent keep
+     * their defaults: empty strings, zero for `expiry`, and `false` for
+     * `secure` and `httpOnly`.
+     *
+     * Params:
+     *  json = The cookie object returned by the driver.
+     *
+     * Returns: The parsed cookie.
+     *
+     * Throws:
+     *  JSONException if `json` is not an object, a required field is absent or
+     *  mistyped, or a present optional field has the wrong type.
+     *  ConvException if `expiry` cannot be represented as a `uint`.
+     */
     static Cookie fromJSON(JSONValue json)
     {
         Cookie ret;

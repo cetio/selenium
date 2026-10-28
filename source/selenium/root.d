@@ -10,21 +10,41 @@ import std.json : JSONValue;
 /// The kind of root represented by a `Root` handle.
 enum RootType : string
 {
+    /// The top-level document root.
     Primary = "primary",
+    /// An iframe element root.
     Embedded = "embedded",
+    /// A shadow-root root.
     Shadow = "shadow",
 }
 
 /// The lifecycle and accessibility state of a `Root`.
+///
+/// Readiness flags (`Uninitialized` through `Complete`) describe the state.
+///
+/// `Open` and `Closed` are shadow-root mode flags. A shadow root therefore carries one
+/// readiness bit ORed with its mode bit.
+///
+/// `Loaded` is reserved for a distinct loaded state but is not currently
+/// produced by `Driver.roots`, and `Closed` is (usually) undiscoverable through
+/// `Driver.roots` because closed shadow roots have no `shadowRoot` property.
 enum RootState : uint
 {
+    /// No state flags are set.
     None = 0,
+    /// The document has not started loading, or its state could not be read.
     Uninitialized = 1,
+    /// The document is still loading.
     Loading = 2,
+    /// Reserved for a loaded document state.
     Loaded = 4,
+    /// The document has parsed and is interactive, but subresources may still load.
     Interactive = 8,
+    /// The document and its subresources have finished loading.
     Complete = 16,
+    /// The shadow root is open and accessible through `element.shadowRoot`.
     Open = 32,
+    /// The shadow root is closed.
     Closed = 64,
 }
 
