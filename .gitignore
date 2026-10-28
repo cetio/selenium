@@ -1,7 +1,4 @@
 .dub
-docs.json
-__dummy.html
-/selenium
 selenium.so
 selenium.dylib
 selenium.dll
@@ -15,11 +12,9 @@ selenium-test-*
 *.a
 *.lst
 libselenium*
-bin/*
-playground/*
-!bin/.gitkeep
-!playground/.gitkeep
-docs/_site/
-docs/.bundle/
-bench/
-.jekyll-cache
+
+bin/
+playground/
+site/
+
+.venv*
