@@ -1,3 +1,7 @@
+/// Tests for driver logger configuration.
+/// 
+/// These tests verify the behavior of the `Logger` class
+/// AND its integration with different browser drivers.
 module tests.webdriver.driver.logger;
 
 import selenium.browser : Browser;
