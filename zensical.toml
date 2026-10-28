@@ -1,0 +1,56 @@
+[project]
+site_name = "Selenium"
+site_description = "Native D implementation of the W3C WebDriver protocol for Chrome, Firefox, Edge, and Safari."
+site_url = "https://cetio.github.io/selenium/"
+repo_url = "https://github.com/cetio/selenium"
+edit_uri = "https://github.com/cetio/selenium/edit/master/docs/"
+
+nav = [
+  { "Home" = "README.md" },
+  { "WebDriver" = [
+    "webdriver/README.md",
+    "webdriver/BRIDGE.md",
+    "webdriver/DRIVER.md",
+    "webdriver/ELEMENTS.md",
+    "webdriver/ACTIONS.md",
+  ] },
+  { "Grid" = "grid/README.md" },
+]
+
+[project.theme]
+features = [
+  "content.action.copy",
+  "content.action.edit",
+  "content.code.annotate",
+  "content.code.copy",
+  "content.code.select",
+  "content.footnote.tooltips",
+  "content.tabs.link",
+  "content.tooltips",
+  "navigation.footer",
+  "navigation.indexes",
+  "navigation.path",
+  "navigation.sections",
+  "navigation.tabs",
+  "navigation.top",
+  "search.highlight",
+]
+
+# Dark mode by default, with a toggle to light
+[[project.theme.palette]]
+scheme = "slate"
+primary = "indigo"
+accent = "orange"
+toggle.icon = "lucide/moon-star"
+toggle.name = "Switch to light mode"
+
+[[project.theme.palette]]
+media = "(prefers-color-scheme: light)"
+scheme = "default"
+primary = "indigo"
+accent = "indigo"
+toggle.icon = "lucide/sun"
+toggle.name = "Switch to dark mode"
+
+[project.theme.icon.tag]
+default = "lucide/hash"
