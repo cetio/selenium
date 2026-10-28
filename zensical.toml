@@ -15,7 +15,52 @@ nav = [
     "webdriver/ACTIONS.md",
   ] },
   { "Grid" = "grid/README.md" },
+  # api-nav-begin
+  { "API Reference" = [
+    "api/index.md",
+    "api/selenium.md",
+    "api/selenium.bridge.md",
+    "api/selenium.element.md",
+    "api/selenium.exception.md",
+    "api/selenium.root.md",
+    { "actions" = [
+      "api/selenium.actions.md",
+      "api/selenium.actions.key.md",
+      "api/selenium.actions.pointer.md",
+    ] },
+    { "browser" = [
+      "api/selenium.browser.md",
+      "api/selenium.browser.chrome.md",
+      "api/selenium.browser.edge.md",
+      "api/selenium.browser.firefox.md",
+      "api/selenium.browser.safari.md",
+    ] },
+    { "driver" = [
+      "api/selenium.driver.md",
+      "api/selenium.driver.cookies.md",
+      "api/selenium.driver.logger.md",
+      "api/selenium.driver.print.md",
+    ] },
+    { "grid" = [
+      "api/selenium.grid.md",
+      { "server" = [
+        "api/selenium.grid.server.md",
+        "api/selenium.grid.server.http.md",
+        "api/selenium.grid.server.hub.md",
+        "api/selenium.grid.server.model.md",
+        "api/selenium.grid.server.node.md",
+      ] },
+    ] },
+  ] },
+  # api-nav-end
 ]
+
+[project.markdown_extensions]
+attr_list = {}
+md_in_html = {}
+tables = {}
+fenced_code = {}
+admonition = {}
 
 [project.theme]
 features = [

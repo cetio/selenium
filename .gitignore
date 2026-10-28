@@ -16,5 +16,8 @@ libselenium*
 bin/
 playground/
 site/
+.cache/
+docs/api/
+.playwright-mcp/
 
 .venv*

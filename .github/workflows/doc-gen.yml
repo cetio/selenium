@@ -29,6 +29,14 @@ jobs:
       - name: Install Zensical
         run: pip install zensical==0.0.73
 
+      - name: Setup D toolchain
+        uses: dlang-community/setup-dlang@v2
+        with:
+          compiler: dmd-latest
+
+      - name: Generate API reference
+        run: python3 tools/gen_api_docs.py
+
       - name: Build site
         run: zensical build
 
