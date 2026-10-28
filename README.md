@@ -57,7 +57,7 @@ writeln(driver.title);
 
 ## Documentation
 
-Guides are published at [cetio.github.io/selenium](https://cetio.github.io/selenium/), covering installation, WebDriver, and Grid.
+Guides are published at [mortifying.si/selenium](https://mortifying.si/selenium/), covering installation, WebDriver, and Grid.
 
 Development notes live in [Testing](TESTING.md) and [Contributing](CONTRIBUTING.md).
 

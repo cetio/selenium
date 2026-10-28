@@ -1,7 +1,7 @@
 [project]
 site_name = "Selenium"
 site_description = "Native D implementation of the W3C WebDriver protocol for Chrome, Firefox, Edge, and Safari."
-site_url = "https://cetio.github.io/selenium/"
+site_url = "https://mortifying.si/selenium/"
 repo_url = "https://github.com/cetio/selenium"
 edit_uri = "https://github.com/cetio/selenium/edit/master/docs/"
 
