@@ -2,7 +2,7 @@
 module selenium.driver.cookies;
 
 import selenium.driver : Driver;
-import selenium.exception : UnableToSetCookieException;
+import selenium.exception : InvalidArgumentException, NoSuchCookieException, UnableToSetCookieException;
 
 import std.json : JSONValue;
 
@@ -40,7 +40,7 @@ struct Cookie
         if (domain != null)
             ret["domain"] = JSONValue(domain);
         if (expiry > 0)
-            ret["expiry"] = JSONValue(expiry);
+            ret["expiry"] = JSONValue(cast(long)expiry);
         if (sameSite != null)
             ret["sameSite"] = JSONValue(sameSite);
         return ret;
@@ -107,15 +107,27 @@ public:
      *
      * Returns:
      *  The matching cookie.
+     *
+     * Throws:
+     *  InvalidArgumentException if the name is empty.
+     *  NoSuchCookieException if no cookie matches.
      */
     Cookie find(string name)
-        => Cookie.fromJSON(driver.bridge.unwrapAndParse!JSONValue(driver.bridge.get(driver.id, "/cookie/"~name)));
+    {
+        if (name.length == 0)
+            throw new InvalidArgumentException("Cookie name cannot be empty.");
+
+        return Cookie.fromJSON(driver.bridge.unwrapAndParse!JSONValue(driver.bridge.get(driver.id, "/cookie/"~name)));
+    }
 
     /**
      * Adds or updates a cookie on the current document.
      *
      * Params:
      *  cookie = The cookie to set.
+     *
+     * Throws:
+     *  UnableToSetCookieException if the browser rejects the cookie.
      */
     void add(Cookie cookie)
     {
@@ -135,9 +147,17 @@ public:
      *
      * Params:
      *  name = The cookie name.
+     *
+     * Throws:
+     *  InvalidArgumentException if the name is empty.
      */
     void remove(string name)
-        => driver.bridge.del!void(driver.id, "/cookie/"~name);
+    {
+        if (name.length == 0)
+            throw new InvalidArgumentException("Cookie name cannot be empty.");
+
+        driver.bridge.del!void(driver.id, "/cookie/"~name);
+    }
 
     /// Deletes every cookie for the current document.
     void clear()

@@ -130,8 +130,20 @@ class NoSuchAlertException : WebDriverException
     mixin basicExceptionCtors;
 }
 
-/// The cookie could not be set, often due to a domain mismatch.
+/// The cookie could not be set.
 class UnableToSetCookieException : WebDriverException
+{
+    mixin basicExceptionCtors;
+}
+
+/// The cookie's domain is not valid for the current document.
+class InvalidCookieDomainException : UnableToSetCookieException
+{
+    mixin basicExceptionCtors;
+}
+
+/// No cookie matched the requested name.
+class NoSuchCookieException : WebDriverException
 {
     mixin basicExceptionCtors;
 }
@@ -203,8 +215,11 @@ static WebDriverException mapException(JSONValue json)
                     return new UnexpectedAlertOpenException(message);
                 case "no such alert":
                     return new NoSuchAlertException(message);
-                case "unable to set cookie":
+                case "no such cookie":
+                    return new NoSuchCookieException(message);
                 case "invalid cookie domain":
+                    return new InvalidCookieDomainException(message);
+                case "unable to set cookie":
                     return new UnableToSetCookieException(message);
                 default:
                     return new WebDriverException(message);
