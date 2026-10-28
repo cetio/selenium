@@ -6,7 +6,7 @@ For upstream concepts, see the [official Selenium element documentation](https:/
 
 ## Locators
 
-`By` pairs a W3C location strategy with a selector. The current helpers are:
+`By` pairs a W3C location strategy with a selector. It is declared in `selenium.locator` and re-exported by the `selenium` package. The current helpers are:
 
 | Helper | Strategy |
 | --- | --- |

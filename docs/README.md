@@ -17,7 +17,7 @@ dub add selenium:grid
 | Package | Contents |
 | --- | --- |
 | `selenium` | WebDriver and Grid modules. |
-| `selenium:webdriver` | Bridge, driver, browser capabilities, elements, roots, cookies, and logging. |
+| `selenium:webdriver` | Bridge, driver, browser capabilities, elements, locators, roots, cookies, and logging. |
 | `selenium:grid` | Grid models, hub and node scaffolding, and in-process HTTP routing. |
 
 Install the browser and matching WebDriver executable separately, then put the executable on `PATH`:

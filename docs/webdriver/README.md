@@ -24,7 +24,7 @@ Install the browser and matching WebDriver executable separately, and put the ex
 
 The library resolves executables but does not download or update them. `Driver.start()` scans the known executables in the table order and uses the first one found.
 
-The `selenium` module publicly imports `Browser`, `Chrome`, `Firefox`, `Driver`, `Bridge`, elements, roots, cookies, logging, and exceptions. Import Edge and Safari explicitly:
+The `selenium` module publicly imports `Browser`, `Chrome`, `Firefox`, `Driver`, `Bridge`, elements, locators, roots, cookies, logging, and exceptions. Import Edge and Safari explicitly:
 
 ```d
 import selenium.browser.edge : Edge;
