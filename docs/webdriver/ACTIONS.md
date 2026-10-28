@@ -1,11 +1,3 @@
----
-layout: default
-title: Actions
-parent: WebDriver
-nav_order: 5
-permalink: /webdriver/actions/
----
-
 # Actions
 
 The Actions framework models the W3C Actions API: a sequence of input sources whose action items are aligned into ticks and executed concurrently. Each tick runs one action per source in parallel, and shorter sources are padded with implicit pauses.
