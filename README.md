@@ -57,11 +57,9 @@ writeln(driver.title);
 
 ## Documentation
 
-- [Documentation index](docs/README.md)
-- [WebDriver guide](docs/webdriver/README.md)
-- [Grid guide](docs/grid/README.md)
-- [Testing](TESTING.md)
-- [Contributing](CONTRIBUTING.md)
+Guides are published at [cetio.github.io/selenium](https://cetio.github.io/selenium/), covering installation, WebDriver, and Grid.
+
+Development notes live in [Testing](TESTING.md) and [Contributing](CONTRIBUTING.md).
 
 ## Roadmap
 
