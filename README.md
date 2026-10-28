@@ -1,8 +1,10 @@
 # Selenium
 
-[![License](https://img.shields.io/badge/License-Apache%202.0-blue)](LICENSE.txt)
-[![DUB Package](https://img.shields.io/badge/DUB-latest-red)](https://code.dlang.org/packages/selenium)
-![Unit Tests](https://github.com/cetio/selenium/actions/workflows/unit-tests.yml/badge.svg)
+[![DUB](https://img.shields.io/badge/DUB-red?style=for-the-badge&logo=hackthebox&logoColor=white)](https://code.dlang.org/packages/selenium)
+[![Documentation](https://img.shields.io/badge/Documentation-brightgreen?style=for-the-badge&logo=readthedocs&logoColor=white)](https://mortifying.si/selenium/)
+
+[![License](https://img.shields.io/badge/License-Apache--2.0-blue)](LICENSE.txt)
+[![CI](https://github.com/cetio/selenium/actions/workflows/unit-tests.yml/badge.svg)](https://github.com/cetio/selenium/actions/workflows/unit-tests.yml)
 
 | OS | Chrome | Firefox | Edge | Safari |
 | --- | --- | --- | --- | --- |
