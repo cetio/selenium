@@ -1,6 +1,7 @@
 /// W3C pointer input source types, move origins, and button constants.
 module selenium.actions.pointer;
 
+/// Pointer input source types.
 enum PointerType : string
 {
     /// Mouse pointer, the W3C default.
@@ -11,6 +12,7 @@ enum PointerType : string
     Touch = "touch",
 }
 
+/// Move origins for pointer actions.
 enum Origin : string
 {
     /// Relative to the top-left corner of the viewport, the W3C default.
@@ -19,6 +21,7 @@ enum Origin : string
     Pointer = "pointer",
 }
 
+/// Button constants for pointer actions.
 enum Button : int
 {
     /// The primary button, usually the left mouse button.

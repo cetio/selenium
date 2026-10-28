@@ -10,6 +10,7 @@ import selenium.element : Element;
 import std.conv : to;
 import std.json : JSONValue;
 
+/// W3C input source types.
 enum InputType : string
 {
     /// A null input source, used only for pauses that align ticks across sources.
@@ -22,6 +23,7 @@ enum InputType : string
     Wheel = "wheel",
 }
 
+/// A single action item within a tick.
 struct Action
 {
     /// The action kind, such as `pause`, `keyDown`, or `pointerMove`.
