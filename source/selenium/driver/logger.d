@@ -53,6 +53,7 @@ LogLevel fromWebDriverLevel(string level)
     }
 }
 
+// TODO: Don't include this in public API
 string toGeckoDriverLevel(LogLevel level)
 {
     switch (level)
@@ -72,6 +73,7 @@ string toGeckoDriverLevel(LogLevel level)
     }
 }
 
+// TODO: Don't include this in public API
 LogLevel fromGeckoDriverLevel(string level)
 {
     switch (level)

@@ -394,6 +394,7 @@ public:
             return value.get!T;
     }
 
+    // TODO: Don't include this in public API
     static Browser parseSession(JSONValue json, out string id)
     {
         if (json.type != JSONType.object || "value" !in json || json["value"].type != JSONType.object)
