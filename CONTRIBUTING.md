@@ -58,6 +58,16 @@ dub test :grid
 
 Use the root package for the browser integration suites. See [TESTING.md](TESTING.md) for the test layout, filtering syntax, browser setup, and CI matrix.
 
+## Documentation
+
+The documentation site is built with [Zensical](https://zensical.org) from the Markdown files in `docs/`. The API reference is generated from the source's Ddoc comments and is not committed:
+
+```sh
+python3 tools/gen_api_docs.py
+```
+
+This requires `dmd` and `dub`, writes pages to `docs/api/`, and refreshes the API entries in `zensical.toml`'s nav. Preview the site locally with `zensical serve`.
+
 ## Review Checklist
 
 Before opening a pull request:
