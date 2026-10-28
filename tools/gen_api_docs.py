@@ -66,6 +66,16 @@ def module_summary(path: Path) -> str:
 
 FENCE_RE = re.compile(r"^```")
 AUTOLINK_RE = re.compile(r"<([a-zA-Z][a-zA-Z0-9+.-]*:[^>\s]*)>")
+SCOPE_ENTER = "@@ddoc-enter@@"
+SCOPE_LEAVE = "@@ddoc-leave@@"
+MEMBER_ENTER = "@@member-enter@@"
+MEMBER_LEAVE = "@@member-leave@@"
+MEMBER_DIV = '<div class="member" markdown="1">'
+ANCHOR_ID_RE = re.compile(r"\{ #([^ }]+)")
+HIDDEN_PROTECTION = {"private", "package"}
+ANCHOR_RE = re.compile(r"@@anchor:([^@]+)@@")
+HEADING_RE = re.compile(r"^#{2,6} ")
+
 
 
 def unescape_fences(text: str) -> str:
@@ -107,6 +117,138 @@ def escape_prose(text: str) -> str:
     return "\n".join(out)
 
 
+def apply_scope(text: str) -> str:
+    """Nest member lists inside their aggregate and indent them by depth.
+
+    The theme wraps each aggregate's member list in @@ddoc-enter@@ /
+    @@ddoc-leave@@ markers. They become <div class="scope" markdown> blocks
+    (rendered through md_in_html, styled with a left rule in api.css), and
+    headings are shifted one level per nesting depth."""
+    for marker in (SCOPE_ENTER, SCOPE_LEAVE, MEMBER_ENTER, MEMBER_LEAVE):
+        text = text.replace(marker, f"\n\n{marker}\n\n")
+    divs = {
+        SCOPE_ENTER: '<div class="scope" markdown="1">',
+        MEMBER_ENTER: '<div class="member" markdown="1">',
+    }
+    out, depth = [], 0
+    for line in text.splitlines():
+        stripped = line.strip()
+        if stripped in divs:
+            out.append(divs[stripped])
+            if stripped == SCOPE_ENTER:
+                depth += 1
+        elif stripped in (SCOPE_LEAVE, MEMBER_LEAVE):
+            out.append("</div>")
+            if stripped == SCOPE_LEAVE:
+                depth = max(depth - 1, 0)
+        else:
+            if line.startswith("## "):
+                line = "#" * min(2 + depth, 6) + line[2:]
+            out.append(line)
+    return "\n".join(out)
+
+
+def resolve_anchors(text: str) -> str:
+    """Use DDoc's declaration anchor for the heading id.
+
+    Overloads share the header anchor name, but dmd emits a unique one in
+    DDOC_ANCHOR (name, name.2, name.3, ...) inside each declaration."""
+    out: list[str] = []
+    pending: int | None = None
+    in_fence = False
+    for line in text.splitlines():
+        if line.startswith("```"):
+            in_fence = not in_fence
+        match = ANCHOR_RE.search(line)
+        if match:
+            line = ANCHOR_RE.sub("", line)
+            if not in_fence and HEADING_RE.match(line):
+                line = line.rstrip() + f" {{ #{match.group(1)} }}"
+            elif pending is not None:
+                out[pending] = re.sub(r"\{ #[^ }]+", f"{{ #{match.group(1)}", out[pending])
+                pending = None
+        if not in_fence and HEADING_RE.match(line):
+            pending = len(out)
+        out.append(line)
+    return "\n".join(out)
+
+
+def non_public_symbols(json_path: Path) -> set[str]:
+    """Qualified names of private/package symbols from dmd -X output."""
+    hidden: set[str] = set()
+
+    def walk(node: dict, prefix: str) -> None:
+        for member in node.get("members", []):
+            if member.get("kind") == "import":
+                continue
+            qualified = f"{prefix}.{member['name']}" if prefix else member["name"]
+            if member.get("protection") in HIDDEN_PROTECTION:
+                hidden.add(qualified)
+            walk(member, qualified)
+
+    for module in json.loads(json_path.read_text()):
+        walk(module, "")
+    return hidden
+
+
+def drop_non_public(text: str, hidden: set[str]) -> str:
+    """Remove member cards whose symbol is private or package-level."""
+    if not hidden:
+        return text
+    lines = text.splitlines()
+    out: list[str] = []
+    i = 0
+    while i < len(lines):
+        if lines[i].strip() == MEMBER_DIV:
+            j = i + 1
+            while j < len(lines) and not HEADING_RE.match(lines[j]):
+                j += 1
+            match = ANCHOR_ID_RE.search(lines[j]) if j < len(lines) else None
+            anchor = match.group(1) if match else None
+            if anchor and (
+                anchor in hidden or re.sub(r"\.\d+$", "", anchor) in hidden
+            ):
+                depth, k = 0, i
+                while k < len(lines):
+                    stripped = lines[k].strip()
+                    if stripped.startswith("<div"):
+                        depth += 1
+                    elif stripped == "</div>":
+                        depth -= 1
+                        if depth == 0:
+                            break
+                    k += 1
+                i = k + 1
+                continue
+        out.append(lines[i])
+        i += 1
+    return "\n".join(out)
+
+
+def normalize_blocks(text: str) -> str:
+    """Put blank lines around fences and after headings.
+
+    Markdown inside md_in_html containers merges a fence into the following
+    paragraph unless blocks are separated, which yields invalid <p><div>."""
+    out: list[str] = []
+    in_fence = False
+    for line in text.splitlines():
+        if line.startswith("```"):
+            if not in_fence and out and out[-1].strip():
+                out.append("")
+            out.append(line)
+            in_fence = not in_fence
+            if not in_fence:
+                out.append("")
+        else:
+            if not in_fence and line.startswith("#"):
+                out.append(line)
+                out.append("")
+            else:
+                out.append(line)
+    return "\n".join(out)
+
+
 def tidy(text: str) -> str:
     return re.sub(r"\n{3,}", "\n\n", text).strip() + "\n"
 
@@ -114,12 +256,21 @@ def tidy(text: str) -> str:
 def generate_page(dfile: Path, imports: list[str]) -> tuple[str, Path]:
     fqn = module_name(dfile)
     out = OUT_DIR / f"{fqn}.md"
+    symbols = OUT_DIR / f"{fqn}.json"
     subprocess.run(
-        ["dmd", "-o-", "-D", f"-Df{out}", *imports, str(dfile), str(THEME)],
+        [
+            "dmd", "-o-", "-D", "-X", f"-Xf{symbols}", f"-Df{out}",
+            *imports, str(dfile), str(THEME),
+        ],
         cwd=ROOT,
         check=True,
     )
-    out.write_text(tidy(escape_prose(unescape_fences(out.read_text()))))
+    hidden = non_public_symbols(symbols)
+    symbols.unlink()
+
+    text = escape_prose(unescape_fences(out.read_text()))
+    text = drop_non_public(apply_scope(resolve_anchors(text)), hidden)
+    out.write_text(tidy(normalize_blocks(text)))
     return fqn, out
 
 

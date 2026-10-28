@@ -92,26 +92,25 @@ $(BODY)
 $(LF)
 
 DDOC_MODULE_MEMBERS = $0$(LF)
-DDOC_CLASS_MEMBERS = $0$(LF)
-DDOC_STRUCT_MEMBERS = $0$(LF)
-DDOC_ENUM_MEMBERS = $0$(LF)
-DDOC_TEMPLATE_MEMBERS = $0$(LF)
+DDOC_CLASS_MEMBERS = @@ddoc-enter@@$(LF)$0$(LF)@@ddoc-leave@@$(LF)
+DDOC_STRUCT_MEMBERS = @@ddoc-enter@@$(LF)$0$(LF)@@ddoc-leave@@$(LF)
+DDOC_ENUM_MEMBERS = @@ddoc-enter@@$(LF)$0$(LF)@@ddoc-leave@@$(LF)
+DDOC_TEMPLATE_MEMBERS = @@ddoc-enter@@$(LF)$0$(LF)@@ddoc-leave@@$(LF)
 
 DDOC_MEMBERS = $0
 
-DDOC_MEMBER =
-$0
+DDOC_MEMBER = @@member-enter@@$(LF)$0$(LF)@@member-leave@@$(LF)
 
 DDOC_MEMBER_HEADER = $0
 
-DDOC_HEADER_ANCHOR = ## `$2`{ #$1 }
+DDOC_HEADER_ANCHOR = ## `$2` { #$1 .api-heading }
 
 DDOC_DECL =
 ```d
 $0
 ```
 
-DDOC_ANCHOR =
+DDOC_ANCHOR = @@anchor:$1@@
 
 DDOC_DECL_DD = $0
 

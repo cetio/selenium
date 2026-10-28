@@ -1,0 +1,46 @@
+/* API reference: every symbol is a card, members nest inside their aggregate. */
+.md-typeset .member {
+  border: 0.05rem solid var(--md-default-fg-color--lighter);
+  border-radius: 0.2rem;
+  margin: 0.8rem 0;
+  padding: 0.4rem 0.9rem 0.2rem;
+}
+
+.md-typeset .scope {
+  margin-left: 1rem;
+}
+
+/* The symbol heading drives the TOC and anchors, while the declaration is the
+   visible header, so hide the duplicate heading text. */
+.md-typeset .api-heading {
+  border: 0;
+  clip: rect(0 0 0 0);
+  height: 1px;
+  margin: -1px;
+  overflow: hidden;
+  padding: 0;
+  position: absolute;
+  white-space: nowrap;
+  width: 1px;
+}
+
+/* Declarations are signatures, not copyable snippets: no copy button, and
+   long signatures wrap instead of scrolling. */
+.md-typeset .member .md-code__button,
+.md-typeset .member .md-clipboard {
+  display: none;
+}
+
+.md-typeset .member .highlight pre > code {
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
+}
+
+/* Tighter spacing inside cards. */
+.md-typeset .member > p {
+  margin-bottom: 0.6rem;
+}
+
+.md-typeset .member .highlight {
+  margin: 0.4rem 0 0.6rem;
+}
