@@ -23,6 +23,7 @@ nav = [
     "api/selenium.bridge.md",
     "api/selenium.element.md",
     "api/selenium.exception.md",
+    "api/selenium.locator.md",
     "api/selenium.root.md",
     { "actions" = [
       "api/selenium.actions.md",
