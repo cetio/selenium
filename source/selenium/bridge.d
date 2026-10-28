@@ -51,9 +51,9 @@ package (selenium):
 public:
     /// Base URL of the WebDriver server, e.g. "http://127.0.0.1:9515".
     string address;
-    /// Process id of a locally spawned driver.
+    /// Process id of a locally spawned driver, or `Pid.init` for a remote bridge.
     Pid pid;
-    /// Maximum concurrent sessions, fixed at construction, or 0 for unlimited.
+    /// Maximum concurrent sessions, fixed at construction. Zero or negative for unlimited.
     const int capacity;
     /// Active sessions keyed by session id, mapped to their negotiated browser.
     Browser[string] sessions;
@@ -66,30 +66,36 @@ public:
      * that only the connecting session may use it.
      *
      * Params:
-     *  capacity = Maximum concurrent sessions, or 0 for unlimited.
+     *  capacity = Maximum concurrent sessions. Zero or negative for unlimited.
      */
     this(int capacity = 0)
     {
         this.capacity = capacity;
     }
 
-    /// Stops the server and tears down all sessions on collection.
+    /// Kills a locally spawned driver process when the bridge is collected.
+    ///
+    /// Remote bridges have no local process to kill, and sessions are not closed
+    /// gracefully. Call `stop` to kill the process and clear local session state
+    /// explicitly.
     ~this() @nogc nothrow
     {
         tryKill(pid);
     }
 
     /**
-     * Spawns a WebDriver binary on a free port and waits for it to accept requests.
+     * Spawns a WebDriver binary on a free port and waits up to five seconds for
+     * it to accept requests.
      *
      * The free port is released before the process starts, so another process can
      * claim it between discovery and the driver's bind. Callers should retry a
      * failed start when operating in an environment with heavy port contention.
+     * If the readiness wait fails, the spawned process is not killed.
      *
      * Params:
      *  binary = Path to the driver executable.
-     *  args = Extra command-line arguments forwarded to the executable.
-     *  capacity = Maximum concurrent sessions, or 0 for unlimited.
+     *  args = Extra command-line arguments appended after `--port`.
+     *  capacity = Maximum concurrent sessions. Zero or negative for unlimited.
      *  childStdin = Standard input for the child process.
      *  childStdout = Standard output for the child process, defaulting to caller stderr.
      *  childStderr = Standard error for the child process.
@@ -99,7 +105,9 @@ public:
      *
      * Throws:
      *  InvalidArgumentException if binary is null.
-     *  WebDriverConnectionException if the server does not become ready in time.
+     *  ProcessException if the process cannot be spawned.
+     *  WebDriverConnectionException if the server does not become ready within
+     *  five seconds.
      */
     static Bridge start(
         string binary,
@@ -131,6 +139,8 @@ public:
     /**
      * Creates a new session and records its negotiated browser capabilities.
      *
+     * The session is added to `sessions` only after the response is validated.
+     *
      * Params:
      *  payload = The new-session capabilities request body.
      *  timeout = Maximum time to wait for the session response, defaulting to 60 seconds.
@@ -139,7 +149,9 @@ public:
      *  The id of the created session.
      *
      * Throws:
-     *  WebDriverConnectionException if `capacity` is reached or the server cannot be reached.
+     *  WebDriverConnectionException if `capacity` is reached, the server cannot
+     *  be reached, or the new-session response is invalid.
+     *  WebDriverException subtypes mapped from a server error response.
      */
     string createSession(JSONValue payload, Duration timeout = 60.seconds)
     {
@@ -165,11 +177,16 @@ public:
     /**
      * Ends a single session and removes it from `sessions`.
      *
-     * Ambiguous failures retain the session for retry, while an already-invalid
-     * remote session is dropped locally.
+     * An unknown local id is a no-op. Other failures leave the session in
+     * `sessions` for retry, except `InvalidSessionIdException`, which is
+     * swallowed and the session is dropped locally.
      *
      * Params:
      *  id = The session id to close.
+     *
+     * Throws:
+     *  WebDriverConnectionException if the delete request fails.
+     *  WebDriverException subtypes mapped from a server error response.
      */
     void closeSession(string id)
     {
@@ -187,7 +204,13 @@ public:
         sessions.remove(id);
     }
 
-    /// Kills a locally spawned process and clears all session state.
+    /**
+     * Kills a locally spawned process and clears all session state.
+     *
+     * This only affects the local process and `sessions`; it does not close
+     * remote sessions or send session-delete commands. Calling it more than once
+     * is safe.
+     */
     void stop()
     {
         if (pid !is Pid.init)
@@ -205,6 +228,15 @@ public:
     /// driver it contains readiness and a message. The raw JSON is returned so the
     /// caller can parse it into `grid.server.model.GridStatus` or inspect it
     /// directly, keeping `Bridge` decoupled from grid types.
+    ///
+    /// Returns: The parsed `GET /status` response.
+    ///
+    /// Throws:
+    ///  WebDriverConnectionException if the server cannot be reached or returns
+    ///  an invalid response.
+    ///  UnknownCommandException if the server reports an unknown command or
+    ///  returns a non-JSON 404 or 405 response.
+    ///  WebDriverException subtypes mapped from a non-success response.
     JSONValue status()
     {
         return checkAndParse(send({
@@ -212,7 +244,23 @@ public:
         }));
     }
 
-    /// Issues a GET against a session and parses the result.
+    /**
+     * Issues a GET against a session and parses the result.
+     *
+     * Params:
+     *  T = The response type. `JSONValue` returns the raw envelope.
+     *     `void` discards. Other types unwrap `value` and deserialize.
+     *  id = The active session id.
+     *  path = The command path appended after `/session/<id>`. Must begin with `/`.
+     *
+     * Returns: The parsed response, or nothing when `T` is `void`.
+     *
+     * Throws:
+     *  InvalidSessionIdException if `id` is not active.
+     *  WebDriverConnectionException if the request fails or the response is invalid.
+     *  WebDriverException subtypes mapped from server errors.
+     *  JSONException if a non-`JSONValue` `T` cannot be deserialized.
+     */
     T get(T = JSONValue)(string id, string path)
     {
         ensureSession(id);
@@ -221,25 +269,94 @@ public:
         }));
     }
 
-    /// Issues a parameterless POST against a session, sending an empty JSON object.
+    /**
+     * Issues a parameterless POST against a session, sending an empty JSON object.
+     *
+     * Params:
+     *  T = The response type. `JSONValue` returns the raw envelope.
+     *     `void` discards the result. Other types unwrap `value` and deserialize.
+     *  id = The active session id.
+     *  path = The command path appended after `/session/<id>`. Must begin with `/`.
+     *
+     * Returns: The parsed response, or nothing when `T` is `void`.
+     *
+     * Throws:
+     *  InvalidSessionIdException if `id` is not active.
+     *  WebDriverConnectionException if the request fails or the response is invalid.
+     *  WebDriverException subtypes mapped from server errors.
+     *  JSONException if a non-`JSONValue` `T` cannot be deserialized.
+     */
     T post(T = JSONValue)(string id, string path)
     {
         return post!T(id, path, JSONValue.emptyObject);
     }
 
-    /// Issues a POST with a JSONValue body against a session and parses the result.
+    /**
+     * Issues a POST with a JSONValue body against a session and parses the result.
+     *
+     * Params:
+     *  T = The response type. `JSONValue` returns the raw envelope.
+     *     `void` discards the result. Other types unwrap `value` and deserialize.
+     *  id = The active session id.
+     *  path = The command path appended after `/session/<id>`. Must begin with `/`.
+     *  data = The JSON request body.
+     *
+     * Returns: The parsed response, or nothing when `T` is `void`.
+     *
+     * Throws:
+     *  InvalidSessionIdException if `id` is not active.
+     *  WebDriverConnectionException if the request fails or the response is invalid.
+     *  WebDriverException subtypes mapped from server errors.
+     *  JSONException if a non-`JSONValue` `T` cannot be deserialized.
+     */
     T post(T = JSONValue)(string id, string path, JSONValue data)
     {
         return post!T(id, path, data.toString(), "application/json");
     }
 
-    /// Issues a POST with a raw string body against a session, without forcing a content type.
+    /**
+     * Issues a POST with a raw string body against a session, without forcing a
+     * content type.
+     *
+     * Params:
+     *  T = The response type. `JSONValue` returns the raw envelope.
+     *     `void` discards the result. Other types unwrap `value` and deserialize.
+     *  id = The active session id.
+     *  path = The command path appended after `/session/<id>`. Must begin with `/`.
+     *  data = The raw request body.
+     *
+     * Returns: The parsed response, or nothing when `T` is `void`.
+     *
+     * Throws:
+     *  InvalidSessionIdException if `id` is not active.
+     *  WebDriverConnectionException if the request fails or the response is invalid.
+     *  WebDriverException subtypes mapped from server errors.
+     *  JSONException if a non-`JSONValue` `T` cannot be deserialized.
+     */
     T post(T = JSONValue)(string id, string path, string data)
     {
         return post!T(id, path, data, null);
     }
 
-    /// Issues a POST with a raw string body and optional content type, using Content-Length.
+    /**
+     * Issues a POST with a raw string body and optional content type, using Content-Length.
+     *
+     * Params:
+     *  T = The response type. `JSONValue` returns the raw envelope.
+     *     `void` discards the result. Other types unwrap `value` and deserialize.
+     *  id = The active session id.
+     *  path = The command path appended after `/session/<id>`. Must begin with `/`.
+     *  data = The raw request body.
+     *  contentType = The Content-Type header, or null to omit it.
+     *
+     * Returns: The parsed response, or nothing when `T` is `void`.
+     *
+     * Throws:
+     *  InvalidSessionIdException if `id` is not active.
+     *  WebDriverConnectionException if the request fails or the response is invalid.
+     *  WebDriverException subtypes mapped from server errors.
+     *  JSONException if a non-`JSONValue` `T` cannot be deserialized.
+     */
     T post(T = JSONValue)(string id, string path, string data, string contentType)
     {
         ensureSession(id);
@@ -248,7 +365,24 @@ public:
         }));
     }
 
-    /// Issues a PUT with a JSONValue body against a session and parses the result.
+    /**
+     * Issues a PUT with a JSONValue body against a session and parses the result.
+     *
+     * Params:
+     *  T = The response type. `JSONValue` returns the raw envelope.
+     *     `void` discards the result. Other types unwrap `value` and deserialize.
+     *  id = The active session id.
+     *  path = The command path appended after `/session/<id>`. Must begin with `/`.
+     *  data = The JSON request body.
+     *
+     * Returns: The parsed response, or nothing when `T` is `void`.
+     *
+     * Throws:
+     *  InvalidSessionIdException if `id` is not active.
+     *  WebDriverConnectionException if the request fails or the response is invalid.
+     *  WebDriverException subtypes mapped from server errors.
+     *  JSONException if a non-`JSONValue` `T` cannot be deserialized.
+     */
     T put(T = JSONValue)(string id, string path, JSONValue data)
     {
         ensureSession(id);
@@ -262,7 +396,24 @@ public:
         }));
     }
 
-    /// Issues a PATCH with a JSONValue body against a session and parses the result.
+    /**
+     * Issues a PATCH with a JSONValue body against a session and parses the result.
+     *
+     * Params:
+     *  T = The response type. `JSONValue` returns the raw envelope.
+     *     `void` discards the result. Other types unwrap `value` and deserialize.
+     *  id = The active session id.
+     *  path = The command path appended after `/session/<id>`. Must begin with `/`.
+     *  data = The JSON request body.
+     *
+     * Returns: The parsed response, or nothing when `T` is `void`.
+     *
+     * Throws:
+     *  InvalidSessionIdException if `id` is not active.
+     *  WebDriverConnectionException if the request fails or the response is invalid.
+     *  WebDriverException subtypes mapped from server errors.
+     *  JSONException if a non-`JSONValue` `T` cannot be deserialized.
+     */
     T patch(T = JSONValue)(string id, string path, JSONValue data)
     {
         ensureSession(id);
@@ -276,7 +427,23 @@ public:
         }));
     }
 
-    /// Issues a DELETE against a session and parses the result.
+    /**
+     * Issues a DELETE against a session and parses the result.
+     *
+     * Params:
+     *  T = The response type. `JSONValue` returns the raw envelope.
+     *     `void` discards the result. Other types unwrap `value` and deserialize.
+     *  id = The active session id.
+     *  path = The command path appended after `/session/<id>`. Must begin with `/`.
+     *
+     * Returns: The parsed response, or nothing when `T` is `void`.
+     *
+     * Throws:
+     *  InvalidSessionIdException if `id` is not active.
+     *  WebDriverConnectionException if the request fails or the response is invalid.
+     *  WebDriverException subtypes mapped from server errors.
+     *  JSONException if a non-`JSONValue` `T` cannot be deserialized.
+     */
     T del(T = JSONValue)(string id, string path)
     {
         ensureSession(id);
@@ -320,6 +487,7 @@ public:
      *
      * Returns:
      *  The element references in order, or an empty array if none are present.
+     *  Malformed array items are returned as `null` entries.
      */
     static string[] parseElementIds(JSONValue json)
     {
@@ -362,6 +530,7 @@ public:
      *
      * Returns:
      *  The shadow root references in order, or an empty array if none are present.
+     *  Malformed array items are returned as `null` entries.
      */
     static string[] parseShadowIds(JSONValue json)
     {
@@ -377,7 +546,22 @@ public:
         return ret;
     }
 
-    /// Deserializes T from a response, unwrapping the W3C `value` envelope if present.
+    /**
+     * Deserializes `T` from a response, unwrapping a `value` envelope if present.
+     *
+     * Any object containing a `value` key is treated as an envelope. `T ==
+     * JSONValue` returns the unwrapped value, dynamic arrays other than `string`
+     * are parsed item by item, and other types are converted with `get!T`.
+     *
+     * Params:
+     *  T = The target type.
+     *  json = The response value or envelope.
+     *
+     * Returns: The unwrapped and deserialized value.
+     *
+     * Throws:
+     *  JSONException if `json` cannot be converted to `T`.
+     */
     static T unwrapAndParse(T)(JSONValue json)
     {
         JSONValue value = (json.type == JSONType.object && "value" in json) ? json["value"] : json;

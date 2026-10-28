@@ -83,9 +83,9 @@ public:
         this._state = state;
     }
 
-    /// The kind of root.
+    /// The root type.
     RootType type() => _type;
-    /// The current state bitmask.
+    /// The root state bitmask. See `RootState` for details.
     RootState state() => _state;
 
     /**
@@ -103,6 +103,7 @@ public:
      *
      * Throws:
      *  NoSuchElementException if no element matches.
+     *  WebDriverException subtypes for other server or connection failures.
      */
     Element find(By by)
     {
@@ -132,6 +133,9 @@ public:
      *
      * Returns:
      *  Handles to all matched elements, or an empty array if none match.
+     *
+     * Throws:
+     *  WebDriverException subtypes for selector, frame, session, or connection failures.
      */
     Element[] findAll(By by)
     {
@@ -152,7 +156,13 @@ public:
         return ret;
     }
 
-    /// Serializes the root into the appropriate W3C reference object.
+    /**
+     * Serializes the root into the appropriate W3C reference object.
+     *
+     * `Primary` roots serialize to an empty object.
+     *
+     * Returns: The W3C element, shadow-root reference, or empty object if primary.
+     */
     JSONValue toJSON() const
     {
         JSONValue ret = JSONValue.emptyObject;
