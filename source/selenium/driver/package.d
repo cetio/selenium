@@ -14,6 +14,8 @@ import std.array : join;
 import std.json : JSONValue;
 import core.time : msecs, seconds, Duration;
 
+// TODO: Split this up so it's not massive.
+
 /// A handle to a single WebDriver session.
 ///
 /// W3C and most clients treat a driver as 1:1 with a session, but that is not the
