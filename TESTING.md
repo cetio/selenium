@@ -67,9 +67,9 @@ dub test -c integration --d-version=firefox -- "frame switch by index"
 
 | Path | Purpose |
 | --- | --- |
-| `source/tests/webdriver/driver/` | Offline locator, response parsing, and bridge-capacity tests. |
+| `source/tests/webdriver/driver/` | Offline locator, cookie model, response parsing, and bridge-capacity tests. |
 | `source/tests/grid/server.d` | Grid models, router dispatch, hub behavior, and node behavior. |
-| `source/tests/common.d` | `dataUri` and the shared `BrowserIntegration` mixin. |
+| `source/tests/common/` | `dataUri`, the loopback HTTP helper, and the shared `BrowserIntegration` mixin. |
 | `source/tests/integration/chrome.d` | Chrome capability unit tests and session setup under `version (chrome)`. |
 | `source/tests/integration/firefox.d` | Firefox capability unit tests and session setup under `version (firefox)`. |
 | `bin/ut.d` | Generated unit-threaded runner. Do not edit it manually. |
@@ -80,7 +80,7 @@ DUB runs `unit-threaded`'s `gen_ut_main` pre-build command to regenerate `bin/ut
 
 Name tests with `@Name` so individual cases can be selected from the command line. Keep offline tests independent of installed browsers and network services.
 
-Add browser-independent assertions to the appropriate module under `source/tests/webdriver` or `source/tests/grid`. Add live behavior shared by Chrome and Firefox to `BrowserIntegration` in `source/tests/common.d`. Integration tests share one session per browser module and must use `@Serial`.
+Add browser-independent assertions to the appropriate module under `source/tests/webdriver` or `source/tests/grid`. Add live behavior shared by Chrome and Firefox to `BrowserIntegration` in `source/tests/common/integration.d`. Integration tests share one session per browser module and must use `@Serial`.
 
 ```d
 @Name("By.css serializes correctly")
@@ -116,6 +116,8 @@ driver.go(dataUri("<html><body><p id='text'>test</p></body></html>"));
 ```
 
 This keeps browser integration tests deterministic and avoids external network dependencies.
+
+Tests that need a real document origin, such as cookies, use `localUri` from `tests.common`. It starts a minimal loopback HTTP server on first use and returns a URL under it.
 
 ## Browser Setup and Debugging
 

@@ -188,6 +188,8 @@ driver.cookies.remove("session");
 
 `Cookie` supports path, domain, secure, HTTP-only, expiry, and SameSite fields in addition to name and value.
 
+`find` raises `NoSuchCookieException` when no cookie matches, and `find` and `remove` reject empty names with `InvalidArgumentException`. A cookie whose domain is not valid for the current document raises `InvalidCookieDomainException`; other browser rejections raise `UnableToSetCookieException`.
+
 ## Logging
 
 A driver's `Logger` combines driver-process options, Chromium logging capabilities, and legacy remote log retrieval. Remote `/log` commands are vendor extensions and may not be supported by every browser.
