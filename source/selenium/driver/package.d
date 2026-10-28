@@ -575,7 +575,6 @@ class Driver
      */
     Element find(By by)
     {
-
         JSONValue resp = bridge.post(id, "/element", by.toJSON());
         return new Element(this, Bridge.parseElementId(resp));
     }
@@ -597,7 +596,6 @@ class Driver
      */
     Element[] findAll(By by)
     {
-
         JSONValue resp = bridge.post(id, "/elements", by.toJSON());
         Element[] ret;
         foreach (eid; Bridge.parseElementIds(resp))
