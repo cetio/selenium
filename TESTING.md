@@ -69,7 +69,7 @@ dub test -c integration --d-version=firefox -- "frame switch by index"
 | --- | --- |
 | `source/tests/webdriver/driver/` | Offline locator, cookie model, response parsing, and bridge-capacity tests. |
 | `source/tests/grid/server.d` | Grid models, router dispatch, hub behavior, and node behavior. |
-| `source/tests/common/` | `dataUri`, the loopback HTTP helper, and the shared `BrowserIntegration` mixin. |
+| `source/tests/common/` | `dataUri` and the shared `BrowserIntegration` mixin. |
 | `source/tests/integration/chrome.d` | Chrome capability unit tests and session setup under `version (chrome)`. |
 | `source/tests/integration/firefox.d` | Firefox capability unit tests and session setup under `version (firefox)`. |
 | `bin/ut.d` | Generated unit-threaded runner. Do not edit it manually. |
@@ -116,8 +116,6 @@ driver.go(dataUri("<html><body><p id='text'>test</p></body></html>"));
 ```
 
 This keeps browser integration tests deterministic and avoids external network dependencies.
-
-Tests that need a real document origin, such as cookies, use `localUri` from `tests.common`. It starts a minimal loopback HTTP server on first use and returns a URL under it.
 
 ## Browser Setup and Debugging
 
