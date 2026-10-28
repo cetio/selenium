@@ -1,7 +1,7 @@
 /// Offline tests for the `By` location strategy serialization.
 module tests.webdriver.driver.frame;
 
-import selenium.element : By;
+import selenium.locator : By;
 import selenium.exception : InvalidSelectorException;
 
 import unit_threaded;

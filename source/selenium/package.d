@@ -16,4 +16,5 @@ public import selenium.actions;
 public import selenium.bridge;
 public import selenium.element;
 public import selenium.exception;
+public import selenium.locator;
 public import selenium.root;

@@ -3,7 +3,8 @@ module selenium.root;
 
 import selenium.bridge : Bridge;
 import selenium.driver : Driver;
-import selenium.element : By, Element;
+import selenium.element : Element;
+import selenium.locator : By;
 
 import std.json : JSONValue;
 

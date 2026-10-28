@@ -3,7 +3,8 @@ module selenium.driver;
 
 import selenium.bridge : Bridge;
 import selenium.browser : Browser;
-import selenium.element : By, Element, Position, Rect, Size;
+import selenium.element : Element, Position, Rect, Size;
+import selenium.locator : By;
 import selenium.root : Root, RootState, RootType;
 import selenium.driver.logger : Logger;
 import selenium.driver.print : PrintOptions;

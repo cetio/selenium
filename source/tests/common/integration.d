@@ -14,8 +14,9 @@ mixin template BrowserIntegration()
     import selenium.driver : Driver;
     import selenium.driver.cookies : Cookie, cookies;
     import selenium.driver.print : Orientation, PrintOptions;
-    import selenium.element : By, Element, Position, Rect, Size;
+    import selenium.element : Element, Position, Rect, Size;
     import selenium.exception;
+    import selenium.locator : By;
     import selenium.root : Root, RootType;
     import unit_threaded;
 
